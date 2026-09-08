@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:veenuscashbook/controller/companyDetails_controller.dart';
+import 'package:veenuscashbook/controller/salesDetails_controller.dart';
 import 'package:veenuscashbook/utilities/requestconstant.dart';
 
 import 'app_theme.dart';
@@ -22,7 +23,7 @@ class EntryScreen extends StatefulWidget {
 
 class _EntryScreenState extends State<EntryScreen> {
   CompanyDetailsController companyDetailsController = Get.put(CompanyDetailsController());
-
+  SalesDetailController salesDetailController = Get.put(SalesDetailController());
 
   @override
   void initState() {
@@ -139,7 +140,8 @@ class _EntryScreenState extends State<EntryScreen> {
                     label: 'Company Name',
                     hint: 'Enter company name',
                     icon: Icons.business_outlined,
-                    controller: companyDetailsController.companyNameController
+                    controller: companyDetailsController.companyNameController,
+                    isDropdown: widget.title == "Sales Details" ? true : false,
                   ),
                   const SizedBox(height: 16),
 
@@ -252,129 +254,154 @@ class _EntryScreenState extends State<EntryScreen> {
         const SizedBox(height: 7),
 
         if (isDropdown)
-          Obx(
-                () => DropdownButtonFormField2<String>(
-              value: companyDetailsController.selectedCity,
+          Obx(() {
+            final bool isSalesDetails =
+                widget.title == "Sales Details";
+                  return DropdownButtonFormField2<String>(
+                    value: isSalesDetails
+                        ? salesDetailController.selectedCompany
+                        : companyDetailsController.selectedCity,
 
-              isExpanded: true,
+                    isExpanded: true,
 
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 13,
-                  color: AppColors.subText,
-                ),
+                    decoration: InputDecoration(
+                      hintText: hint,
+                      hintStyle: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        color: AppColors.subText,
+                      ),
 
-                prefixIcon: Icon(
-                  icon,
-                  color: AppColors.drawerIcon,
-                  size: 21,
-                ),
+                      prefixIcon: Icon(
+                        icon,
+                        color: AppColors.drawerIcon,
+                        size: 21,
+                      ),
 
-                filled: true,
-                fillColor: AppColors.background,
+                      filled: true,
+                      fillColor: AppColors.background,
 
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 14,
-                ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 14,
+                      ),
 
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(11),
-                  borderSide: const BorderSide(
-                    color: AppColors.border,
-                  ),
-                ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(11),
+                        borderSide: const BorderSide(
+                          color: AppColors.border,
+                        ),
+                      ),
 
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(11),
-                  borderSide: const BorderSide(
-                    color: AppColors.border,
-                  ),
-                ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(11),
+                        borderSide: const BorderSide(
+                          color: AppColors.border,
+                        ),
+                      ),
 
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(11),
-                  borderSide: const BorderSide(
-                    color: AppColors.accent,
-                    width: 1.3,
-                  ),
-                ),
-              ),
-
-              hint: Text(
-                hint,
-                style: const TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 13,
-                  color: AppColors.subText,
-                ),
-              ),
-
-              // API dropdown values
-                  items: [
-                    // Default value
-                    const DropdownMenuItem<String>(
-                      value: "--SELECT--",
-                      child: Text(
-                        "--SELECT--",
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 13,
-                          color: AppColors.subText,
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(11),
+                        borderSide: const BorderSide(
+                          color: AppColors.accent,
+                          width: 1.3,
                         ),
                       ),
                     ),
 
-                    // API values
-                    ...companyDetailsController.cityDropDown.map((city) {
-                      return DropdownMenuItem<String>(
-                        value: city.cityName ?? '',
+                    hint: Text(
+                      hint,
+                      style: const TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
+                        color: AppColors.subText,
+                      ),
+                    ),
+
+                    // API dropdown values
+                    items: [
+                      // Default value
+                      const DropdownMenuItem<String>(
+                        value: "--SELECT--",
                         child: Text(
-                          city.cityName ?? '',
-                          style: const TextStyle(
+                          "--SELECT--",
+                          style: TextStyle(
                             fontFamily: 'Poppins',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.text,
+                            fontSize: 13,
+                            color: AppColors.subText,
                           ),
                         ),
-                      );
-                    }).toList(),
-                  ],
+                      ),
 
-              onChanged: (value) {
-                setState(() {
-                  companyDetailsController.selectedCity = value ?? "--SELECT--";
-                });
-              },
+                      // isSalesDetails
+                      //     ? salesDetailController.companyDropdown.map((company) {
+                      //   return DropdownMenuItem<String>(
+                      //     value: company.companyName ?? '',
+                      //     child: Text(
+                      //       company.companyName ?? '',
+                      //       style: const TextStyle(
+                      //         fontFamily: 'Poppins',
+                      //         fontSize: 14,
+                      //         fontWeight: FontWeight.w500,
+                      //         color: AppColors.text,
+                      //       ),
+                      //     ),
+                      //   );
+                      // }).toList()
+                      //     : companyDetailsController.cityDropDown.map((city) {
+                      //   return DropdownMenuItem<String>(
+                      //     value: city.cityName ?? '',
+                      //     child: Text(
+                      //       city.cityName ?? '',
+                      //       style: const TextStyle(
+                      //         fontFamily: 'Poppins',
+                      //         fontSize: 14,
+                      //         fontWeight: FontWeight.w500,
+                      //         color: AppColors.text,
+                      //       ),
+                      //     ),
+                      //   );
+                      // }).toList(),
 
-              buttonStyleData: const ButtonStyleData(
-                height: 20,
-              ),
+                    ],
 
-              iconStyleData: const IconStyleData(
-                icon: Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: AppColors.subText,
-                ),
-              ),
+                    onChanged: (value) {
+                      setState(() {
+                        if (isSalesDetails) {
+                          salesDetailController.selectedCompany =
+                              value ?? "--SELECT--";
+                        } else {
+                          companyDetailsController.selectedCity =
+                              value ?? "--SELECT--";
+                        }
+                      });
+                    },
 
-              dropdownStyleData: DropdownStyleData(
-                maxHeight: 220,
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(11),
-                ),
-              ),
+                    buttonStyleData: const ButtonStyleData(
+                      height: 20,
+                    ),
 
-              menuItemStyleData: const MenuItemStyleData(
-                height: 45,
-                padding: EdgeInsets.symmetric(horizontal: 14),
-              ),
-            ),
-          )
+                    iconStyleData: const IconStyleData(
+                      icon: Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        color: AppColors.subText,
+                      ),
+                    ),
+
+                    dropdownStyleData: DropdownStyleData(
+                      maxHeight: 220,
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                    ),
+
+                    menuItemStyleData: const MenuItemStyleData(
+                      height: 45,
+                      padding: EdgeInsets.symmetric(horizontal: 14),
+                    ),
+                  );
+                } )
         else
           TextField(
             controller: controller,
@@ -444,7 +471,7 @@ class _EntryScreenState extends State<EntryScreen> {
       builder: (context) => AlertDialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),),
-        title: const Text('Alert!',style: TextStyle(fontSize: 14),),
+        title: const Text('Alert!',style: TextStyle(fontSize: 20,fontWeight: FontWeight.w500),),
         content: Text(companyDetailsController.saveButton==RequestConstant.RESUBMIT  ? 'Are you sure to Re-Submit?' :
         'Are you sure to Submit?'),
         actions:[

@@ -15,7 +15,6 @@ class CompanyDetailsProvider{
           "${ApiConstant.GETCOMPANY_DETAILSLIST}");
 
       return companyDetailsGetAllResponseFromJson(value);
-
     } catch (error) {
       print(error);
       return null;

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:veenuscashbook/controller/salesDetails_controller.dart';
 
 import 'app_theme.dart';
 import 'entry_screen.dart';
@@ -16,7 +19,15 @@ class ListScreen extends StatefulWidget {
 }
 
 class _ListScreenState extends State<ListScreen> {
+  SalesDetailController salesDetailController = Get.put(SalesDetailController());
   int? expandedIndex;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    salesDetailController.getSalesDetails_List();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -186,17 +197,19 @@ class _ListScreenState extends State<ListScreen> {
 
           // List
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(
-                18,
-                5,
-                18,
-                90,
+            child: Obx(()=>
+                ListView.builder(
+                padding: const EdgeInsets.fromLTRB(
+                  18,
+                  5,
+                  18,
+                  90,
+                ),
+                itemCount: salesDetailController.SalesDetailsList.length,
+                itemBuilder: (context, index) {
+                  return _listItem(index);
+                },
               ),
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                return _listItem(index);
-              },
             ),
           ),
         ],
@@ -219,6 +232,8 @@ class _ListScreenState extends State<ListScreen> {
 
   Widget _listItem(int index) {
     final bool isExpanded = expandedIndex == index;
+
+    final sales = salesDetailController.SalesDetailsList[index];
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -253,7 +268,9 @@ class _ListScreenState extends State<ListScreen> {
             child: Row(
               children: [
 
-                // Date
+                // =========================
+                // DATE
+                // =========================
                 Container(
                   width: 48,
                   height: 52,
@@ -261,12 +278,12 @@ class _ListScreenState extends State<ListScreen> {
                     color: AppColors.lightBlue,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Column(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        '02',
-                        style: TextStyle(
+                        _getDay(sales.date),
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
@@ -274,8 +291,8 @@ class _ListScreenState extends State<ListScreen> {
                         ),
                       ),
                       Text(
-                        'SEP',
-                        style: TextStyle(
+                        _getMonth(sales.date),
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 9,
                           fontWeight: FontWeight.w600,
@@ -288,26 +305,34 @@ class _ListScreenState extends State<ListScreen> {
 
                 const SizedBox(width: 13),
 
-                // Details
-                const Expanded(
+                // =========================
+                // COMPANY + SALES NO
+                // =========================
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'ABC Traders',
-                        style: TextStyle(
+                        sales.companyName ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.text,
                         ),
                       ),
-                      SizedBox(height: 4),
+
+                      const SizedBox(height: 4),
+
                       Text(
-                        'Sales entry',
-                        style: TextStyle(
+                        "SalesNo : ${sales.salesNo ?? ''}",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
-                          fontSize: 11,
+                          fontSize: 12,
                           color: AppColors.subText,
                         ),
                       ),
@@ -315,10 +340,12 @@ class _ListScreenState extends State<ListScreen> {
                   ),
                 ),
 
-                // Amount
-                const Text(
-                  '₹ 5,500',
-                  style: TextStyle(
+                // =========================
+                // ERP COST
+                // =========================
+                Text(
+                  '₹ ${sales.erpCost ?? 0}',
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -328,7 +355,9 @@ class _ListScreenState extends State<ListScreen> {
 
                 const SizedBox(width: 4),
 
-                // More button
+                // =========================
+                // MORE BUTTON
+                // =========================
                 InkWell(
                   borderRadius: BorderRadius.circular(20),
                   onTap: () {
@@ -380,11 +409,12 @@ class _ListScreenState extends State<ListScreen> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
 
+                  // =========================
                   // EDIT
+                  // =========================
                   InkWell(
                     borderRadius: BorderRadius.circular(10),
                     onTap: () {
-                      // Edit action
                       print('Edit $index');
                     },
                     child: Container(
@@ -420,11 +450,12 @@ class _ListScreenState extends State<ListScreen> {
 
                   const SizedBox(width: 10),
 
+                  // =========================
                   // DELETE
+                  // =========================
                   InkWell(
                     borderRadius: BorderRadius.circular(10),
                     onTap: () {
-                      // Delete action
                       print('Delete $index');
                     },
                     child: Container(
@@ -464,6 +495,48 @@ class _ListScreenState extends State<ListScreen> {
         ],
       ),
     );
+  }
+
+  String _getDay(String? date) {
+    if (date == null || date.isEmpty) {
+      return '--';
+    }
+
+    try {
+      final parsedDate = DateTime.parse(date);
+      return parsedDate.day.toString().padLeft(2, '0');
+    } catch (e) {
+      return '--';
+    }
+  }
+
+  String _getMonth(String? date) {
+    if (date == null || date.isEmpty) {
+      return '--';
+    }
+
+    try {
+      final parsedDate = DateTime.parse(date);
+
+      const months = [
+        'JAN',
+        'FEB',
+        'MAR',
+        'APR',
+        'MAY',
+        'JUN',
+        'JUL',
+        'AUG',
+        'SEP',
+        'OCT',
+        'NOV',
+        'DEC',
+      ];
+
+      return months[parsedDate.month - 1];
+    } catch (e) {
+      return '--';
+    }
   }
 
 }
