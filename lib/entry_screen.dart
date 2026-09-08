@@ -1,5 +1,9 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:veenuscashbook/controller/companyDetails_controller.dart';
 
 import 'app_theme.dart';
 
@@ -16,14 +20,17 @@ class EntryScreen extends StatefulWidget {
 }
 
 class _EntryScreenState extends State<EntryScreen> {
+  CompanyDetailsController companyDetailsController = Get.put(CompanyDetailsController());
   String? selectedCity;
 
-  final List<String> cities = [
-    'Chennai',
-    'Coimbatore',
-    'Madurai',
-    'Trichy',
-  ];
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      companyDetailsController.getDropDownCityValues();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,6 +115,7 @@ class _EntryScreenState extends State<EntryScreen> {
                     label: 'Company Name',
                     hint: 'Enter company name',
                     icon: Icons.business_outlined,
+                    controller: companyDetailsController.companyNameController
                   ),
                   const SizedBox(height: 16),
 
@@ -115,6 +123,7 @@ class _EntryScreenState extends State<EntryScreen> {
                     label: 'Address',
                     hint: 'Enter address',
                     icon: Icons.location_on_outlined,
+                    controller: companyDetailsController.AdressController,
                     maxLines: 3,
                   ),
                   const SizedBox(height: 16),
@@ -124,6 +133,7 @@ class _EntryScreenState extends State<EntryScreen> {
                     hint: 'Enter contact number',
                     icon: Icons.phone_outlined,
                     keyboardType: TextInputType.number,
+                    controller: companyDetailsController.ContactNoController
                   ),
                   const SizedBox(height: 16),
 
@@ -139,6 +149,7 @@ class _EntryScreenState extends State<EntryScreen> {
                     label: 'Email',
                     hint: 'Enter email address',
                     icon: Icons.email_outlined,
+                    controller: companyDetailsController.emailController,
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 16),
@@ -147,6 +158,7 @@ class _EntryScreenState extends State<EntryScreen> {
                     label: 'GST No.',
                     hint: 'Enter GST number',
                     icon: Icons.receipt_long_outlined,
+                    controller: companyDetailsController.GSTNoController,
                     keyboardType: TextInputType.number,
                   ),
 
@@ -192,6 +204,7 @@ class _EntryScreenState extends State<EntryScreen> {
     required String label,
     required String hint,
     required IconData icon,
+    TextEditingController? controller,
     TextInputType? keyboardType,
     int maxLines = 1,
     bool isDropdown = false,
@@ -212,112 +225,116 @@ class _EntryScreenState extends State<EntryScreen> {
         const SizedBox(height: 7),
 
         if (isDropdown)
-          DropdownButtonFormField2<String>(
-            value: selectedCity,
+          Obx(
+                () => DropdownButtonFormField2<String>(
+              value: selectedCity,
 
-            isExpanded: true,
+              isExpanded: true,
 
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 13,
-                color: AppColors.subText,
-              ),
-
-              prefixIcon: Icon(
-                icon,
-                color: AppColors.drawerIcon,
-                size: 21,
-              ),
-
-              filled: true,
-              fillColor: AppColors.background,
-
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 14,
-              ),
-
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(11),
-                borderSide: const BorderSide(
-                  color: AppColors.border,
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 13,
+                  color: AppColors.subText,
                 ),
-              ),
 
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(11),
-                borderSide: const BorderSide(
-                  color: AppColors.border,
+                prefixIcon: Icon(
+                  icon,
+                  color: AppColors.drawerIcon,
+                  size: 21,
                 ),
-              ),
 
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(11),
-                borderSide: const BorderSide(
-                  color: AppColors.accent,
-                  width: 1.3,
+                filled: true,
+                fillColor: AppColors.background,
+
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
                 ),
-              ),
-            ),
 
-            hint: Text(
-              hint,
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 13,
-                color: AppColors.subText,
-              ),
-            ),
-
-            items: cities.map((city) {
-              return DropdownMenuItem<String>(
-                value: city,
-                child: Text(
-                  city,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.text,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(11),
+                  borderSide: const BorderSide(
+                    color: AppColors.border,
                   ),
                 ),
-              );
-            }).toList(),
 
-            onChanged: (value) {
-              setState(() {
-                selectedCity = value;
-              });
-            },
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(11),
+                  borderSide: const BorderSide(
+                    color: AppColors.border,
+                  ),
+                ),
 
-            buttonStyleData: const ButtonStyleData(
-              height: 20,
-            ),
-
-            iconStyleData: const IconStyleData(
-              icon: Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: AppColors.subText,
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(11),
+                  borderSide: const BorderSide(
+                    color: AppColors.accent,
+                    width: 1.3,
+                  ),
+                ),
               ),
-            ),
 
-            dropdownStyleData: DropdownStyleData(
-              maxHeight: 220,
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(11),
+              hint: Text(
+                hint,
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 13,
+                  color: AppColors.subText,
+                ),
               ),
-            ),
 
-            menuItemStyleData: const MenuItemStyleData(
-              height: 45,
-              padding: EdgeInsets.symmetric(horizontal: 14),
+              // API dropdown values
+              items: companyDetailsController.cityDropDown.map((city) {
+                return DropdownMenuItem<String>(
+                  value: city.cityName ?? '',
+                  child: Text(
+                    city.cityName ?? '',
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.text,
+                    ),
+                  ),
+                );
+              }).toList(),
+
+              onChanged: (value) {
+                setState(() {
+                  selectedCity = value;
+                });
+              },
+
+              buttonStyleData: const ButtonStyleData(
+                height: 20,
+              ),
+
+              iconStyleData: const IconStyleData(
+                icon: Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.subText,
+                ),
+              ),
+
+              dropdownStyleData: DropdownStyleData(
+                maxHeight: 220,
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(11),
+                ),
+              ),
+
+              menuItemStyleData: const MenuItemStyleData(
+                height: 45,
+                padding: EdgeInsets.symmetric(horizontal: 14),
+              ),
             ),
           )
         else
           TextField(
+            controller: controller,
             keyboardType: keyboardType,
             maxLines: maxLines,
 

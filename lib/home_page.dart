@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_theme.dart';
+import 'companyDetails/companyDetails_EntryList.dart';
 import 'list_screen.dart';
 
 class CashBookHomeScreen extends StatelessWidget {
@@ -240,7 +241,7 @@ class CashBookDrawer extends StatelessWidget {
               icon: Icons.business_outlined,
               title: 'Company Details',
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context)=> const ListScreen(title: 'Company Details')));
+                Navigator.push(context, MaterialPageRoute(builder: (context)=> const CompanyListScreen(title: 'Company Details')));
               },
             ),
 
