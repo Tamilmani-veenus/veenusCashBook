@@ -4,7 +4,11 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:veenuscashbook/provider/companyDetails_provider.dart';
-
+import '../entry_screen.dart';
+import '../models/companyDetailsEdit_model.dart';
+import '../models/companyDetailsList_model.dart';
+import '../models/companyDetailsSave_model.dart';
+import '../utilities/baseutitiles.dart';
 import '../utilities/requestconstant.dart';
 
 class CompanyDetailsController extends GetxController{
@@ -14,8 +18,13 @@ class CompanyDetailsController extends GetxController{
   final emailController = TextEditingController();
   final GSTNoController = TextEditingController();
 
+  int companyId = 0;
+
   RxList CompanyDetailsList = [].obs;
   RxList cityDropDown = [].obs;
+
+  String selectedCity = "--SELECT--";
+  RxList<CompanyEditResult> Company_EditListApiValue = <CompanyEditResult>[].obs;
 
   RxString saveButton = RequestConstant.SUBMIT.obs;
 
@@ -58,6 +67,60 @@ class CompanyDetailsController extends GetxController{
       Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
     }
   }
+
+  Future SaveButton_CompanyDetails(BuildContext context, int id) async {
+    int i = 0;
+    await Future.delayed(const Duration(seconds: 0));
+    String body = companyDetailsSaveResponseToJson(CompanyDetailsSaveResponse(
+      id: id != 0 ? id : 0,
+      companyName: companyNameController.text,
+      companyAddress: AdressController.text,
+      city: selectedCity,
+      contactNo: ContactNoController.text,
+      email: emailController.text,
+      gstNo: GSTNoController.text,
+    ));
+
+    final list = await CompanyDetailsProvider.SaveCompanyScreenEntryAPI(body, id, context);
+
+    if (list != null ) {
+      if(list["success"] == true){
+        Fluttertoast.showToast(msg: list["message"]);
+        await getCompanyDetails_List();
+        // clearDatas();
+        BaseUtitiles.popMultiple(context, count: 2);
+      }
+      else {
+        Fluttertoast.showToast(msg: list["message"] ?? RequestConstant.NETWORKERROR);
+        BaseUtitiles.popMultiple(context, count: 2);
+      }
+    }
+    else {
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+      BaseUtitiles.popMultiple(context, count: 2);
+    }
+  }
+
+  Future CompanyDetails_List_EditApi(int expenseId,String MenuName, BuildContext context) async {
+      final value =
+      await CompanyDetailsProvider.CompanyDetails_List_editAPI(expenseId);
+      if (value != null) {
+        if(value.success == true){
+          saveButton.value = RequestConstant.RESUBMIT;
+          Company_EditListApiValue.value = [value.result!];
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => EntryScreen(title: MenuName,)),
+          );
+        }else {
+          Fluttertoast.showToast(msg: value.message ?? RequestConstant.NETWORKERROR);
+        }
+      }
+      else {
+        Fluttertoast.showToast(msg:RequestConstant.NETWORKERROR);
+      }
+  }
+
 
   Future<bool> CompanyDetails_List_DeleteApi(int reqId) async {
     return CompanyDetailsProvider.CompanyDetails_List_deleteAPI(reqId);

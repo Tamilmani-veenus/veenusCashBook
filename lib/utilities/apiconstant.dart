@@ -39,6 +39,8 @@ class ApiConstant{
   static String GETCOMPANY_DETAILSLIST = BASE_URL_CORE + "api/Company/CompanyDetailsGetAll";
   static String GETDROPDOWN_CITYLIST = BASE_URL_CORE + "api/Sales/GetAllCity";
 
+  static String EDITCOMPANY_DETAILSLIST = BASE_URL_CORE + "api/Company/CompanyDetailsGetById";
+
 
 
 
