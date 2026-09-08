@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:veenuscashbook/splash.dart';
+import 'package:veenuscashbook/utilities/apiconstant.dart';
+import 'package:upgrader/upgrader.dart';
 
-void main() {
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await ApiConfig.initializeUrl();
+  await Upgrader.clearSavedSettings();
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp],);
+
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
