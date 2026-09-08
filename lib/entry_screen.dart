@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:veenuscashbook/controller/companyDetails_controller.dart';
+import 'package:veenuscashbook/utilities/requestconstant.dart';
 
 import 'app_theme.dart';
 
@@ -21,12 +22,35 @@ class EntryScreen extends StatefulWidget {
 
 class _EntryScreenState extends State<EntryScreen> {
   CompanyDetailsController companyDetailsController = Get.put(CompanyDetailsController());
-  String? selectedCity;
+
 
   @override
   void initState() {
     super.initState();
+    var duration = const Duration(seconds:0);
+    Future.delayed(duration,() async {
 
+      if(companyDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
+        companyDetailsController.Company_EditListApiValue.forEach((element) {
+          companyDetailsController.companyId=element.id!;
+          companyDetailsController.companyNameController.text = element.companyName!;
+          companyDetailsController.AdressController.text = element.companyAddress!;
+          companyDetailsController.ContactNoController.text = element.contactNo!;
+          companyDetailsController.selectedCity = element.city!;
+          companyDetailsController.emailController.text = element.email!;
+          companyDetailsController.GSTNoController.text = element.gstNo!;
+        });
+      }
+
+      if(companyDetailsController.saveButton.value ==RequestConstant.SUBMIT){
+        companyDetailsController.companyNameController.text = "";
+        companyDetailsController.AdressController.text = "";
+        companyDetailsController.ContactNoController.text = "";
+        companyDetailsController.selectedCity = "--SELECT--";
+        companyDetailsController.emailController.text = "";
+        companyDetailsController.GSTNoController.text = "";
+      }
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       companyDetailsController.getDropDownCityValues();
     });
@@ -175,7 +199,10 @@ class _EntryScreenState extends State<EntryScreen> {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: ()
+                {
+                  SubmitAlert(context);
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
@@ -184,8 +211,8 @@ class _EntryScreenState extends State<EntryScreen> {
                     borderRadius: BorderRadius.circular(13),
                   ),
                 ),
-                child: const Text(
-                  'Save Entry',
+                child: Text(
+                  companyDetailsController.saveButton.value,
                   style: TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 15,
@@ -227,7 +254,7 @@ class _EntryScreenState extends State<EntryScreen> {
         if (isDropdown)
           Obx(
                 () => DropdownButtonFormField2<String>(
-              value: selectedCity,
+              value: companyDetailsController.selectedCity,
 
               isExpanded: true,
 
@@ -286,24 +313,40 @@ class _EntryScreenState extends State<EntryScreen> {
               ),
 
               // API dropdown values
-              items: companyDetailsController.cityDropDown.map((city) {
-                return DropdownMenuItem<String>(
-                  value: city.cityName ?? '',
-                  child: Text(
-                    city.cityName ?? '',
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.text,
+                  items: [
+                    // Default value
+                    const DropdownMenuItem<String>(
+                      value: "--SELECT--",
+                      child: Text(
+                        "--SELECT--",
+                        style: TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 13,
+                          color: AppColors.subText,
+                        ),
+                      ),
                     ),
-                  ),
-                );
-              }).toList(),
+
+                    // API values
+                    ...companyDetailsController.cityDropDown.map((city) {
+                      return DropdownMenuItem<String>(
+                        value: city.cityName ?? '',
+                        child: Text(
+                          city.cityName ?? '',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.text,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ],
 
               onChanged: (value) {
                 setState(() {
-                  selectedCity = value;
+                  companyDetailsController.selectedCity = value ?? "--SELECT--";
                 });
               },
 
@@ -395,5 +438,63 @@ class _EntryScreenState extends State<EntryScreen> {
     );
   }
 
+  Future SubmitAlert(BuildContext context) async {
+    return await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),),
+        title: const Text('Alert!',style: TextStyle(fontSize: 14),),
+        content: Text(companyDetailsController.saveButton==RequestConstant.RESUBMIT  ? 'Are you sure to Re-Submit?' :
+        'Are you sure to Submit?'),
+        actions:[
+          Container(
+            margin: const EdgeInsets.only(left: 20,right: 20),
+            child: IntrinsicHeight(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: TextButton(onPressed: (){
+                      Navigator.pop(context);
+                    }, child: const Text("Cancel", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: RequestConstant.Lable_Font_SIZE))),
+                  ),
+                  VerticalDivider(
+                    color: Colors.grey.shade400,
+                    width: 5,
+                    thickness: 2,
+                    indent: 15,
+                    endIndent: 15,
+                  ),
+
+                  Expanded(
+                    child: StatefulBuilder(
+                      builder: (context, setState) => TextButton(
+                        onPressed:  () async {
+                            // if (await BaseUtitiles.checkNetworkAndShowLoader(context)) {
+                              await companyDetailsController.SaveButton_CompanyDetails(
+                                context, companyDetailsController.companyId != 0 ? companyDetailsController.companyId : 0,
+                              );
+                            // }
+                        },
+                        child: Text(
+                          companyDetailsController.saveButton.value,
+                          style: TextStyle(
+                            color: AppColors.primary, // Change color when button is disabled
+                            fontWeight: FontWeight.bold,
+                            fontSize: RequestConstant.Lable_Font_SIZE,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
 }

@@ -142,7 +142,7 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
 
                 return ListView.builder(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
+                    horizontal: 4,
                     vertical: 10,
                   ),
                   itemCount: companyDetailsController.CompanyDetailsList.length,
@@ -208,8 +208,8 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
     return Container(
       margin: const EdgeInsets.only(
         bottom: 10,
-        left: 16,
-        right: 16,
+        left: 10,
+        right: 10,
       ),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -291,7 +291,21 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
               InkWell(
                 borderRadius: BorderRadius.circular(10),
                 onTap: () {
-                  // edit
+                  companyDetailsController
+                      .saveButton
+                      .value =
+                      RequestConstant
+                          .RESUBMIT;
+                  FocusScope.of(
+                      context)
+                      .unfocus();
+                  companyDetailsController.CompanyDetails_List_EditApi(
+                      companyDetailsController
+                          .CompanyDetailsList
+                          .value[
+                      index]
+                          .id,widget.title,
+                      context);
                 },
                 child: Container(
                   width: 34,
