@@ -1,33 +1,33 @@
 // To parse this JSON data, do
 //
-//     final receiptDetailsEditResponse = receiptDetailsEditResponseFromJson(jsonString);
+//     final receiptDetailsEditesponse = receiptDetailsEditesponseFromJson(jsonString);
 
 import 'dart:convert';
 
-ReceiptDetailsGetAllResponse receiptDetailsGetAllResponseFromJson(String str) => ReceiptDetailsGetAllResponse.fromJson(json.decode(str));
+ReceiptDetailsEditesponse receiptDetailsEditesponseFromJson(String str) => ReceiptDetailsEditesponse.fromJson(json.decode(str));
 
-String receiptDetailsGetAllResponseToJson(ReceiptDetailsGetAllResponse data) => json.encode(data.toJson());
+String receiptDetailsEditesponseToJson(ReceiptDetailsEditesponse data) => json.encode(data.toJson());
 
-class ReceiptDetailsGetAllResponse {
+class ReceiptDetailsEditesponse {
   bool? success;
-  List<Result>? result;
+  Result? result;
   String? message;
 
-  ReceiptDetailsGetAllResponse({
+  ReceiptDetailsEditesponse({
     this.success,
     this.result,
     this.message
   });
 
-  factory ReceiptDetailsGetAllResponse.fromJson(Map<String, dynamic> json) => ReceiptDetailsGetAllResponse(
+  factory ReceiptDetailsEditesponse.fromJson(Map<String, dynamic> json) => ReceiptDetailsEditesponse(
     success: json["success"],
-    result: json["result"] == null ? [] : List<Result>.from(json["result"]!.map((x) => Result.fromJson(x))),
+    result: json["result"] == null ? null : Result.fromJson(json["result"]),
     message: json["message"]
   );
 
   Map<String, dynamic> toJson() => {
     "success": success,
-    "result": result == null ? [] : List<dynamic>.from(result!.map((x) => x.toJson())),
+    "result": result?.toJson(),
     "message": message
   };
 }

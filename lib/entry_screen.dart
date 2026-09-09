@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:veenuscashbook/controller/billDetails_controller.dart';
 import 'package:veenuscashbook/controller/common_controller.dart';
 import 'package:veenuscashbook/controller/companyDetails_controller.dart';
 import 'package:veenuscashbook/controller/receiptDetails_controller.dart';
@@ -29,7 +30,8 @@ class _EntryScreenState extends State<EntryScreen> {
   CompanyDetailsController companyDetailsController = Get.put(CompanyDetailsController());
   SalesDetailController salesDetailController = Get.put(SalesDetailController());
   ReceiptDetailsController receiptDetailsController = Get.put(ReceiptDetailsController());
-  CommmonController commmonController = Get.put(CommmonController());
+  BillDetailsController billDetailsController = Get.put(BillDetailsController());
+  CommonController commmonController = Get.put(CommonController());
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -42,98 +44,176 @@ class _EntryScreenState extends State<EntryScreen> {
         companyDetailsController.getDropDownCityValues();
         commmonController.getDropDownCompanyValues();
       });
+      if (widget.title == "Company Details") {
+        if(companyDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
+          companyDetailsController.Company_EditListApiValue.forEach((element) {
+            companyDetailsController.companyId=element.id!;
+            companyDetailsController.companyNameController.text = element.companyName!;
+            companyDetailsController.AdressController.text = element.companyAddress!;
+            companyDetailsController.ContactNoController.text = element.contactNo!;
+            companyDetailsController.selectedCity = element.city!;
+            companyDetailsController.emailController.text = element.email!;
+            companyDetailsController.GSTNoController.text = element.gstNo!;
+          });
+        }
 
-      if(companyDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
-        companyDetailsController.Company_EditListApiValue.forEach((element) {
-          companyDetailsController.companyId=element.id!;
-          companyDetailsController.companyNameController.text = element.companyName!;
-          companyDetailsController.AdressController.text = element.companyAddress!;
-          companyDetailsController.ContactNoController.text = element.contactNo!;
-          companyDetailsController.selectedCity = element.city!;
-          companyDetailsController.emailController.text = element.email!;
-          companyDetailsController.GSTNoController.text = element.gstNo!;
-        });
+        else if(companyDetailsController.saveButton.value ==RequestConstant.SUBMIT){
+          companyDetailsController.companyNameController.text = "";
+          companyDetailsController.AdressController.text = "";
+          companyDetailsController.ContactNoController.text = "";
+          companyDetailsController.selectedCity = "--SELECT--";
+          companyDetailsController.emailController.text = "";
+          companyDetailsController.GSTNoController.text = "";
+        }
       }
 
-      else if(companyDetailsController.saveButton.value ==RequestConstant.SUBMIT){
-        companyDetailsController.companyNameController.text = "";
-        companyDetailsController.AdressController.text = "";
-        companyDetailsController.ContactNoController.text = "";
-        companyDetailsController.selectedCity = "--SELECT--";
-        companyDetailsController.emailController.text = "";
-        companyDetailsController.GSTNoController.text = "";
+      else if (widget.title == "Sales Details") {
+        if(salesDetailController.saveButton.value == RequestConstant.RESUBMIT) {
+          salesDetailController.Sales_EditListApiValue.forEach((element) {
+            salesDetailController.salesId=element.id!;
+            salesDetailController.SalesNoController.text = element.salesNo;
+            salesDetailController.selectedCompanyId = element.companyId;
+            salesDetailController.selectedCompany = element.companyName;
+            salesDetailController.SalesDate.text = DateFormat('dd/MM/yyyy').format(
+                DateFormat('yyyy-MM-dd').parse(element.date));
+            salesDetailController.erpCostController.text = element.erpCost.toString();
+            salesDetailController.cashPortionController.text = element.cashPortion.toString();
+            salesDetailController.accPortionController.text = element.accountPortion.toString();
+            salesDetailController.gstController.text = element.gst.toString();
+            salesDetailController.tdsController.text = element.tds.toString();
+            salesDetailController.netAmountController.text = element.netAmount.toString();
+          });
+        }
+
+        else if(salesDetailController.saveButton.value ==RequestConstant.SUBMIT){
+          salesDetailController.salesId=0;
+          await commmonController.AutoYearWiseNo("SALES");
+          salesDetailController.SalesNoController.text = commmonController.Sales_autoYrsWise.value;
+          salesDetailController.selectedCompanyId = 0;
+          salesDetailController.selectedCompany = "--SELECT--";
+          salesDetailController.SalesDate.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
+          salesDetailController.erpCostController.text = "0.0";
+          salesDetailController.cashPortionController.text = "0.0";
+          salesDetailController.accPortionController.text = "0.0";
+          salesDetailController.gstController.text = "0.0";
+          salesDetailController.tdsController.text = "0.0";
+          salesDetailController.netAmountController.text = "0.0";
+        }
       }
 
-      if(salesDetailController.saveButton.value == RequestConstant.RESUBMIT) {
-        salesDetailController.Sales_EditListApiValue.forEach((element) {
-          salesDetailController.salesId=element.id!;
-          salesDetailController.SalesNoController.text = element.salesNo;
-          salesDetailController.selectedCompanyId = element.companyId;
-          salesDetailController.selectedCompany = element.companyName;
-          salesDetailController.SalesDate.text = DateFormat('dd/MM/yyyy').format(
-              DateFormat('yyyy-MM-dd').parse(element.date));
-          salesDetailController.erpCostController.text = element.erpCost.toString();
-          salesDetailController.cashPortionController.text = element.cashPortion.toString();
-          salesDetailController.accPortionController.text = element.accountPortion.toString();
-          salesDetailController.gstController.text = element.gst.toString();
-          salesDetailController.tdsController.text = element.tds.toString();
-          salesDetailController.netAmountController.text = element.netAmount.toString();
-        });
+      else if (widget.title == "Receipt Details") {
+        if(receiptDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
+          receiptDetailsController.Receipt_EditListApiValue.forEach((element) {
+            receiptDetailsController.receiptId=element.id!;
+            receiptDetailsController.ReceiptNoController.text = element.receiptNo;
+            receiptDetailsController.selectedCompanyId = element.companyId;
+            receiptDetailsController.selectedCompany = element.companyName;
+            receiptDetailsController.ReceiptDate.text = DateFormat('dd/MM/yyyy').format(
+                DateFormat('yyyy-MM-dd').parse(element.date));
+            receiptDetailsController.receiptCostController.text = element.receivedAmount.toString();
+            receiptDetailsController.cashPortionController.text = element.cashPortion.toString();
+            receiptDetailsController.accPortionController.text = element.bankPortion.toString();
+            receiptDetailsController.tdsController.text = element.tds.toString();
+          });
+        }
+
+        else if(receiptDetailsController.saveButton.value ==RequestConstant.SUBMIT){
+          receiptDetailsController.receiptId=0;
+          await commmonController.AutoYearWiseNo("RECEIPT");
+          receiptDetailsController.ReceiptNoController.text = commmonController.Receipt_autoYrsWise.value;
+          receiptDetailsController.selectedCompanyId = 0;
+          receiptDetailsController.selectedCompany = "--SELECT--";
+          receiptDetailsController.ReceiptDate.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
+          receiptDetailsController.receiptCostController.text = "0.0";
+          receiptDetailsController.cashPortionController.text = "0.0";
+          receiptDetailsController.accPortionController.text = "0.0";
+          receiptDetailsController.tdsController.text = "0.0";
+        }
       }
 
-      else if(salesDetailController.saveButton.value ==RequestConstant.SUBMIT){
-        salesDetailController.salesId=0;
-        await commmonController.AutoYearWiseNo("SALES");
-        salesDetailController.SalesNoController.text = commmonController.Sales_autoYrsWise.value;
-        salesDetailController.selectedCompanyId = 0;
-        salesDetailController.selectedCompany = "--SELECT--";
-        salesDetailController.SalesDate.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
-        salesDetailController.erpCostController.text = "0.0";
-        salesDetailController.cashPortionController.text = "0.0";
-        salesDetailController.accPortionController.text = "0.0";
-        salesDetailController.gstController.text = "0.0";
-        salesDetailController.tdsController.text = "0.0";
-        salesDetailController.netAmountController.text = "0.0";
-      }
+      salesDetailController.cashPortionController.addListener(() {
+        commmonController.calculateErpCost(
+          salesDetailController.cashPortionController,
+          salesDetailController.accPortionController,
+          salesDetailController.erpCostController,
+        );
+      });
 
-      if(receiptDetailsController.saveButton.value ==RequestConstant.SUBMIT){
-        receiptDetailsController.receiptId=0;
-        await commmonController.AutoYearWiseNo("RECEIPT");
-        receiptDetailsController.ReceiptNoController.text = commmonController.Sales_autoYrsWise.value;
-        receiptDetailsController.selectedCompanyId = 0;
-        receiptDetailsController.selectedCompany = "--SELECT--";
-        receiptDetailsController.ReceiptDate.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
-        receiptDetailsController.receiptCostController.text = "0.0";
-        receiptDetailsController.cashPortionController.text = "0.0";
-        receiptDetailsController.accPortionController.text = "0.0";
-        receiptDetailsController.tdsController.text = "0.0";
-      }
+      salesDetailController.accPortionController.addListener(() {
+        commmonController.calculateErpCost(
+          salesDetailController.cashPortionController,
+          salesDetailController.accPortionController,
+          salesDetailController.erpCostController,
+        );
+      });
+
+      receiptDetailsController.cashPortionController.addListener(() {
+        commmonController.calculateErpCost(
+          receiptDetailsController.cashPortionController,
+          receiptDetailsController.accPortionController,
+          receiptDetailsController.receiptCostController,
+        );
+      });
+
+      receiptDetailsController.accPortionController.addListener(() {
+        commmonController.calculateErpCost(
+          receiptDetailsController.cashPortionController,
+          receiptDetailsController.accPortionController,
+          receiptDetailsController.receiptCostController,
+        );
+      });
+
+      salesDetailController.accPortionController
+          .addListener(commmonController.calculateGst);
+
+      // TDS CALCULATION
+
+      salesDetailController.accPortionController.addListener(() {
+        commmonController.calculateTds(
+          salesDetailController.accPortionController,
+          salesDetailController.tdsController,
+        );
+      });
+
+      receiptDetailsController.accPortionController.addListener(() {
+        commmonController.calculateTds(
+          receiptDetailsController.accPortionController,
+          receiptDetailsController.tdsController,
+        );
+      });
 
       salesDetailController.cashPortionController
-          .addListener(salesDetailController.calculateErpCost);
-      salesDetailController.accPortionController
-          .addListener(salesDetailController.calculateErpCost);
+          .addListener(commmonController.calculateNetAmount);
 
       salesDetailController.accPortionController
-          .addListener(salesDetailController.calculateGst);
-
-      salesDetailController.accPortionController
-          .addListener(salesDetailController.calculateTds);
-
-      salesDetailController.cashPortionController
-          .addListener(salesDetailController.calculateNetAmount);
-
-      salesDetailController.accPortionController
-          .addListener(salesDetailController.calculateNetAmount);
+          .addListener(commmonController.calculateNetAmount);
 
       salesDetailController.gstController
-          .addListener(salesDetailController.calculateNetAmount);
+          .addListener(commmonController.calculateNetAmount);
 
       // Calculate initial value
-      salesDetailController.calculateErpCost();
-      salesDetailController.calculateGst();
-      salesDetailController.calculateTds();
-      salesDetailController.calculateNetAmount();
+      commmonController.calculateErpCost(
+        salesDetailController.cashPortionController,
+        salesDetailController.accPortionController,
+        salesDetailController.erpCostController,
+      );
+      commmonController.calculateErpCost(
+        receiptDetailsController.cashPortionController,
+        receiptDetailsController.accPortionController,
+        receiptDetailsController.receiptCostController,
+      );
+      commmonController.calculateGst();
+      commmonController.calculateTds(
+        salesDetailController.accPortionController,
+        salesDetailController.tdsController,
+      );
+
+      // Initial calculation - Receipt
+      commmonController.calculateTds(
+        receiptDetailsController.accPortionController,
+        receiptDetailsController.tdsController,
+      );
+      commmonController.calculateNetAmount();
     });
 
 
@@ -142,25 +222,34 @@ class _EntryScreenState extends State<EntryScreen> {
   @override
   void dispose() {
     salesDetailController.cashPortionController
-        .removeListener(salesDetailController.calculateErpCost);
+        .removeListener(commmonController.salesERPListener);
 
     salesDetailController.accPortionController
-        .removeListener(salesDetailController.calculateErpCost);
+        .removeListener(commmonController.salesERPListener);
+
+    receiptDetailsController.cashPortionController
+        .removeListener(commmonController.receiptERPListener);
+
+    receiptDetailsController.accPortionController
+        .removeListener(commmonController.receiptERPListener);
 
     salesDetailController.accPortionController
-        .removeListener(salesDetailController.calculateGst);
+        .removeListener(commmonController.calculateGst);
 
     salesDetailController.accPortionController
-        .removeListener(salesDetailController.calculateTds);
+        .removeListener(commmonController.salesTdsListener);
+
+    receiptDetailsController.accPortionController
+        .removeListener(commmonController.receiptTdsListener);
 
     salesDetailController.cashPortionController
-        .removeListener(salesDetailController.calculateNetAmount);
+        .removeListener(commmonController.calculateNetAmount);
 
     salesDetailController.accPortionController
-        .removeListener(salesDetailController.calculateNetAmount);
+        .removeListener(commmonController.calculateNetAmount);
 
     salesDetailController.gstController
-        .removeListener(salesDetailController.calculateNetAmount);
+        .removeListener(commmonController.calculateNetAmount);
     super.dispose();
   }
 
@@ -266,24 +355,28 @@ class _EntryScreenState extends State<EntryScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    if (widget.title == "Sales Details" || widget.title == "Receipt Details" ) ...[
+                    if (widget.title == "Sales Details" || widget.title == "Receipt Details" || widget.title == "Bill Details") ...[
                       _entryField(
                         label: 'Date',
                         hint: '',
                         icon: Icons.calendar_month_outlined,
-                        controller: widget.title == "Sales Details" ? salesDetailController.SalesDate : receiptDetailsController.ReceiptDate,
+                        controller: widget.title == "Sales Details" ? salesDetailController.SalesDate :
+                        widget.title == "Receipt Details" ? receiptDetailsController.ReceiptDate : billDetailsController.BillDate,
                         isDateField: true,
                       ),
                       const SizedBox(height: 16),
 
                       _entryField(
-                        label: widget.title == "Sales Details" ? 'ERP Cost' : 'Receipt Amount',
+                        label: widget.title == "Sales Details" ? 'ERP Cost' : widget.title == "Receipt Details" ? 'Receipt Amount' : 'Bill Amount',
                         hint: '0.0',
                         icon: Icons.numbers,
-                        controller: widget.title == "Sales Details" ? salesDetailController.erpCostController : receiptDetailsController.receiptCostController,
+                        controller: widget.title == "Sales Details" ? salesDetailController.erpCostController :
+                        widget.title == "Receipt Details" ? receiptDetailsController.receiptCostController : billDetailsController.billCostController,
                         readOnly: true
                       ),
                       const SizedBox(height: 16),
+                      ],
+                    if (widget.title == "Sales Details" || widget.title == "Receipt Details" ) ...[
                       _entryField(
                         label: 'Cash portion',
                         hint: 'Enter cash portion',
@@ -319,6 +412,7 @@ class _EntryScreenState extends State<EntryScreen> {
                           }
                         },
                       ),
+                      const SizedBox(height: 16),
                     ],
                     if (widget.title == "Sales Details") ...[
                       const SizedBox(height: 16),
@@ -427,7 +521,7 @@ class _EntryScreenState extends State<EntryScreen> {
                     ),
                   ),
                   child: Text(
-                    widget.title == "Company Details" ? companyDetailsController.saveButton.value : salesDetailController.saveButton.value,
+                    widget.title == "Company Details" ? companyDetailsController.saveButton.value : widget.title == "Sales Details" ? salesDetailController.saveButton.value : receiptDetailsController.saveButton.value,
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 15,
@@ -569,9 +663,9 @@ class _EntryScreenState extends State<EntryScreen> {
 
               if (isSalesDetails || isReceiptDetails) {
                 return DropdownButtonFormField2<int>(
-                  value: salesDetailController.selectedCompanyId == 0
+                  value: isSalesDetails ? salesDetailController.selectedCompanyId == 0
                       ? null
-                      : salesDetailController.selectedCompanyId,
+                      : salesDetailController.selectedCompanyId : receiptDetailsController.selectedCompanyId == 0 ? null : receiptDetailsController.selectedCompanyId,
 
                   isExpanded: true,
 
@@ -653,11 +747,19 @@ class _EntryScreenState extends State<EntryScreen> {
                     );
 
                     setState(() {
-                      salesDetailController.selectedCompanyId =
-                          value ?? 0;
+                      if(isSalesDetails){
+                        salesDetailController.selectedCompanyId =
+                            value ?? 0;
 
-                      salesDetailController.selectedCompany =
-                          selected.companyName ?? '';
+                        salesDetailController.selectedCompany =
+                            selected.companyName ?? '';
+                      }
+                      else
+                        {
+                          receiptDetailsController.selectedCompanyId = value ?? 0;
+                          receiptDetailsController.selectedCompany = selected.companyName ?? '';
+                        }
+
                     });
                   },
 
@@ -894,7 +996,7 @@ class _EntryScreenState extends State<EntryScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),),
         title: const Text('Alert!',style: TextStyle(fontSize: 20,fontWeight: FontWeight.w500),),
-        content: Text(companyDetailsController.saveButton==RequestConstant.RESUBMIT  || salesDetailController.saveButton.value == RequestConstant.RESUBMIT ? 'Are you sure to Re-Submit?' :
+        content: Text(companyDetailsController.saveButton==RequestConstant.RESUBMIT  || salesDetailController.saveButton.value == RequestConstant.RESUBMIT || receiptDetailsController.saveButton.value == RequestConstant.RESUBMIT ? 'Are you sure to Re-Submit?' :
         'Are you sure to Submit?'),
         actions:[
           Container(
@@ -924,15 +1026,20 @@ class _EntryScreenState extends State<EntryScreen> {
                               if(widget.title == "Company Details"){
                               await companyDetailsController.SaveButton_CompanyDetails(
                                 context, companyDetailsController.companyId != 0 ? companyDetailsController.companyId : 0,
-                              );}
-                              else {
+                              );
+                              }
+                              else if(widget.title == "Sales Details") {
                                   await salesDetailController.SaveButton_SalesDetails(
                                       context, salesDetailController.salesId != 0 ? salesDetailController.salesId : 0,);
                                 }
+                              else if(widget.title == "Receipt Details"){
+                                await receiptDetailsController.SaveButton_ReceiptDetails(
+                                context, receiptDetailsController.receiptId != 0 ? receiptDetailsController.receiptId : 0,);
+                              }
                             }
                         },
                         child: Text(
-                          widget.title == "Company Details" ? companyDetailsController.saveButton.value : salesDetailController.saveButton.value,
+                          widget.title == "Company Details" ? companyDetailsController.saveButton.value : widget.title == "Sales Details" ? salesDetailController.saveButton.value : receiptDetailsController.saveButton.value,
                           style: TextStyle(
                             color: AppColors.primary, // Change color when button is disabled
                             fontWeight: FontWeight.bold,

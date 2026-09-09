@@ -1,7 +1,10 @@
 import 'dart:convert';
 
+import 'package:fluttertoast/fluttertoast.dart';
+
 import '../apimanager/apimanager.dart';
 import '../utilities/apiconstant.dart';
+import '../utilities/requestconstant.dart';
 
 class CommonProvider{
 
@@ -21,6 +24,38 @@ class CommonProvider{
     } catch (error) {
       print("Error == $error");
       return null;
+    }
+  }
+
+  static Future<bool> Details_List_deleteAPI(int reqId,String title) async {
+    var response;
+    try {
+      if(title == "Sales"){
+       response = await ApiManager.deleteAPICall(
+          "${ApiConstant.SALESDETAILS_DELETE}?salesId=$reqId");}
+      else
+        {
+          response = await ApiManager.deleteAPICall(
+              "${ApiConstant.RECEIPTDETAILS_DELETE}?receiptId=$reqId");
+        }
+
+      final Map<String, dynamic> decoded = jsonDecode(response);
+
+
+      bool isSuccess = decoded["success"] == true;
+
+      final message = decoded["message"] ??
+          (isSuccess
+              ? "Deleted successfully"
+              : RequestConstant.NETWORKERROR);
+
+      Fluttertoast.showToast(msg: message);
+
+      return isSuccess;
+    } catch (error) {
+      print("Delete API Error: $error");
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+      return false;
     }
   }
 }

@@ -55,28 +55,4 @@ class SalesDetailsProvider{
     }
   }
 
-  static Future<bool> SalesDetails_List_deleteAPI(int reqId) async {
-    try {
-      final response = await ApiManager.deleteAPICall(
-          "${ApiConstant.SALESDETAILS_DELETE}?salesId=$reqId");
-
-      final Map<String, dynamic> decoded = jsonDecode(response);
-
-
-      bool isSuccess = decoded["success"] == true;
-
-      final message = decoded["message"] ??
-          (isSuccess
-              ? "Deleted successfully"
-              : RequestConstant.NETWORKERROR);
-
-      Fluttertoast.showToast(msg: message);
-
-      return isSuccess;
-    } catch (error) {
-      print("Delete API Error: $error");
-      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
-      return false;
-    }
-  }
 }

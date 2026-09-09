@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:veenuscashbook/controller/billDetails_controller.dart';
+import 'package:veenuscashbook/controller/common_controller.dart';
 import 'package:veenuscashbook/controller/receiptDetails_controller.dart';
 import 'package:veenuscashbook/controller/salesDetails_controller.dart';
 import 'package:veenuscashbook/utilities/requestconstant.dart';
@@ -23,6 +25,8 @@ class ListScreen extends StatefulWidget {
 class _ListScreenState extends State<ListScreen> {
   SalesDetailController salesDetailController = Get.put(SalesDetailController());
   ReceiptDetailsController receiptDetailsController = Get.put(ReceiptDetailsController());
+  BillDetailsController billDetailsController = Get.put(BillDetailsController());
+  CommonController commonController = Get.put(CommonController());
   int? expandedIndex;
 
   @override
@@ -31,6 +35,7 @@ class _ListScreenState extends State<ListScreen> {
     super.initState();
     salesDetailController.getSalesDetails_List();
     receiptDetailsController.getReceiptDetails_List();
+    billDetailsController.getBillDetails_List();
   }
 
   @override
@@ -112,15 +117,17 @@ class _ListScreenState extends State<ListScreen> {
           // Summary
           Obx(() {
             final int totalEntries =
-                widget.title == "Sales Details" ? salesDetailController.SalesDetailsList.length : receiptDetailsController.ReceiptDetailsList.length;
+                widget.title == "Sales Details" ? salesDetailController.SalesDetailsList.length : widget.title == "Receipt Details" ? receiptDetailsController.ReceiptDetailsList.length : billDetailsController.BillDetailsList.length;
 
             final double totalAmount =
             widget.title == "Sales Details" ? salesDetailController.SalesDetailsList.fold<double>(
               0.0,
                   (sum, item) => sum + (item.erpCost ?? 0),
-            ) :receiptDetailsController.ReceiptDetailsList.fold<double>(
+            ) :widget.title == "Receipt Details" ? receiptDetailsController.ReceiptDetailsList.fold<double>(
               0.0,
-                  (sum, item) => sum + (item.receivedAmount ?? 0) ) ;
+                  (sum, item) => sum + (item.receivedAmount ?? 0) ) : billDetailsController.BillDetailsList.fold<double>(
+                0.0,
+                    (sum, item) => sum + (item.billAmount ?? 0) ) ;
 
             return Padding(
               padding: const EdgeInsets.symmetric(
@@ -205,7 +212,7 @@ class _ListScreenState extends State<ListScreen> {
                   18,
                   90,
                 ),
-                itemCount: widget.title == "Sales Details" ? salesDetailController.SalesDetailsList.length : receiptDetailsController.ReceiptDetailsList.length,
+                itemCount: widget.title == "Sales Details" ? salesDetailController.SalesDetailsList.length : widget.title == "Receipt Details" ? receiptDetailsController.ReceiptDetailsList.length : billDetailsController.BillDetailsList.length,
                 itemBuilder: (context, index) {
                   return _listItem(index);
                 },
@@ -219,7 +226,9 @@ class _ListScreenState extends State<ListScreen> {
         backgroundColor: AppColors.primary,
         elevation: 4,
         onPressed: () {
-          widget.title == "Sales Details" ? salesDetailController.saveButton.value = RequestConstant.SUBMIT : receiptDetailsController.saveButton.value = RequestConstant.SUBMIT;
+          widget.title == "Sales Details" ? salesDetailController.saveButton.value = RequestConstant.SUBMIT :
+          widget.title == "Receipt Details" ?
+          receiptDetailsController.saveButton.value = RequestConstant.SUBMIT : billDetailsController.saveButton.value = RequestConstant.SUBMIT;
           Navigator.push(context, MaterialPageRoute(builder: (context)=>EntryScreen(title: widget.title)));
         },
         child: const Icon(
@@ -236,6 +245,7 @@ class _ListScreenState extends State<ListScreen> {
 
     final sales = salesDetailController.SalesDetailsList[index];
     final receipt = receiptDetailsController.ReceiptDetailsList[index];
+    final bill = billDetailsController.BillDetailsList[index];
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -284,7 +294,7 @@ class _ListScreenState extends State<ListScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        _getDay(widget.title == "Sales Details" ? sales.date : receipt.date),
+                        _getDay(widget.title == "Sales Details" ? sales.date : widget.title == "Receipt Details" ? receipt.date : bill.date),
                         style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 17,
@@ -293,7 +303,7 @@ class _ListScreenState extends State<ListScreen> {
                         ),
                       ),
                       Text(
-                        _getMonth(widget.title == "Sales Details" ? sales.date : receipt.date),
+                        _getMonth(widget.title == "Sales Details" ? sales.date : widget.title == "Receipt Details" ? receipt.date : bill.date),
                         style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 9,
@@ -315,7 +325,7 @@ class _ListScreenState extends State<ListScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.title == "Sales Details" ? sales.companyName ?? '' : receipt.companyName ?? '',
+                        widget.title == "Sales Details" ? sales.companyName ?? '' : widget.title == "Receipt Details" ? receipt.companyName ?? '' : bill.companyName ?? '',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -329,7 +339,8 @@ class _ListScreenState extends State<ListScreen> {
                       const SizedBox(height: 4),
 
                       Text(
-                        widget.title == "Sales Details" ? "SalesNo : ${sales.salesNo ?? ''}" : "ReceiptNo : ${receipt.receiptNo ?? ''}",
+                        widget.title == "Sales Details" ? "SalesNo : ${sales.salesNo ?? ''}" :
+                        widget.title == "Receipt Details" ? "ReceiptNo : ${receipt.receiptNo ?? ''}" : "BillNo : ${bill.billNo ?? ''}",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -346,7 +357,7 @@ class _ListScreenState extends State<ListScreen> {
                 // ERP COST
                 // =========================
                 Text(
-                  widget.title == "Sales Details" ? '₹ ${sales.erpCost ?? 0}' : '₹ ${receipt.receivedAmount ?? 0}',
+                  widget.title == "Sales Details" ? '₹ ${sales.erpCost ?? 0}' : widget.title == "Receipt Details" ? '₹ ${receipt.receivedAmount ?? 0}' : '₹ ${bill.billAmount ?? 0}',
                   style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 14,
@@ -417,17 +428,25 @@ class _ListScreenState extends State<ListScreen> {
                   InkWell(
                     borderRadius: BorderRadius.circular(10),
                     onTap: () {
-                      salesDetailController
-                          .saveButton
-                          .value =
-                          RequestConstant
-                              .RESUBMIT;
                       FocusScope.of(
                           context)
                           .unfocus();
+                      widget.title == "Sales Details" ?
                       salesDetailController.SalesDetails_List_EditApi(
                           salesDetailController
                               .SalesDetailsList
+                              .value[
+                          index]
+                              .id,widget.title,
+                          context) : widget.title == "Receipt Details" ? receiptDetailsController.ReceiptDetails_List_EditApi(
+                          receiptDetailsController
+                              .ReceiptDetailsList
+                              .value[
+                          index]
+                              .id,widget.title,
+                          context) : billDetailsController.BillDetails_List_EditApi(
+                          billDetailsController
+                              .BillDetailsList
                               .value[
                           index]
                               .id,widget.title,
@@ -472,9 +491,9 @@ class _ListScreenState extends State<ListScreen> {
                   InkWell(
                     borderRadius: BorderRadius.circular(10),
                     onTap: () async {
-                      await salesDetailController.DeleteAlert(
+                      await commonController.DeleteAlert(
                           context,
-                          index);
+                          index,widget.title);
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(

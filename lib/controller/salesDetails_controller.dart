@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:veenuscashbook/provider/common_provider.dart';
 import 'package:veenuscashbook/provider/salesDetails_provider.dart';
 
 import '../entry_screen.dart';
@@ -92,8 +93,6 @@ class SalesDetailController extends GetxController{
   }
 
 
-
-
   Future SalesDetails_List_EditApi(int expenseId,String MenuName, BuildContext context) async {
     final value =
     await SalesDetailsProvider.SalesDetails_List_editAPI(expenseId);
@@ -114,118 +113,9 @@ class SalesDetailController extends GetxController{
     }
   }
 
-  void calculateErpCost() {
-    final double cash =
-        double.tryParse(
-          cashPortionController.text.trim(),
-        ) ??
-            0;
-
-    final double ac =
-        double.tryParse(
-          accPortionController.text.trim(),
-        ) ??
-            0;
-
-    final double total = cash + ac;
-
-    erpCostController.text =
-        total.toStringAsFixed(2);
-  }
-
-  void calculateGst() {
-    final double acPortion =
-        double.tryParse(accPortionController.text.trim()) ?? 0;
-
-    final double gst = acPortion * 18 / 100;
-
-    gstController.text = gst.toStringAsFixed(2);
-  }
-
-  void calculateTds() {
-    final double acPortion =
-        double.tryParse(accPortionController.text.trim()) ?? 0;
-
-    final double tds = acPortion * 10 / 100;
-
-    tdsController.text = tds.toStringAsFixed(2);
-  }
-
-  void calculateNetAmount() {
-    final double cash =
-        double.tryParse(cashPortionController.text.trim()) ?? 0;
-
-    final double acc =
-        double.tryParse(accPortionController.text.trim()) ?? 0;
-
-    final double gst =
-        double.tryParse(gstController.text.trim()) ?? 0;
-
-    final double netAmount = cash + acc + gst;
-
-    netAmountController.text = netAmount.toStringAsFixed(2);
-  }
 
   Future<bool> SalesDetails_List_DeleteApi(int reqId) async {
-    return SalesDetailsProvider.SalesDetails_List_deleteAPI(reqId);
-  }
-
-  Future DeleteAlert(BuildContext context, int index) async {
-    return await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Alert!'),
-        content: const Text('Do you want to Delete?'),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(left: 20, right: 20),
-            child: IntrinsicHeight(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Text("Cancel",
-                            style: TextStyle(
-                                color: Colors.grey,
-                                fontWeight: FontWeight.bold,
-                                fontSize: RequestConstant.Lable_Font_SIZE))),
-                  ),
-                  VerticalDivider(
-                    color: Colors.grey.shade400, //color of divider
-                    width: 5, //width space of divider
-                    thickness: 2, //thickness of divier line
-                    indent: 15, //Spacing at the top of divider.
-                    endIndent: 15, //Spacing at the bottom of divider.
-                  ),
-                  Expanded(
-                    child: TextButton(
-                        onPressed: () async {
-                          bool result = await SalesDetails_List_DeleteApi(SalesDetailsList.value[index].id);
-                          if (result) {
-                            SalesDetailsList.removeAt(index);
-                            Navigator.of(context).pop();
-                          }
-                          else{
-                            Navigator.of(context).pop();
-                          }
-                        },
-                        child: const Text("Delete",
-                            style: TextStyle(
-                                color: Colors.red,
-                                fontWeight: FontWeight.bold,
-                                fontSize: RequestConstant.Lable_Font_SIZE))),
-                  )
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    return CommonProvider.Details_List_deleteAPI(reqId,"Sales");
   }
 
 }
