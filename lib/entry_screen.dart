@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
+import 'package:veenuscashbook/controller/common_controller.dart';
 import 'package:veenuscashbook/controller/companyDetails_controller.dart';
+import 'package:veenuscashbook/controller/receiptDetails_controller.dart';
 import 'package:veenuscashbook/controller/salesDetails_controller.dart';
+import 'package:veenuscashbook/utilities/baseutitiles.dart';
 import 'package:veenuscashbook/utilities/requestconstant.dart';
 
 import 'app_theme.dart';
+import 'package:intl/intl.dart';
 
 class EntryScreen extends StatefulWidget {
   final String title;
@@ -24,12 +28,20 @@ class EntryScreen extends StatefulWidget {
 class _EntryScreenState extends State<EntryScreen> {
   CompanyDetailsController companyDetailsController = Get.put(CompanyDetailsController());
   SalesDetailController salesDetailController = Get.put(SalesDetailController());
+  ReceiptDetailsController receiptDetailsController = Get.put(ReceiptDetailsController());
+  CommmonController commmonController = Get.put(CommmonController());
+
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
     var duration = const Duration(seconds:0);
     Future.delayed(duration,() async {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        companyDetailsController.getDropDownCityValues();
+        commmonController.getDropDownCompanyValues();
+      });
 
       if(companyDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
         companyDetailsController.Company_EditListApiValue.forEach((element) {
@@ -43,7 +55,7 @@ class _EntryScreenState extends State<EntryScreen> {
         });
       }
 
-      if(companyDetailsController.saveButton.value ==RequestConstant.SUBMIT){
+      else if(companyDetailsController.saveButton.value ==RequestConstant.SUBMIT){
         companyDetailsController.companyNameController.text = "";
         companyDetailsController.AdressController.text = "";
         companyDetailsController.ContactNoController.text = "";
@@ -51,10 +63,105 @@ class _EntryScreenState extends State<EntryScreen> {
         companyDetailsController.emailController.text = "";
         companyDetailsController.GSTNoController.text = "";
       }
+
+      if(salesDetailController.saveButton.value == RequestConstant.RESUBMIT) {
+        salesDetailController.Sales_EditListApiValue.forEach((element) {
+          salesDetailController.salesId=element.id!;
+          salesDetailController.SalesNoController.text = element.salesNo;
+          salesDetailController.selectedCompanyId = element.companyId;
+          salesDetailController.selectedCompany = element.companyName;
+          salesDetailController.SalesDate.text = DateFormat('dd/MM/yyyy').format(
+              DateFormat('yyyy-MM-dd').parse(element.date));
+          salesDetailController.erpCostController.text = element.erpCost.toString();
+          salesDetailController.cashPortionController.text = element.cashPortion.toString();
+          salesDetailController.accPortionController.text = element.accountPortion.toString();
+          salesDetailController.gstController.text = element.gst.toString();
+          salesDetailController.tdsController.text = element.tds.toString();
+          salesDetailController.netAmountController.text = element.netAmount.toString();
+        });
+      }
+
+      else if(salesDetailController.saveButton.value ==RequestConstant.SUBMIT){
+        salesDetailController.salesId=0;
+        await commmonController.AutoYearWiseNo("SALES");
+        salesDetailController.SalesNoController.text = commmonController.Sales_autoYrsWise.value;
+        salesDetailController.selectedCompanyId = 0;
+        salesDetailController.selectedCompany = "--SELECT--";
+        salesDetailController.SalesDate.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
+        salesDetailController.erpCostController.text = "0.0";
+        salesDetailController.cashPortionController.text = "0.0";
+        salesDetailController.accPortionController.text = "0.0";
+        salesDetailController.gstController.text = "0.0";
+        salesDetailController.tdsController.text = "0.0";
+        salesDetailController.netAmountController.text = "0.0";
+      }
+
+      if(receiptDetailsController.saveButton.value ==RequestConstant.SUBMIT){
+        receiptDetailsController.receiptId=0;
+        await commmonController.AutoYearWiseNo("RECEIPT");
+        receiptDetailsController.ReceiptNoController.text = commmonController.Sales_autoYrsWise.value;
+        receiptDetailsController.selectedCompanyId = 0;
+        receiptDetailsController.selectedCompany = "--SELECT--";
+        receiptDetailsController.ReceiptDate.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
+        receiptDetailsController.receiptCostController.text = "0.0";
+        receiptDetailsController.cashPortionController.text = "0.0";
+        receiptDetailsController.accPortionController.text = "0.0";
+        receiptDetailsController.tdsController.text = "0.0";
+      }
+
+      salesDetailController.cashPortionController
+          .addListener(salesDetailController.calculateErpCost);
+      salesDetailController.accPortionController
+          .addListener(salesDetailController.calculateErpCost);
+
+      salesDetailController.accPortionController
+          .addListener(salesDetailController.calculateGst);
+
+      salesDetailController.accPortionController
+          .addListener(salesDetailController.calculateTds);
+
+      salesDetailController.cashPortionController
+          .addListener(salesDetailController.calculateNetAmount);
+
+      salesDetailController.accPortionController
+          .addListener(salesDetailController.calculateNetAmount);
+
+      salesDetailController.gstController
+          .addListener(salesDetailController.calculateNetAmount);
+
+      // Calculate initial value
+      salesDetailController.calculateErpCost();
+      salesDetailController.calculateGst();
+      salesDetailController.calculateTds();
+      salesDetailController.calculateNetAmount();
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      companyDetailsController.getDropDownCityValues();
-    });
+
+
+  }
+
+  @override
+  void dispose() {
+    salesDetailController.cashPortionController
+        .removeListener(salesDetailController.calculateErpCost);
+
+    salesDetailController.accPortionController
+        .removeListener(salesDetailController.calculateErpCost);
+
+    salesDetailController.accPortionController
+        .removeListener(salesDetailController.calculateGst);
+
+    salesDetailController.accPortionController
+        .removeListener(salesDetailController.calculateTds);
+
+    salesDetailController.cashPortionController
+        .removeListener(salesDetailController.calculateNetAmount);
+
+    salesDetailController.accPortionController
+        .removeListener(salesDetailController.calculateNetAmount);
+
+    salesDetailController.gstController
+        .removeListener(salesDetailController.calculateNetAmount);
+    super.dispose();
   }
 
   @override
@@ -87,143 +194,250 @@ class _EntryScreenState extends State<EntryScreen> {
         ),
       ),
 
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(18, 20, 18, 30),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(18, 20, 18, 30),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
 
-            // Header
-            Text(
-              '${widget.title} Entry',
-              style: const TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 21,
-                fontWeight: FontWeight.w700,
-                color: AppColors.text,
-              ),
-            ),
-
-            const SizedBox(height: 5),
-
-            const Text(
-              'Enter the details below',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 13,
-                color: AppColors.subText,
-              ),
-            ),
-
-            const SizedBox(height: 22),
-
-            // Form Card
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-
-                  _entryField(
-                    label: 'Company Name',
-                    hint: 'Enter company name',
-                    icon: Icons.business_outlined,
-                    controller: companyDetailsController.companyNameController,
-                    isDropdown: widget.title == "Sales Details" ? true : false,
-                  ),
-                  const SizedBox(height: 16),
-
-                  _entryField(
-                    label: 'Address',
-                    hint: 'Enter address',
-                    icon: Icons.location_on_outlined,
-                    controller: companyDetailsController.AdressController,
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 16),
-
-                  _entryField(
-                    label: 'Contact No.',
-                    hint: 'Enter contact number',
-                    icon: Icons.phone_outlined,
-                    keyboardType: TextInputType.number,
-                    controller: companyDetailsController.ContactNoController
-                  ),
-                  const SizedBox(height: 16),
-
-                  _entryField(
-                    label: 'City',
-                    hint: 'Select city',
-                    icon: Icons.location_city_outlined,
-                    isDropdown: true,
-                  ),
-                  const SizedBox(height: 16),
-
-                  _entryField(
-                    label: 'Email',
-                    hint: 'Enter email address',
-                    icon: Icons.email_outlined,
-                    controller: companyDetailsController.emailController,
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  const SizedBox(height: 16),
-
-                  _entryField(
-                    label: 'GST No.',
-                    hint: 'Enter GST number',
-                    icon: Icons.receipt_long_outlined,
-                    controller: companyDetailsController.GSTNoController,
-                    keyboardType: TextInputType.number,
-                  ),
-
-                  const SizedBox(height: 16),
-
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            // Save Button
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: ()
-                {
-                  SubmitAlert(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(13),
-                  ),
-                ),
-                child: Text(
-                  companyDetailsController.saveButton.value,
-                  style: TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
+              // Header
+              Text(
+                '${widget.title} Entry',
+                style: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 21,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.text,
                 ),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 5),
+
+              const Text(
+                'Enter the details below',
+                style: TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 13,
+                  color: AppColors.subText,
+                ),
+              ),
+
+              const SizedBox(height: 22),
+
+              // Form Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    if (widget.title == "Sales Details" || widget.title == "Receipt Details") ...[
+                      _entryField(
+                        label: widget.title == "Sales Details" ? 'Sales No' : 'Receipt No',
+                        hint: '',
+                        icon: Icons.numbers,
+                        controller: widget.title == "Sales Details" ? salesDetailController.SalesNoController : receiptDetailsController.ReceiptNoController,
+                        isDateField: true,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    _entryField(
+                      label: 'Company Name',
+                      hint: widget.title == "Company Details" ? 'Enter company name' : "--SELECT--",
+                      icon: Icons.business_outlined,
+                      controller: companyDetailsController.companyNameController,
+                      isDropdown: widget.title == "Company Details" ? false : true,
+                      requiredField: true,
+                    ),
+                    const SizedBox(height: 16),
+
+                    if (widget.title == "Sales Details" || widget.title == "Receipt Details" ) ...[
+                      _entryField(
+                        label: 'Date',
+                        hint: '',
+                        icon: Icons.calendar_month_outlined,
+                        controller: widget.title == "Sales Details" ? salesDetailController.SalesDate : receiptDetailsController.ReceiptDate,
+                        isDateField: true,
+                      ),
+                      const SizedBox(height: 16),
+
+                      _entryField(
+                        label: widget.title == "Sales Details" ? 'ERP Cost' : 'Receipt Amount',
+                        hint: '0.0',
+                        icon: Icons.numbers,
+                        controller: widget.title == "Sales Details" ? salesDetailController.erpCostController : receiptDetailsController.receiptCostController,
+                        readOnly: true
+                      ),
+                      const SizedBox(height: 16),
+                      _entryField(
+                        label: 'Cash portion',
+                        hint: 'Enter cash portion',
+                        icon: Icons.payments_outlined,
+                        controller: widget.title == "Sales Details" ? salesDetailController.cashPortionController : receiptDetailsController.cashPortionController,
+                        keyboardType: TextInputType.number,
+                        onTap: () {
+                          if (salesDetailController.cashPortionController.text.trim() == '0.0' ||
+                              salesDetailController.cashPortionController.text.trim() == '0.00') {
+                            salesDetailController.cashPortionController.clear();
+                          }
+                          else if (receiptDetailsController.cashPortionController.text.trim() == '0.0' ||
+                              receiptDetailsController.cashPortionController.text.trim() == '0.00') {
+                            receiptDetailsController.cashPortionController.clear();
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _entryField(
+                        label: 'A/C portion',
+                        hint: 'Enter A/C portion',
+                        icon: Icons.account_balance_outlined,
+                        controller: widget.title == "Sales Details" ? salesDetailController.accPortionController : receiptDetailsController.accPortionController,
+                        keyboardType: TextInputType.number,
+                        onTap: () {
+                          if (salesDetailController.accPortionController.text.trim() == '0.0' ||
+                              salesDetailController.accPortionController.text.trim() == '0.00') {
+                            salesDetailController.accPortionController.clear();
+                          }
+                          else if (receiptDetailsController.accPortionController.text.trim() == '0.0' ||
+                              receiptDetailsController.accPortionController.text.trim() == '0.00') {
+                            receiptDetailsController.accPortionController.clear();
+                          }
+                        },
+                      ),
+                    ],
+                    if (widget.title == "Sales Details") ...[
+                      const SizedBox(height: 16),
+                      _entryField(
+                        label: 'GST %',
+                        hint: '0.0%',
+                        icon: Icons.percent,
+                        controller: salesDetailController.gstController,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                      _entryField(
+                        label: 'Net Amount',
+                        hint: '0.00',
+                        icon: Icons.calculate_outlined,
+                        controller: salesDetailController.netAmountController,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16,),
+                      ],
+                    if (widget.title == "Sales Details" || widget.title == "Receipt Details") ...[
+                      _entryField(
+                        label: 'TDS %',
+                        hint: '0.0',
+                        icon: Icons.percent,
+                        controller: widget.title == "Sales Details" ? salesDetailController.tdsController : receiptDetailsController.tdsController,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    if (widget.title == "Company Details") ...[
+                        _entryField(
+                          label: 'Address',
+                          hint: 'Enter address',
+                          icon: Icons.location_on_outlined,
+                          controller: companyDetailsController.AdressController,
+                          maxLines: 3,
+                          requiredField: true,
+                        ),
+                        const SizedBox(height: 16),
+
+                        _entryField(
+                          label: 'Contact No.',
+                          hint: 'Enter contact number',
+                          icon: Icons.phone_outlined,
+                          keyboardType: TextInputType.number,
+                          controller: companyDetailsController.ContactNoController,
+                          requiredField: true,
+                        ),
+                        const SizedBox(height: 16),
+
+                        _entryField(
+                          label: 'City',
+                          hint: '--SELECT--',
+                          icon: Icons.location_city_outlined,
+                          isDropdown: true,
+                          requiredField: true,
+                        ),
+                        const SizedBox(height: 16),
+
+                        _entryField(
+                          label: 'Email',
+                          hint: 'Enter email address',
+                          icon: Icons.email_outlined,
+                          controller: companyDetailsController.emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          requiredField: true,
+                        ),
+                        const SizedBox(height: 16),
+
+                        _entryField(
+                          label: 'GST No.',
+                          hint: 'Enter GST number',
+                          icon: Icons.receipt_long_outlined,
+                          controller: companyDetailsController.GSTNoController,
+                          keyboardType: TextInputType.number,
+                          requiredField: true,
+                        ),
+
+                        const SizedBox(height: 16),
+                    ]
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 25),
+
+              // Save Button
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: ()
+                  {
+                    if(_formKey.currentState!.validate()){
+                      _formKey.currentState!.save();
+                      SubmitAlert(context);
+                    }
+                    },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                  ),
+                  child: Text(
+                    widget.title == "Company Details" ? companyDetailsController.saveButton.value : salesDetailController.saveButton.value,
+                    style: TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -237,6 +451,10 @@ class _EntryScreenState extends State<EntryScreen> {
     TextInputType? keyboardType,
     int maxLines = 1,
     bool isDropdown = false,
+    bool isDateField = false,
+    bool readOnly = false,
+    bool requiredField = false,
+    VoidCallback? onTap,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,215 +470,419 @@ class _EntryScreenState extends State<EntryScreen> {
         ),
 
         const SizedBox(height: 7),
+          if (isDateField)
+            TextField(
+              controller: controller,
+              readOnly: true,
+              onTap: () async {
+                FocusScope.of(context).unfocus();
 
-        if (isDropdown)
-          Obx(() {
-            final bool isSalesDetails =
-                widget.title == "Sales Details";
-                  return DropdownButtonFormField2<String>(
-                    value: isSalesDetails
-                        ? salesDetailController.selectedCompany
-                        : companyDetailsController.selectedCity,
-
-                    isExpanded: true,
-
-                    decoration: InputDecoration(
-                      hintText: hint,
-                      hintStyle: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 13,
-                        color: AppColors.subText,
-                      ),
-
-                      prefixIcon: Icon(
-                        icon,
-                        color: AppColors.drawerIcon,
-                        size: 21,
-                      ),
-
-                      filled: true,
-                      fillColor: AppColors.background,
-
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 14,
-                      ),
-
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(11),
-                        borderSide: const BorderSide(
-                          color: AppColors.border,
+                final DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                  builder: (context, child) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: ColorScheme.light(
+                          primary: AppColors.accent,
+                          onPrimary: AppColors.white,
+                          surface: AppColors.white,
+                          onSurface: AppColors.text,
                         ),
                       ),
+                      child: child!,
+                    );
+                  },
+                );
 
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(11),
-                        borderSide: const BorderSide(
-                          color: AppColors.border,
-                        ),
-                      ),
+                if (pickedDate != null) {
+                  final String formattedDate =
+                      "${pickedDate.day.toString().padLeft(2, '0')}/"
+                      "${pickedDate.month.toString().padLeft(2, '0')}/"
+                      "${pickedDate.year}";
 
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(11),
-                        borderSide: const BorderSide(
-                          color: AppColors.accent,
-                          width: 1.3,
-                        ),
+                  controller?.text = formattedDate;
+                }
+              },
+
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.text,
+              ),
+
+              decoration: InputDecoration(
+                hintText: hint,
+
+                hintStyle: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 13,
+                  color: AppColors.subText,
+                ),
+
+                prefixIcon: Icon(
+                  icon,
+                  color: AppColors.drawerIcon,
+                  size: 21,
+                ),
+
+                filled: true,
+                fillColor: AppColors.background,
+
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
+                ),
+
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(11),
+                  borderSide: const BorderSide(
+                    color: AppColors.border,
+                  ),
+                ),
+
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(11),
+                  borderSide: const BorderSide(
+                    color: AppColors.border,
+                  ),
+                ),
+
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(11),
+                  borderSide: const BorderSide(
+                    color: AppColors.accent,
+                    width: 1.3,
+                  ),
+                ),
+              ),
+            )
+          else if (isDropdown)
+            Obx(() {
+              final bool isSalesDetails =
+                  widget.title == "Sales Details";
+              final bool isReceiptDetails =
+                  widget.title == "Receipt Details";
+
+              if (isSalesDetails || isReceiptDetails) {
+                return DropdownButtonFormField2<int>(
+                  value: salesDetailController.selectedCompanyId == 0
+                      ? null
+                      : salesDetailController.selectedCompanyId,
+
+                  isExpanded: true,
+
+                  decoration: InputDecoration(
+                    hintText: hint,
+                    hintStyle: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 13,
+                      color: AppColors.subText,
+                    ),
+
+                    prefixIcon: Icon(
+                      icon,
+                      color: AppColors.drawerIcon,
+                      size: 21,
+                    ),
+
+                    filled: true,
+                    fillColor: AppColors.background,
+
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
+                    ),
+
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.border,
                       ),
                     ),
 
-                    hint: Text(
-                      hint,
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 13,
-                        color: AppColors.subText,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.border,
                       ),
                     ),
 
-                    // API dropdown values
-                    items: [
-                      // Default value
-                      const DropdownMenuItem<String>(
-                        value: "--SELECT--",
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.accent,
+                        width: 1.3,
+                      ),
+                    ),
+                  ),
+
+                  hint: Text(
+                    hint,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 13,
+                      color: AppColors.subText,
+                    ),
+                  ),
+
+                  items: [
+                    ...commmonController.companyDropdown.map((company) {
+                      return DropdownMenuItem<int>(
+                        value: company.companyId ?? 0,
                         child: Text(
-                          "--SELECT--",
-                          style: TextStyle(
+                          company.companyName ?? '',
+                          style: const TextStyle(
                             fontFamily: 'Poppins',
-                            fontSize: 13,
-                            color: AppColors.subText,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.text,
                           ),
                         ),
-                      ),
+                      );
+                    }),
+                  ],
 
-                      // isSalesDetails
-                      //     ? salesDetailController.companyDropdown.map((company) {
-                      //   return DropdownMenuItem<String>(
-                      //     value: company.companyName ?? '',
-                      //     child: Text(
-                      //       company.companyName ?? '',
-                      //       style: const TextStyle(
-                      //         fontFamily: 'Poppins',
-                      //         fontSize: 14,
-                      //         fontWeight: FontWeight.w500,
-                      //         color: AppColors.text,
-                      //       ),
-                      //     ),
-                      //   );
-                      // }).toList()
-                      //     : companyDetailsController.cityDropDown.map((city) {
-                      //   return DropdownMenuItem<String>(
-                      //     value: city.cityName ?? '',
-                      //     child: Text(
-                      //       city.cityName ?? '',
-                      //       style: const TextStyle(
-                      //         fontFamily: 'Poppins',
-                      //         fontSize: 14,
-                      //         fontWeight: FontWeight.w500,
-                      //         color: AppColors.text,
-                      //       ),
-                      //     ),
-                      //   );
-                      // }).toList(),
+                  onChanged: (value) {
+                    final selected = commmonController.companyDropdown
+                        .firstWhere(
+                          (company) => company.companyId == value,
+                    );
 
-                    ],
+                    setState(() {
+                      salesDetailController.selectedCompanyId =
+                          value ?? 0;
 
-                    onChanged: (value) {
-                      setState(() {
-                        if (isSalesDetails) {
-                          salesDetailController.selectedCompany =
-                              value ?? "--SELECT--";
-                        } else {
-                          companyDetailsController.selectedCity =
-                              value ?? "--SELECT--";
-                        }
-                      });
-                    },
+                      salesDetailController.selectedCompany =
+                          selected.companyName ?? '';
+                    });
+                  },
 
-                    buttonStyleData: const ButtonStyleData(
-                      height: 20,
+                  buttonStyleData: const ButtonStyleData(
+                    height: 20,
+                  ),
+
+                  iconStyleData: const IconStyleData(
+                    icon: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: AppColors.subText,
                     ),
+                  ),
 
-                    iconStyleData: const IconStyleData(
-                      icon: Icon(
-                        Icons.keyboard_arrow_down_rounded,
+                  dropdownStyleData: DropdownStyleData(
+                    maxHeight: 220,
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                  ),
+
+                  menuItemStyleData: const MenuItemStyleData(
+                    height: 45,
+                    padding: EdgeInsets.symmetric(horizontal: 14),
+                  ),
+                );
+              }
+
+              // CITY DROPDOWN
+              return DropdownButtonFormField2<String>(
+                value: companyDetailsController.selectedCity,
+
+                isExpanded: true,
+
+                decoration: InputDecoration(
+                  hintText: hint,
+                  prefixIcon: Icon(
+                    icon,
+                    color: AppColors.drawerIcon,
+                    size: 21,
+                  ),
+                  filled: true,
+                  fillColor: AppColors.background,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 14,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(11),
+                    borderSide: const BorderSide(
+                      color: AppColors.border,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(11),
+                    borderSide: const BorderSide(
+                      color: AppColors.border,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(11),
+                    borderSide: const BorderSide(
+                      color: AppColors.accent,
+                      width: 1.3,
+                    ),
+                  ),
+                ),
+
+                hint: Text(
+                  hint,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    color: AppColors.subText,
+                  ),
+                ),
+
+                items: [
+                  const DropdownMenuItem<String>(
+                    value: "--SELECT--",
+                    child: Text(
+                      "--SELECT--",
+                      style: TextStyle(
+                        fontFamily: 'Poppins',
+                        fontSize: 13,
                         color: AppColors.subText,
                       ),
                     ),
+                  ),
 
-                    dropdownStyleData: DropdownStyleData(
-                      maxHeight: 220,
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(11),
+                  ...companyDetailsController.cityDropDown.map((city) {
+                    return DropdownMenuItem<String>(
+                      value: city.cityName ?? '',
+                      child: Text(
+                        city.cityName ?? '',
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.text,
+                        ),
                       ),
-                    ),
+                    );
+                  }),
+                ],
 
-                    menuItemStyleData: const MenuItemStyleData(
-                      height: 45,
-                      padding: EdgeInsets.symmetric(horizontal: 14),
-                    ),
-                  );
-                } )
-        else
-          TextField(
-            controller: controller,
-            keyboardType: keyboardType,
-            maxLines: maxLines,
+                onChanged: (value) {
+                  setState(() {
+                    companyDetailsController.selectedCity =
+                        value ?? "--SELECT--";
+                  });
+                },
 
-            style: const TextStyle(
-              fontFamily: 'Poppins',
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: AppColors.text,
-            ),
+                buttonStyleData: const ButtonStyleData(
+                  height: 20,
+                ),
 
-            decoration: InputDecoration(
-              hintText: hint,
+                iconStyleData: const IconStyleData(
+                  icon: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: AppColors.subText,
+                  ),
+                ),
 
-              hintStyle: const TextStyle(
+                dropdownStyleData: DropdownStyleData(
+                  maxHeight: 220,
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                ),
+
+                menuItemStyleData: const MenuItemStyleData(
+                  height: 45,
+                  padding: EdgeInsets.symmetric(horizontal: 14),
+                ),
+              );
+            })
+          else
+            TextFormField(
+              controller: controller,
+              keyboardType: keyboardType,
+              maxLines: maxLines,
+              readOnly: readOnly,
+              onTap: onTap,
+              style: const TextStyle(
                 fontFamily: 'Poppins',
-                fontSize: 13,
-                color: AppColors.subText,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppColors.text,
               ),
+              validator: requiredField
+                  ? (value) {
+                final text = value?.trim() ?? '';
 
-              prefixIcon: Icon(
-                icon,
-                color: AppColors.drawerIcon,
-                size: 21,
-              ),
+                // Empty validation
+                if (text.isEmpty || text == "--SELECT--") {
+                  return '* Required';
+                }
 
-              filled: true,
-              fillColor: AppColors.background,
+                // Number validation
+                final amount = double.tryParse(text);
 
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 14,
-              ),
+                if (amount == null) {
+                  return 'Enter a valid amount';
+                }
 
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(11),
-                borderSide: const BorderSide(
-                  color: AppColors.border,
+                // Zero / negative validation
+                if (amount <= 0) {
+                  return '$label must be greater than 0';
+                }
+
+                return null;
+              }
+                  : null,
+
+              decoration: InputDecoration(
+                hintText: hint,
+
+                hintStyle: const TextStyle(
+                  fontFamily: 'Poppins',
+                  fontSize: 13,
+                  color: AppColors.subText,
                 ),
-              ),
 
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(11),
-                borderSide: const BorderSide(
-                  color: AppColors.border,
+                prefixIcon: Icon(
+                  icon,
+                  color: AppColors.drawerIcon,
+                  size: 21,
                 ),
-              ),
 
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(11),
-                borderSide: const BorderSide(
-                  color: AppColors.accent,
-                  width: 1.3,
+                filled: true,
+                fillColor: readOnly
+                    ? AppColors.background.withOpacity(0.7)
+                    : AppColors.background,
+
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 14,
+                ),
+
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(11),
+                  borderSide: const BorderSide(
+                    color: AppColors.border,
+                  ),
+                ),
+
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(11),
+                  borderSide: const BorderSide(
+                    color: AppColors.border,
+                  ),
+                ),
+
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(11),
+                  borderSide: const BorderSide(
+                    color: AppColors.accent,
+                    width: 1.3,
+                  ),
                 ),
               ),
             ),
-          ),
       ],
     );
   }
@@ -472,7 +894,7 @@ class _EntryScreenState extends State<EntryScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),),
         title: const Text('Alert!',style: TextStyle(fontSize: 20,fontWeight: FontWeight.w500),),
-        content: Text(companyDetailsController.saveButton==RequestConstant.RESUBMIT  ? 'Are you sure to Re-Submit?' :
+        content: Text(companyDetailsController.saveButton==RequestConstant.RESUBMIT  || salesDetailController.saveButton.value == RequestConstant.RESUBMIT ? 'Are you sure to Re-Submit?' :
         'Are you sure to Submit?'),
         actions:[
           Container(
@@ -498,14 +920,19 @@ class _EntryScreenState extends State<EntryScreen> {
                     child: StatefulBuilder(
                       builder: (context, setState) => TextButton(
                         onPressed:  () async {
-                            // if (await BaseUtitiles.checkNetworkAndShowLoader(context)) {
+                            if (await BaseUtitiles.checkNetworkAndShowLoader(context)) {
+                              if(widget.title == "Company Details"){
                               await companyDetailsController.SaveButton_CompanyDetails(
                                 context, companyDetailsController.companyId != 0 ? companyDetailsController.companyId : 0,
-                              );
-                            // }
+                              );}
+                              else {
+                                  await salesDetailController.SaveButton_SalesDetails(
+                                      context, salesDetailController.salesId != 0 ? salesDetailController.salesId : 0,);
+                                }
+                            }
                         },
                         child: Text(
-                          companyDetailsController.saveButton.value,
+                          widget.title == "Company Details" ? companyDetailsController.saveButton.value : salesDetailController.saveButton.value,
                           style: TextStyle(
                             color: AppColors.primary, // Change color when button is disabled
                             fontWeight: FontWeight.bold,

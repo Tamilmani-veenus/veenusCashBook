@@ -1,6 +1,12 @@
+import 'dart:convert';
+
+import 'package:fluttertoast/fluttertoast.dart';
+
 import '../apimanager/apimanager.dart';
+import '../models/salesDetailsEdit_model.dart';
 import '../models/salesDetailsList_model.dart';
 import '../utilities/apiconstant.dart';
+import '../utilities/requestconstant.dart';
 
 class SalesDetailsProvider{
 
@@ -15,6 +21,62 @@ class SalesDetailsProvider{
       print(error);
       print("ERROR...${E}");
       return null;
+    }
+  }
+
+  static SaveSalesScreenEntryAPI(String body, int SaleId, context) async {
+
+    try {
+      var response;
+
+      if (SaleId != 0) {
+        response = await ApiManager.putUpdateAPIButton("${ApiConstant.PUTSALESDETAILS_API}?id=$SaleId", body);
+      } else {
+        response = await ApiManager.postAPICall(ApiConstant.SALESDETAILS_SAVEAPI, body);
+      }
+      return jsonDecode(response);
+
+    }  catch (error) {
+      print("Error == $error");
+      return null;
+    }
+  }
+
+  static Future<SalesDetailsEditResponse?> SalesDetails_List_editAPI(int UsageId) async {
+    try {
+      final response = await ApiManager.getAPICall(
+          ApiConstant.EDITSALES_DETAILSLIST + "?SalesId=$UsageId");
+      return salesDetailsEditResponseFromJson(response);
+    }
+    catch (error,e) {
+      print("Error == $error");
+      print("ERROR .......${e}");
+      return null;
+    }
+  }
+
+  static Future<bool> SalesDetails_List_deleteAPI(int reqId) async {
+    try {
+      final response = await ApiManager.deleteAPICall(
+          "${ApiConstant.SALESDETAILS_DELETE}?salesId=$reqId");
+
+      final Map<String, dynamic> decoded = jsonDecode(response);
+
+
+      bool isSuccess = decoded["success"] == true;
+
+      final message = decoded["message"] ??
+          (isSuccess
+              ? "Deleted successfully"
+              : RequestConstant.NETWORKERROR);
+
+      Fluttertoast.showToast(msg: message);
+
+      return isSuccess;
+    } catch (error) {
+      print("Delete API Error: $error");
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+      return false;
     }
   }
 }

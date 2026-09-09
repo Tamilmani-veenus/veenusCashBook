@@ -21,10 +21,10 @@ class CompanyDetailsProvider{
     }
   }
 
-  static Future<DropDownCityValues?> getDropDownValues() async {
+  static Future<DropDownCityValues?> getDropDownValues(type) async {
     try {
       var value = await ApiManager.getAPICall(
-          "${ApiConstant.GETDROPDOWN_CITYLIST}");
+          "${type == "CompanyDetails" ? ApiConstant.GETDROPDOWN_CITYLIST : ApiConstant.GETDROPDOWN_COMPANYLIST}");
 
       return dropDownCityValuesFromJson(value);
 

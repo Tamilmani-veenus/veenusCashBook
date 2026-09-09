@@ -35,19 +35,27 @@ class DropDownCityValues {
 class Result {
   int? cityId;
   String? cityName;
+  int? companyId;
+  String? companyName;
 
   Result({
     this.cityId,
     this.cityName,
+    this.companyId,
+    this.companyName,
   });
 
   factory Result.fromJson(Map<String, dynamic> json) => Result(
     cityId: json["cityID"],
     cityName: json["cityName"],
+    companyId: json['id'],
+    companyName: json["companyName"],
   );
 
   Map<String, dynamic> toJson() => {
     "cityID": cityId,
     "cityName": cityName,
+    "id": companyId,
+    "companyName": companyName,
   };
 }

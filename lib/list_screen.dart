@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:veenuscashbook/controller/receiptDetails_controller.dart';
 import 'package:veenuscashbook/controller/salesDetails_controller.dart';
+import 'package:veenuscashbook/utilities/requestconstant.dart';
 
 import 'app_theme.dart';
 import 'entry_screen.dart';
@@ -20,6 +22,7 @@ class ListScreen extends StatefulWidget {
 
 class _ListScreenState extends State<ListScreen> {
   SalesDetailController salesDetailController = Get.put(SalesDetailController());
+  ReceiptDetailsController receiptDetailsController = Get.put(ReceiptDetailsController());
   int? expandedIndex;
 
   @override
@@ -27,6 +30,7 @@ class _ListScreenState extends State<ListScreen> {
     // TODO: implement initState
     super.initState();
     salesDetailController.getSalesDetails_List();
+    receiptDetailsController.getReceiptDetails_List();
   }
 
   @override
@@ -101,97 +105,93 @@ class _ListScreenState extends State<ListScreen> {
 
                 const SizedBox(width: 10),
 
-                Container(
-                  height: 48,
-                  width: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.border,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.tune_rounded,
-                    color: AppColors.drawerIcon,
-                    size: 22,
-                  ),
-                ),
               ],
             ),
           ),
 
           // Summary
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 18,
-              vertical: 8,
-            ),
-            child: Container(
-              width: double.infinity,
+          Obx(() {
+            final int totalEntries =
+                widget.title == "Sales Details" ? salesDetailController.SalesDetailsList.length : receiptDetailsController.ReceiptDetailsList.length;
+
+            final double totalAmount =
+            widget.title == "Sales Details" ? salesDetailController.SalesDetailsList.fold<double>(
+              0.0,
+                  (sum, item) => sum + (item.erpCost ?? 0),
+            ) :receiptDetailsController.ReceiptDetailsList.fold<double>(
+              0.0,
+                  (sum, item) => sum + (item.receivedAmount ?? 0) ) ;
+
+            return Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 18,
-                vertical: 15,
+                vertical: 8,
               ),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 15,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Total Entries',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            color: Colors.white70,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '$totalEntries',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
 
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Total Entries',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 12,
-                          color: Colors.white70,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text(
+                          'Total Amount',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            color: Colors.white70,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        '24',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                        const SizedBox(height: 3),
+                        Text(
+                          '₹ ${totalAmount.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: const [
-                      Text(
-                        'Total Amount',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 12,
-                          color: Colors.white70,
-                        ),
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        '₹ 1,25,500',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
+            );
+          }),
 
           const SizedBox(height: 8),
 
@@ -205,7 +205,7 @@ class _ListScreenState extends State<ListScreen> {
                   18,
                   90,
                 ),
-                itemCount: salesDetailController.SalesDetailsList.length,
+                itemCount: widget.title == "Sales Details" ? salesDetailController.SalesDetailsList.length : receiptDetailsController.ReceiptDetailsList.length,
                 itemBuilder: (context, index) {
                   return _listItem(index);
                 },
@@ -219,6 +219,7 @@ class _ListScreenState extends State<ListScreen> {
         backgroundColor: AppColors.primary,
         elevation: 4,
         onPressed: () {
+          widget.title == "Sales Details" ? salesDetailController.saveButton.value = RequestConstant.SUBMIT : receiptDetailsController.saveButton.value = RequestConstant.SUBMIT;
           Navigator.push(context, MaterialPageRoute(builder: (context)=>EntryScreen(title: widget.title)));
         },
         child: const Icon(
@@ -234,6 +235,7 @@ class _ListScreenState extends State<ListScreen> {
     final bool isExpanded = expandedIndex == index;
 
     final sales = salesDetailController.SalesDetailsList[index];
+    final receipt = receiptDetailsController.ReceiptDetailsList[index];
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -282,7 +284,7 @@ class _ListScreenState extends State<ListScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        _getDay(sales.date),
+                        _getDay(widget.title == "Sales Details" ? sales.date : receipt.date),
                         style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 17,
@@ -291,7 +293,7 @@ class _ListScreenState extends State<ListScreen> {
                         ),
                       ),
                       Text(
-                        _getMonth(sales.date),
+                        _getMonth(widget.title == "Sales Details" ? sales.date : receipt.date),
                         style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 9,
@@ -313,7 +315,7 @@ class _ListScreenState extends State<ListScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        sales.companyName ?? '',
+                        widget.title == "Sales Details" ? sales.companyName ?? '' : receipt.companyName ?? '',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -327,7 +329,7 @@ class _ListScreenState extends State<ListScreen> {
                       const SizedBox(height: 4),
 
                       Text(
-                        "SalesNo : ${sales.salesNo ?? ''}",
+                        widget.title == "Sales Details" ? "SalesNo : ${sales.salesNo ?? ''}" : "ReceiptNo : ${receipt.receiptNo ?? ''}",
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -344,7 +346,7 @@ class _ListScreenState extends State<ListScreen> {
                 // ERP COST
                 // =========================
                 Text(
-                  '₹ ${sales.erpCost ?? 0}',
+                  widget.title == "Sales Details" ? '₹ ${sales.erpCost ?? 0}' : '₹ ${receipt.receivedAmount ?? 0}',
                   style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 14,
@@ -415,7 +417,21 @@ class _ListScreenState extends State<ListScreen> {
                   InkWell(
                     borderRadius: BorderRadius.circular(10),
                     onTap: () {
-                      print('Edit $index');
+                      salesDetailController
+                          .saveButton
+                          .value =
+                          RequestConstant
+                              .RESUBMIT;
+                      FocusScope.of(
+                          context)
+                          .unfocus();
+                      salesDetailController.SalesDetails_List_EditApi(
+                          salesDetailController
+                              .SalesDetailsList
+                              .value[
+                          index]
+                              .id,widget.title,
+                          context);
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -455,8 +471,10 @@ class _ListScreenState extends State<ListScreen> {
                   // =========================
                   InkWell(
                     borderRadius: BorderRadius.circular(10),
-                    onTap: () {
-                      print('Delete $index');
+                    onTap: () async {
+                      await salesDetailController.DeleteAlert(
+                          context,
+                          index);
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
