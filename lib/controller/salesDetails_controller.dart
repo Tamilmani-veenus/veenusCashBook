@@ -19,8 +19,10 @@ class SalesDetailController extends GetxController{
   final cashPortionController = TextEditingController();
   final accPortionController = TextEditingController();
   final gstController = TextEditingController();
+  final gstAmtController = TextEditingController();
   final tdsController = TextEditingController();
   final netAmountController = TextEditingController();
+  final tdsAmtController = TextEditingController();
 
   int salesId = 0;
 
@@ -75,18 +77,25 @@ class SalesDetailController extends GetxController{
 
     if (list != null) {
       if (list["success"] == true) {
+        final bool success = list["success"] == true;
         final String msg = list["message"] ?? '';
         await getSalesDetails_List();
 
-        if (msg.toLowerCase().contains('submitted successfully')) {
-          await BaseUtitiles.showSuccessAnimation(context, msg);
-        } else {
-          Fluttertoast.showToast(msg: msg);
-        }
+        await BaseUtitiles.showSuccessAnimation(
+          context,
+          title: success ? 'Submitted' : 'Failed',
+          message: msg,
+          isSuccess: success,
+        );
 
-        BaseUtitiles.popMultiple(context, count: 3);
+        BaseUtitiles.popMultiple(context, count: success ? 3 : 2);
       } else {
-        Fluttertoast.showToast(msg: list["message"] ?? RequestConstant.NETWORKERROR);
+        await BaseUtitiles.showSuccessAnimation(
+          context,
+          title: 'Failed',
+          message: RequestConstant.NETWORKERROR,
+          isSuccess: false,
+        );
         BaseUtitiles.popMultiple(context, count: 2);
       }
     } else {
@@ -119,5 +128,4 @@ class SalesDetailController extends GetxController{
   Future<bool> SalesDetails_List_DeleteApi(int reqId) async {
     return CommonProvider.Details_List_deleteAPI(reqId,"Sales");
   }
-
 }

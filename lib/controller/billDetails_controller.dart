@@ -16,6 +16,7 @@ class BillDetailsController extends GetxController{
   final BillNoController = TextEditingController();
   final billCostController = TextEditingController();
   final gstController = TextEditingController();
+  final gstAmtController = TextEditingController();
   final netAmountController = TextEditingController();
 
   int billId = 0;
@@ -65,15 +66,26 @@ class BillDetailsController extends GetxController{
 
     final list = await BillDetailsProvider.SaveBillScreenEntryAPI(body, id, context);
 
-    if (list != null ) {
-      if(list["success"] == true){
-        Fluttertoast.showToast(msg: list["message"]);
+    if (list != null) {
+      if (list["success"] == true) {
+        final bool success = list["success"] == true;
+        final String msg = list["message"] ?? '';
         await getBillDetails_List();
-        // clearDatas();
-        BaseUtitiles.popMultiple(context, count: 3);
-      }
-      else {
-        Fluttertoast.showToast(msg: list["message"] ?? RequestConstant.NETWORKERROR);
+        await BaseUtitiles.showSuccessAnimation(
+          context,
+          title: success ? 'Submitted' : 'Failed',
+          message: msg,
+          isSuccess: success,
+        );
+
+        BaseUtitiles.popMultiple(context, count: success ? 3 : 2);
+      } else {
+        await BaseUtitiles.showSuccessAnimation(
+          context,
+          title: 'Failed',
+          message: RequestConstant.NETWORKERROR,
+          isSuccess: false,
+        );
         BaseUtitiles.popMultiple(context, count: 2);
       }
     }

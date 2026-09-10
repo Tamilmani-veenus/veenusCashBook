@@ -279,6 +279,15 @@ class _ListScreenState extends State<ListScreen> {
 
   Widget _listItem(int index) {
     final bool isExpanded = expandedIndex == index;
+    final int length = isSalesDetails
+        ? salesDetailController.SalesDetailsList.length
+        : isReceiptDetails
+        ? receiptDetailsController.ReceiptDetailsList.length
+        : billDetailsController.BillDetailsList.length;
+
+    if (index < 0 || index >= length) {
+      return const SizedBox.shrink();
+    }
 
     final String date;
     final String companyName;

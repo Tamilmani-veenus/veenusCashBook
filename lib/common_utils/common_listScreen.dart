@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:veenuscashbook/app_theme.dart';
-
+import 'dart:math' as math;
 import '../utilities/requestconstant.dart';
 
 class CommonRequestBottomBar extends StatelessWidget {
@@ -153,9 +153,19 @@ class CommonRequestBottomBar extends StatelessWidget {
   }
 }
 
+
+
 class SuccessPopup extends StatefulWidget {
+  final String title;
   final String message;
-  const SuccessPopup({super.key, required this.message});
+  final bool isSuccess;
+
+  const SuccessPopup({
+    super.key,
+    this.title = 'Submitted',
+    required this.message,
+    this.isSuccess = true,
+  });
 
   @override
   State<SuccessPopup> createState() => _SuccessPopupState();
@@ -164,39 +174,45 @@ class SuccessPopup extends StatefulWidget {
 class _SuccessPopupState extends State<SuccessPopup>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late final Animation<double> _scaleAnim;
-  late final Animation<double> _checkAnim;
-  late final Animation<double> _ringAnim;
+  late final Animation<double> _iconScale;
+  late final Animation<double> _ringProgress;
+  late final Animation<double> _contentFade;
+  late final Animation<Offset> _contentSlide;
 
   @override
   void initState() {
     super.initState();
+
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
     );
 
-    _scaleAnim = TweenSequence([
-      TweenSequenceItem(
-        tween: Tween(begin: 0.0, end: 1.15)
-            .chain(CurveTween(curve: Curves.easeOutBack)),
-        weight: 65,
+    _iconScale = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.55, curve: Curves.easeOutBack),
       ),
-      TweenSequenceItem(
-        tween: Tween(begin: 1.15, end: 1.0)
-            .chain(CurveTween(curve: Curves.easeOut)),
-        weight: 35,
-      ),
-    ]).animate(_controller);
-
-    _checkAnim = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.35, 0.75, curve: Curves.easeOut),
     );
 
-    _ringAnim = CurvedAnimation(
+    _ringProgress = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.0, 1.0, curve: Curves.easeOut),
+      curve: const Interval(0.05, 0.65, curve: Curves.easeOut),
+    );
+
+    _contentFade = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.45, 1.0, curve: Curves.easeOut),
+    );
+
+    _contentSlide = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.4, 1.0, curve: Curves.easeOutCubic),
+      ),
     );
 
     _controller.forward();
@@ -208,6 +224,21 @@ class _SuccessPopupState extends State<SuccessPopup>
     super.dispose();
   }
 
+  // Status-driven colors, computed once per build
+  Color get _statusColor =>
+      widget.isSuccess ? AppColors.primary : const Color(0xFFE24B4A);
+
+  Color get _statusChipBg =>
+      widget.isSuccess ? AppColors.lightBlue : const Color(0xFFFCEBEB);
+
+  IconData get _statusIcon =>
+      widget.isSuccess ? Icons.check_rounded : Icons.close_rounded;
+
+  IconData get _chipIcon =>
+      widget.isSuccess ? Icons.verified_rounded : Icons.error_outline_rounded;
+
+
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -217,78 +248,93 @@ class _SuccessPopupState extends State<SuccessPopup>
           animation: _controller,
           builder: (context, child) {
             return Container(
-              width: 240,
-              padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+              width: 290,
+              padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
               decoration: BoxDecoration(
                 color: AppColors.white,
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(26),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 30,
-                    offset: const Offset(0, 12),
+                    color: _statusColor.withOpacity(0.12),
+                    blurRadius: 35,
+                    spreadRadius: 3,
+                    offset: const Offset(0, 15),
                   ),
                 ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Animated status icon
                   SizedBox(
-                    width: 90,
-                    height: 90,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Expanding soft ring pulse
-                        Transform.scale(
-                          scale: 0.6 + (_ringAnim.value * 0.6),
-                          child: Opacity(
-                            opacity: (1 - _ringAnim.value).clamp(0.0, 0.4),
-                            child: Container(
-                              width: 90,
-                              height: 90,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.accent.withOpacity(0.3),
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Green circle with checkmark
-                        Transform.scale(
-                          scale: _scaleAnim.value,
+                    width: 105,
+                    height: 105,
+                    child: CustomPaint(
+                      painter: _SuccessRingPainter(
+                        progress: _ringProgress.value,
+                        color: _statusColor,
+                      ),
+                      child: Center(
+                        child: Transform.scale(
+                          scale: _iconScale.value,
                           child: Container(
-                            width: 68,
-                            height: 68,
-                            decoration: const BoxDecoration(
+                            width: 62,
+                            height: 62,
+                            decoration: BoxDecoration(
+                              color: _statusColor,
                               shape: BoxShape.circle,
-                              color: Color(0xFF34C759),
-                            ),
-                            child: Center(
-                              child: SizedBox(
-                                width: 34,
-                                height: 34,
-                                child: CustomPaint(
-                                  painter: _CheckPainter(progress: _checkAnim.value),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _statusColor.withOpacity(0.22),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 6),
                                 ),
-                              ),
+                              ],
+                            ),
+                            child: Icon(
+                              _statusIcon,
+                              color: AppColors.white,
+                              size: 34,
                             ),
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  Opacity(
-                    opacity: _checkAnim.value,
-                    child: Text(
-                      widget.message,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.text,
+
+                  const SizedBox(height: 12),
+
+                  // Content
+                  FadeTransition(
+                    opacity: _contentFade,
+                    child: SlideTransition(
+                      position: _contentSlide,
+                      child: Column(
+                        children: [
+                          Text(
+                            widget.title,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.text,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            widget.message,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 12,
+                              height: 1.5,
+                              color: AppColors.subText,
+                            ),
+                          ),
+
+
+                        ],
                       ),
                     ),
                   ),
@@ -302,44 +348,59 @@ class _SuccessPopupState extends State<SuccessPopup>
   }
 }
 
-class _CheckPainter extends CustomPainter {
-  final double progress; // 0..1
-  _CheckPainter({required this.progress});
+class _SuccessRingPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  _SuccessRingPainter({required this.progress, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2 - 7;
+
+    // Background ring
+    final backgroundPaint = Paint()
+      ..color = color.withOpacity(0.08)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.4
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
+      ..strokeWidth = 2.5;
 
-    final path = Path();
-    final p1 = Offset(size.width * 0.18, size.height * 0.52);
-    final p2 = Offset(size.width * 0.42, size.height * 0.74);
-    final p3 = Offset(size.width * 0.85, size.height * 0.28);
+    canvas.drawCircle(center, radius, backgroundPaint);
 
-    final firstLeg = (progress * 2).clamp(0.0, 1.0);
-    final secondLeg = ((progress - 0.5) * 2).clamp(0.0, 1.0);
+    // Animated ring
+    final progressPaint = Paint()
+      ..color = color.withOpacity(0.28)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
 
-    path.moveTo(p1.dx, p1.dy);
-    path.lineTo(
-      p1.dx + (p2.dx - p1.dx) * firstLeg,
-      p1.dy + (p2.dy - p1.dy) * firstLeg,
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      -math.pi / 2,
+      math.pi * 2 * progress,
+      false,
+      progressPaint,
     );
 
-    if (secondLeg > 0) {
-      path.lineTo(
-        p2.dx + (p3.dx - p2.dx) * secondLeg,
-        p2.dy + (p3.dy - p2.dy) * secondLeg,
+    // Decorative dots
+    const dotCount = 8;
+    for (int i = 0; i < dotCount; i++) {
+      final angle = (i / dotCount) * math.pi * 2;
+      final dotRadius = radius + 5;
+      final position = Offset(
+        center.dx + math.cos(angle) * dotRadius,
+        center.dy + math.sin(angle) * dotRadius,
       );
-    }
 
-    canvas.drawPath(path, paint);
+      final opacity = (progress - i * 0.06).clamp(0.0, 1.0);
+      final paint = Paint()..color = color.withOpacity(0.18 * opacity);
+
+      canvas.drawCircle(position, 2, paint);
+    }
   }
 
   @override
-  bool shouldRepaint(covariant _CheckPainter oldDelegate) =>
-      oldDelegate.progress != progress;
+  bool shouldRepaint(covariant _SuccessRingPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.color != color;
+  }
 }

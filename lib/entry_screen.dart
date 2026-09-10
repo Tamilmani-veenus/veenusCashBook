@@ -34,6 +34,8 @@ class _EntryScreenState extends State<EntryScreen> {
   CommonController commmonController = Get.put(CommonController());
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool isTdsEnabled = false;
+  bool isReceiptTdsEnabled = false;
 
   @override
   void initState() {
@@ -80,6 +82,8 @@ class _EntryScreenState extends State<EntryScreen> {
             salesDetailController.cashPortionController.text = element.cashPortion.toString();
             salesDetailController.accPortionController.text = element.accountPortion.toString();
             salesDetailController.gstController.text = element.gst.toString();
+            // salesDetailController.gstAmtController.text =
+            // salesDetailController.tdsAmtController.text =
             salesDetailController.tdsController.text = element.tds.toString();
             salesDetailController.netAmountController.text = element.netAmount.toString();
           });
@@ -96,7 +100,9 @@ class _EntryScreenState extends State<EntryScreen> {
           salesDetailController.cashPortionController.text = "0.0";
           salesDetailController.accPortionController.text = "0.0";
           salesDetailController.gstController.text = "0.0";
+          salesDetailController.gstAmtController.text = "0.0";
           salesDetailController.tdsController.text = "0.0";
+          salesDetailController.tdsAmtController.text = "0.0";
           salesDetailController.netAmountController.text = "0.0";
         }
       }
@@ -270,8 +276,6 @@ class _EntryScreenState extends State<EntryScreen> {
       commmonController.calculateNetAmount();
       commmonController.calculateBillNetAmount();
     });
-
-
   }
 
   @override
@@ -440,6 +444,7 @@ class _EntryScreenState extends State<EntryScreen> {
                         controller: isSalesDetails ? salesDetailController.erpCostController :
                         isReceiptDetails ? receiptDetailsController.receiptCostController : billDetailsController.billCostController,
                         readOnly: widget.title != "Bill Details" ? true : false,
+                        isNumberField: true,
                         onTap: (){
                           if (billDetailsController.billCostController.text.trim() == '0.0' ||
                               billDetailsController.billCostController.text.trim() == '0.00') {
@@ -456,14 +461,17 @@ class _EntryScreenState extends State<EntryScreen> {
                         icon: Icons.payments_outlined,
                         controller: isSalesDetails ? salesDetailController.cashPortionController : receiptDetailsController.cashPortionController,
                         keyboardType: TextInputType.number,
+                        requiredField: true,
+                        isNumberField: true,
                         onTap: () {
-                          if (salesDetailController.cashPortionController.text.trim() == '0.0' ||
-                              salesDetailController.cashPortionController.text.trim() == '0.00') {
-                            salesDetailController.cashPortionController.clear();
-                          }
-                          else if (receiptDetailsController.cashPortionController.text.trim() == '0.0' ||
-                              receiptDetailsController.cashPortionController.text.trim() == '0.00') {
-                            receiptDetailsController.cashPortionController.clear();
+                          final controller = isSalesDetails
+                              ? salesDetailController.cashPortionController
+                              : receiptDetailsController.cashPortionController;
+
+                          final value = controller.text.trim();
+
+                          if (value == '0.0' || value == '0.00') {
+                            controller.clear();
                           }
                         },
                       ),
@@ -474,26 +482,35 @@ class _EntryScreenState extends State<EntryScreen> {
                         icon: Icons.account_balance_outlined,
                         controller: isSalesDetails ? salesDetailController.accPortionController : receiptDetailsController.accPortionController,
                         keyboardType: TextInputType.number,
+                        requiredField: true,
+                        isNumberField: true,
                         onTap: () {
-                          if (salesDetailController.accPortionController.text.trim() == '0.0' ||
-                              salesDetailController.accPortionController.text.trim() == '0.00') {
-                            salesDetailController.accPortionController.clear();
-                          }
-                          else if (receiptDetailsController.accPortionController.text.trim() == '0.0' ||
-                              receiptDetailsController.accPortionController.text.trim() == '0.00') {
-                            receiptDetailsController.accPortionController.clear();
+                          final controller = isSalesDetails
+                              ? salesDetailController.accPortionController
+                              : receiptDetailsController.accPortionController;
+
+                          final value = controller.text.trim();
+
+                          if (value == '0.0' || value == '0.00') {
+                            controller.clear();
                           }
                         },
                       ),
                       const SizedBox(height: 16),
                     ],
                     if (isSalesDetails || isReceiptDetails || isBillDetails) ...[
-                      _entryField(
-                        label: 'GST %',
-                        hint: '0.0%',
-                        icon: Icons.percent,
-                        controller: isSalesDetails ? salesDetailController.gstController : isBillDetails ? billDetailsController.gstController : receiptDetailsController.gstController,
-                        readOnly: true,
+                      _gstFields(
+                        gstController: isSalesDetails
+                            ? salesDetailController.gstController
+                            : isBillDetails
+                            ? billDetailsController.gstController
+                            : receiptDetailsController.gstController,
+
+                        gstAmountController: isSalesDetails
+                            ? salesDetailController.gstAmtController
+                            : isBillDetails
+                            ? billDetailsController.gstAmtController
+                            : receiptDetailsController.gstAmtController,
                       ),
                       const SizedBox(height: 16),
                       ],
@@ -504,16 +521,27 @@ class _EntryScreenState extends State<EntryScreen> {
                         icon: Icons.calculate_outlined,
                         controller: isSalesDetails ? salesDetailController.netAmountController : billDetailsController.netAmountController,
                         readOnly: true,
+                        requiredField: true,
                       ),
                       const SizedBox(height: 16,),
                       ],
                     if (isSalesDetails || isReceiptDetails) ...[
-                      _entryField(
-                        label: 'TDS %',
-                        hint: '0.0',
-                        icon: Icons.percent,
-                        controller: isSalesDetails ? salesDetailController.tdsController : receiptDetailsController.tdsController,
-                        readOnly: true,
+                      _tdsFields(
+                        tdsController: isSalesDetails
+                            ? salesDetailController.tdsController
+                            : receiptDetailsController.tdsController,
+
+                        tdsAmountController: isSalesDetails
+                            ? salesDetailController.tdsAmtController
+                            : receiptDetailsController.tdsAmtController,
+
+                        isTdsEnabled: isTdsEnabled,
+
+                        onTdsChanged: (value) {
+                          setState(() {
+                            isTdsEnabled = value ?? false;
+                          });
+                        },
                       ),
                       const SizedBox(height: 16),
                     ],
@@ -612,6 +640,100 @@ class _EntryScreenState extends State<EntryScreen> {
     );
   }
 
+  Widget _gstFields({
+    required TextEditingController gstController,
+    required TextEditingController gstAmountController,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _entryField(
+            label: 'GST %',
+            hint: '0.0%',
+            icon: Icons.percent_rounded,
+            controller: gstController,
+            readOnly: true,
+          ),
+        ),
+
+        const SizedBox(width: 12),
+
+        Expanded(
+          child: _entryField(
+            label: 'GST Amount',
+            hint: '0.00',
+            icon: Icons.currency_rupee_rounded,
+            controller: gstAmountController,
+            readOnly: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _tdsFields({
+    required TextEditingController tdsController,
+    required TextEditingController tdsAmountController,
+    required bool isTdsEnabled,
+    required ValueChanged<bool?> onTdsChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            // const Text(
+            //   'TDS',
+            //   style: TextStyle(
+            //     fontFamily: 'Poppins',
+            //     fontSize: 14,
+            //     fontWeight: FontWeight.w600,
+            //     color: AppColors.text,
+            //   ),
+            // ),
+
+            const Spacer(),
+
+            Checkbox(
+              value: isTdsEnabled,
+              onChanged: onTdsChanged,
+              activeColor: AppColors.primary,
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ],
+        ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: _entryField(
+                label: 'TDS %',
+                hint: '0.00',
+                icon: Icons.percent_rounded,
+                controller: tdsController,
+                readOnly: !isTdsEnabled,
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            Expanded(
+              child: _entryField(
+                label: 'TDS Amount',
+                hint: '0.00',
+                icon: Icons.currency_rupee_rounded,
+                controller: tdsAmountController,
+                readOnly: true,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _entryField({
     required String label,
     required String hint,
@@ -623,6 +745,7 @@ class _EntryScreenState extends State<EntryScreen> {
     bool isDateField = false,
     bool readOnly = false,
     bool requiredField = false,
+    bool isNumberField = false,
     VoidCallback? onTap,
   }) {
     return Column(
@@ -740,10 +863,12 @@ class _EntryScreenState extends State<EntryScreen> {
 
               if (isSalesDetails || isReceiptDetails || isBillDetails) {
                 return DropdownButtonFormField2<int>(
-                  value: isSalesDetails ? salesDetailController.selectedCompanyId == 0
+                  value: isSalesDetails
+                      ? salesDetailController.selectedCompanyId == 0
                       ? null
-                      : salesDetailController.selectedCompanyId :
-                  isReceiptDetails ? receiptDetailsController.selectedCompanyId == 0
+                      : salesDetailController.selectedCompanyId
+                      : isReceiptDetails
+                      ? receiptDetailsController.selectedCompanyId == 0
                       ? null
                       : receiptDetailsController.selectedCompanyId
                       : billDetailsController.selectedCompanyId == 0
@@ -766,11 +891,17 @@ class _EntryScreenState extends State<EntryScreen> {
                       size: 21,
                     ),
 
+                    // Reduce the gap between prefix icon and dropdown text
+                    prefixIconConstraints: const BoxConstraints(
+                      minWidth: 42,
+                      minHeight: 48,
+                    ),
+
                     filled: true,
                     fillColor: AppColors.background,
 
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
+                      horizontal: 8,
                       vertical: 14,
                     ),
 
@@ -812,6 +943,8 @@ class _EntryScreenState extends State<EntryScreen> {
                         value: company.companyId ?? 0,
                         child: Text(
                           company.companyName ?? '',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontFamily: 'Poppins',
                             fontSize: 14,
@@ -824,34 +957,30 @@ class _EntryScreenState extends State<EntryScreen> {
                   ],
 
                   onChanged: (value) {
-                    final selected = commmonController.companyDropdown
-                        .firstWhere(
+                    final selected = commmonController.companyDropdown.firstWhere(
                           (company) => company.companyId == value,
                     );
 
                     setState(() {
-                      if(isSalesDetails){
-                        salesDetailController.selectedCompanyId =
-                            value ?? 0;
-
+                      if (isSalesDetails) {
+                        salesDetailController.selectedCompanyId = value ?? 0;
                         salesDetailController.selectedCompany =
                             selected.companyName ?? '';
-                      }else if(isBillDetails){
-                        billDetailsController.selectedCompanyId =
-                            value ?? 0;
-
+                      } else if (isBillDetails) {
+                        billDetailsController.selectedCompanyId = value ?? 0;
                         billDetailsController.selectedCompany =
                             selected.companyName ?? '';
                       } else {
-                          receiptDetailsController.selectedCompanyId = value ?? 0;
-                          receiptDetailsController.selectedCompany = selected.companyName ?? '';
-                        }
-
+                        receiptDetailsController.selectedCompanyId = value ?? 0;
+                        receiptDetailsController.selectedCompany =
+                            selected.companyName ?? '';
+                      }
                     });
                   },
 
                   buttonStyleData: const ButtonStyleData(
                     height: 20,
+                    padding: EdgeInsets.zero,
                   ),
 
                   iconStyleData: const IconStyleData(
@@ -871,7 +1000,7 @@ class _EntryScreenState extends State<EntryScreen> {
 
                   menuItemStyleData: const MenuItemStyleData(
                     height: 45,
-                    padding: EdgeInsets.symmetric(horizontal: 14),
+                    padding: EdgeInsets.symmetric(horizontal: 8),
                   ),
                 );
               }
@@ -1005,11 +1134,22 @@ class _EntryScreenState extends State<EntryScreen> {
                   ? (value) {
                 final text = value?.trim() ?? '';
 
-                // Empty validation
+                // Required validation
                 if (text.isEmpty || text == "--SELECT--") {
                   return '* Required';
                 }
 
+                if (isNumberField) {
+                  final number = double.tryParse(text);
+
+                  if (number == null) {
+                    return '* Required';
+                  }
+
+                  if (number <= 0) {
+                    return '* Required';
+                  }
+                }
                 return null;
               }
                   : null,
