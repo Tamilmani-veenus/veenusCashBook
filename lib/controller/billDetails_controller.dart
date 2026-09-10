@@ -2,10 +2,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:veenuscashbook/provider/billDetails_provider.dart';
 
 import '../entry_screen.dart';
+import '../models/billDetailsSave_model.dart';
 import '../provider/common_provider.dart';
+import '../utilities/baseutitiles.dart';
 import '../utilities/requestconstant.dart';
 
 class BillDetailsController extends GetxController{
@@ -15,11 +18,12 @@ class BillDetailsController extends GetxController{
   final gstController = TextEditingController();
   final netAmountController = TextEditingController();
 
-  int receiptId = 0;
+  int billId = 0;
 
   RxList BillDetailsList = [].obs;
   RxList Bill_EditListApiValue = [].obs;
-
+  int selectedCompanyId = 0;
+  String selectedCompany = "--SELECT--";
   RxString saveButton = RequestConstant.SUBMIT.obs;
 
   Future getBillDetails_List() async {
@@ -39,6 +43,43 @@ class BillDetailsController extends GetxController{
       }
     } else {
       Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+    }
+  }
+
+  Future SaveButton_BillDetails(BuildContext context, int id) async {
+    int i = 0;
+    final String apiDate = DateFormat('yyyy-MM-dd').format(
+      DateFormat('dd/MM/yyyy').parse(BillDate.text),
+    );
+    await Future.delayed(const Duration(seconds: 0));
+    String body = billDetailsSaveResponseToJson(BillDetailsSaveResponse(
+      id: id != 0 ? id : 0,
+      billNo: BillNoController.text,
+      billDate: apiDate,
+      companyId: selectedCompanyId,
+      billAmount: double.tryParse(billCostController.text) ?? 0.0,
+      gst: double.tryParse(gstController.text) ?? 0.0,
+      netAmount: double.tryParse(netAmountController.text) ?? 0.0,
+      companyName: selectedCompany,
+    ));
+
+    final list = await BillDetailsProvider.SaveBillScreenEntryAPI(body, id, context);
+
+    if (list != null ) {
+      if(list["success"] == true){
+        Fluttertoast.showToast(msg: list["message"]);
+        await getBillDetails_List();
+        // clearDatas();
+        BaseUtitiles.popMultiple(context, count: 3);
+      }
+      else {
+        Fluttertoast.showToast(msg: list["message"] ?? RequestConstant.NETWORKERROR);
+        BaseUtitiles.popMultiple(context, count: 2);
+      }
+    }
+    else {
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+      BaseUtitiles.popMultiple(context, count: 2);
     }
   }
 

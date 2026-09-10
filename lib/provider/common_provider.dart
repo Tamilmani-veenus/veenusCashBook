@@ -19,6 +19,10 @@ class CommonProvider{
         response = await ApiManager.getAPICall(
             "${ApiConstant.GETAUTONO_YEAR_WISE}?fieldName=receiptNo&tableName=ReceiptDetails&formName=Receipt");
       }
+      else{
+        response = await ApiManager.getAPICall(
+            "${ApiConstant.GETAUTONO_YEAR_WISE}?fieldName=BillNo&tableName=BillDetails&formName=Bill");
+      }
       final data = json.decode(response);
       return data;
     } catch (error) {
@@ -32,9 +36,12 @@ class CommonProvider{
     try {
       if(title == "Sales"){
        response = await ApiManager.deleteAPICall(
-          "${ApiConstant.SALESDETAILS_DELETE}?salesId=$reqId");}
-      else
-        {
+          "${ApiConstant.SALESDETAILS_DELETE}?salesId=$reqId");
+      }else if(title == "Bills"){
+      response = await ApiManager.deleteAPICall(
+      "${ApiConstant.BILLDETAILS_DELETE}?billId=$reqId");
+      }
+      else{
           response = await ApiManager.deleteAPICall(
               "${ApiConstant.RECEIPTDETAILS_DELETE}?receiptId=$reqId");
         }

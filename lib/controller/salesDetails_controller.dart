@@ -53,11 +53,10 @@ class SalesDetailController extends GetxController{
 
 
   Future SaveButton_SalesDetails(BuildContext context, int id) async {
-    int i = 0;
     final String apiDate = DateFormat('yyyy-MM-dd').format(
       DateFormat('dd/MM/yyyy').parse(SalesDate.text),
     );
-    await Future.delayed(const Duration(seconds: 0));
+
     String body = salesDetailsSaveResponseToJson(SalesDetailsSaveResponse(
       id: id != 0 ? id : 0,
       salesNo: SalesNoController.text,
@@ -74,24 +73,27 @@ class SalesDetailController extends GetxController{
 
     final list = await SalesDetailsProvider.SaveSalesScreenEntryAPI(body, id, context);
 
-    if (list != null ) {
-      if(list["success"] == true){
-        Fluttertoast.showToast(msg: list["message"]);
+    if (list != null) {
+      if (list["success"] == true) {
+        final String msg = list["message"] ?? '';
         await getSalesDetails_List();
-        // clearDatas();
+
+        if (msg.toLowerCase().contains('submitted successfully')) {
+          await BaseUtitiles.showSuccessAnimation(context, msg);
+        } else {
+          Fluttertoast.showToast(msg: msg);
+        }
+
         BaseUtitiles.popMultiple(context, count: 3);
-      }
-      else {
+      } else {
         Fluttertoast.showToast(msg: list["message"] ?? RequestConstant.NETWORKERROR);
         BaseUtitiles.popMultiple(context, count: 2);
       }
-    }
-    else {
+    } else {
       Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
       BaseUtitiles.popMultiple(context, count: 2);
     }
   }
-
 
   Future SalesDetails_List_EditApi(int expenseId,String MenuName, BuildContext context) async {
     final value =

@@ -63,16 +63,20 @@ class ApiConstant{
   static String PUTCOMPANYDETAILS_API = BASE_URL_CORE + "api/Company/updateCompany";
   static String PUTSALESDETAILS_API = BASE_URL_CORE + "api/Sales/UpdateSales";
   static String PUTRECEIPTDETAILS_API = BASE_URL_CORE + "api/Receipt/UpdateReceipt";
+  static String PUTBILLDETAILS_API = BASE_URL_CORE + "api/Bill/updateBill";
 
   /// ----- POST API's -----
 
   static String COMPANYDETAILS_SAVEAPI = BASE_URL_CORE + "api/Company/AddCompany";
   static String SALESDETAILS_SAVEAPI = BASE_URL_CORE + "api/Sales/AddSales";
   static String RECEIPTDETAILS_SAVEAPI = BASE_URL_CORE + "api/Receipt/AddReceipt";
+  static String BILLDETAILS_SAVEAPI = BASE_URL_CORE + "api/Bill/AddBilldetails";
+
 
   /// ----- Delete API's -----
   static String COMPANYDETAILS_DELETE = BASE_URL_CORE + "api/Company/DeleteCompanyDetail";
   static String SALESDETAILS_DELETE = BASE_URL_CORE + "api/Sales/DeleteSalesDetails";
   static String RECEIPTDETAILS_DELETE = BASE_URL_CORE + "api/Receipt/DeleteReceiptDetails";
+  static String BILLDETAILS_DELETE = BASE_URL_CORE + "api/Bill/DeleteBillDetails";
 
 }

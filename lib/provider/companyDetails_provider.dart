@@ -78,7 +78,6 @@ class CompanyDetailsProvider{
           (isSuccess
               ? "Deleted successfully"
               : RequestConstant.NETWORKERROR);
-
       Fluttertoast.showToast(msg: message);
 
       return isSuccess;

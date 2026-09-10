@@ -126,40 +126,40 @@ class _EntryScreenState extends State<EntryScreen> {
           receiptDetailsController.ReceiptDate.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
           receiptDetailsController.receiptCostController.text = "0.0";
           receiptDetailsController.cashPortionController.text = "0.0";
+          receiptDetailsController.gstController.text = "0.0";
           receiptDetailsController.accPortionController.text = "0.0";
           receiptDetailsController.tdsController.text = "0.0";
         }
       }
 
-      // else if (widget.title == "Bill Details") {
-      //   if(billDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
-      //     billDetailsController.Bill_EditListApiValue.forEach((element) {
-      //       billDetailsController.bi=element.id!;
-      //       billDetailsController.ReceiptNoController.text = element.receiptNo;
-      //       billDetailsController.selectedCompanyId = element.companyId;
-      //       billDetailsController.selectedCompany = element.companyName;
-      //       billDetailsController.ReceiptDate.text = DateFormat('dd/MM/yyyy').format(
-      //           DateFormat('yyyy-MM-dd').parse(element.date));
-      //       billDetailsController.receiptCostController.text = element.receivedAmount.toString();
-      //       billDetailsController.cashPortionController.text = element.cashPortion.toString();
-      //       billDetailsController.accPortionController.text = element.bankPortion.toString();
-      //       billDetailsController.tdsController.text = element.tds.toString();
-      //     });
-      //   }
-      //
-      //   else if(receiptDetailsController.saveButton.value ==RequestConstant.SUBMIT){
-      //     receiptDetailsController.receiptId=0;
-      //     await commmonController.AutoYearWiseNo("RECEIPT");
-      //     receiptDetailsController.ReceiptNoController.text = commmonController.Receipt_autoYrsWise.value;
-      //     receiptDetailsController.selectedCompanyId = 0;
-      //     receiptDetailsController.selectedCompany = "--SELECT--";
-      //     receiptDetailsController.ReceiptDate.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
-      //     receiptDetailsController.receiptCostController.text = "0.0";
-      //     receiptDetailsController.cashPortionController.text = "0.0";
-      //     receiptDetailsController.accPortionController.text = "0.0";
-      //     receiptDetailsController.tdsController.text = "0.0";
-      //   }
-      // }
+      else if (widget.title == "Bill Details") {
+        if(billDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
+          billDetailsController.Bill_EditListApiValue.forEach((element) {
+            billDetailsController.billId=element.id!;
+            billDetailsController.BillNoController.text = element.billNo;
+            billDetailsController.selectedCompanyId = element.companyId;
+            billDetailsController.selectedCompany = element.companyName;
+            billDetailsController.BillDate.text = DateFormat('dd/MM/yyyy').format(
+                DateFormat('yyyy-MM-dd').parse(element.billDate));
+            billDetailsController.billCostController.text = element.billAmount.toString();
+            billDetailsController.gstController.text = element.gst.toString();
+            billDetailsController.netAmountController.text = element.netAmount.toString();
+          });
+        }
+
+        else if(billDetailsController.saveButton.value ==RequestConstant.SUBMIT){
+          billDetailsController.billId=0;
+          await commmonController.AutoYearWiseNo("BILL");
+          billDetailsController.BillNoController.text = commmonController.Bill_autoYrsWise.value;
+          billDetailsController.selectedCompanyId = 0;
+          billDetailsController.selectedCompany = "--SELECT--";
+          billDetailsController.BillDate.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
+          billDetailsController.billCostController.text = "0.0";
+          billDetailsController.billCostController.text = "0.0";
+          billDetailsController.gstController.text = "0.0";
+          billDetailsController.netAmountController.text = "0.0";
+        }
+      }
 
       salesDetailController.cashPortionController.addListener(() {
         commmonController.calculateErpCost(
@@ -193,8 +193,19 @@ class _EntryScreenState extends State<EntryScreen> {
         );
       });
 
-      salesDetailController.accPortionController
-          .addListener(commmonController.calculateGst);
+      salesDetailController.accPortionController.addListener(() {
+        commmonController.calculateGst(
+        salesDetailController.accPortionController,
+        salesDetailController.gstController
+        );
+      });
+
+      billDetailsController.billCostController.addListener(() {
+        commmonController.calculateGst(
+            billDetailsController.billCostController,
+            billDetailsController.gstController
+        );
+      });
 
       // TDS CALCULATION
 
@@ -221,6 +232,12 @@ class _EntryScreenState extends State<EntryScreen> {
       salesDetailController.gstController
           .addListener(commmonController.calculateNetAmount);
 
+      billDetailsController.billCostController
+          .addListener(commmonController.calculateBillNetAmount);
+
+      billDetailsController.gstController
+          .addListener(commmonController.calculateBillNetAmount);
+
       // Calculate initial value
       commmonController.calculateErpCost(
         salesDetailController.cashPortionController,
@@ -232,7 +249,14 @@ class _EntryScreenState extends State<EntryScreen> {
         receiptDetailsController.accPortionController,
         receiptDetailsController.receiptCostController,
       );
-      commmonController.calculateGst();
+      commmonController.calculateGst(
+        salesDetailController.accPortionController,
+        salesDetailController.gstController
+      );
+      commmonController.calculateGst(
+          billDetailsController.billCostController,
+          billDetailsController.gstController
+      );
       commmonController.calculateTds(
         salesDetailController.accPortionController,
         salesDetailController.tdsController,
@@ -244,6 +268,7 @@ class _EntryScreenState extends State<EntryScreen> {
         receiptDetailsController.tdsController,
       );
       commmonController.calculateNetAmount();
+      commmonController.calculateBillNetAmount();
     });
 
 
@@ -264,7 +289,10 @@ class _EntryScreenState extends State<EntryScreen> {
         .removeListener(commmonController.receiptERPListener);
 
     salesDetailController.accPortionController
-        .removeListener(commmonController.calculateGst);
+        .removeListener(commmonController.salesGSTListener);
+
+    billDetailsController.billCostController
+        .removeListener(commmonController.billGSTListener);
 
     salesDetailController.accPortionController
         .removeListener(commmonController.salesTdsListener);
@@ -280,11 +308,20 @@ class _EntryScreenState extends State<EntryScreen> {
 
     salesDetailController.gstController
         .removeListener(commmonController.calculateNetAmount);
+    billDetailsController.billCostController
+        .removeListener(commmonController.calculateBillNetAmount);
+    billDetailsController.gstController
+        .removeListener(commmonController.calculateBillNetAmount);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+
+    final bool isSalesDetails = widget.title == "Sales Details";
+    final bool isReceiptDetails = widget.title == "Receipt Details";
+    final bool isBillDetails = widget.title == "Bill Details";
+
     return Scaffold(
       backgroundColor: AppColors.background,
 
@@ -366,10 +403,10 @@ class _EntryScreenState extends State<EntryScreen> {
 
                     if (widget.title != "Company Details") ...[
                       _entryField(
-                        label: widget.title == "Sales Details" ? 'Sales No' : widget.title == "Receipt Details" ? 'Receipt No' : 'Bill No',
+                        label: isSalesDetails ? 'Sales No' : isReceiptDetails ? 'Receipt No' : 'Bill No',
                         hint: '',
                         icon: Icons.numbers,
-                        controller: widget.title == "Sales Details" ? salesDetailController.SalesNoController : widget.title == "Receipt Details" ? receiptDetailsController.ReceiptNoController : billDetailsController.BillNoController,
+                        controller: isSalesDetails ? salesDetailController.SalesNoController : isReceiptDetails ? receiptDetailsController.ReceiptNoController : billDetailsController.BillNoController,
                         isDateField: true,
                       ),
                       const SizedBox(height: 16),
@@ -385,33 +422,39 @@ class _EntryScreenState extends State<EntryScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    if (widget.title == "Sales Details" || widget.title == "Receipt Details" || widget.title == "Bill Details") ...[
+                    if (isSalesDetails || isReceiptDetails || isBillDetails) ...[
                       _entryField(
                         label: 'Date',
                         hint: '',
                         icon: Icons.calendar_month_outlined,
-                        controller: widget.title == "Sales Details" ? salesDetailController.SalesDate :
-                        widget.title == "Receipt Details" ? receiptDetailsController.ReceiptDate : billDetailsController.BillDate,
+                        controller: isSalesDetails ? salesDetailController.SalesDate :
+                        isReceiptDetails ? receiptDetailsController.ReceiptDate : billDetailsController.BillDate,
                         isDateField: true,
                       ),
                       const SizedBox(height: 16),
 
                       _entryField(
-                        label: widget.title == "Sales Details" ? 'ERP Cost' : widget.title == "Receipt Details" ? 'Receipt Amount' : 'Bill Amount',
+                        label: isSalesDetails ? 'ERP Cost' : isReceiptDetails ? 'Receipt Amount' : 'Bill Amount',
                         hint: '0.0',
                         icon: Icons.numbers,
-                        controller: widget.title == "Sales Details" ? salesDetailController.erpCostController :
-                        widget.title == "Receipt Details" ? receiptDetailsController.receiptCostController : billDetailsController.billCostController,
-                        readOnly: true
+                        controller: isSalesDetails ? salesDetailController.erpCostController :
+                        isReceiptDetails ? receiptDetailsController.receiptCostController : billDetailsController.billCostController,
+                        readOnly: widget.title != "Bill Details" ? true : false,
+                        onTap: (){
+                          if (billDetailsController.billCostController.text.trim() == '0.0' ||
+                              billDetailsController.billCostController.text.trim() == '0.00') {
+                            billDetailsController.billCostController.clear();
+                          }
+                        }
                       ),
                       const SizedBox(height: 16),
                       ],
-                    if (widget.title == "Sales Details" || widget.title == "Receipt Details" ) ...[
+                    if (isSalesDetails || isReceiptDetails ) ...[
                       _entryField(
                         label: 'Cash portion',
                         hint: 'Enter cash portion',
                         icon: Icons.payments_outlined,
-                        controller: widget.title == "Sales Details" ? salesDetailController.cashPortionController : receiptDetailsController.cashPortionController,
+                        controller: isSalesDetails ? salesDetailController.cashPortionController : receiptDetailsController.cashPortionController,
                         keyboardType: TextInputType.number,
                         onTap: () {
                           if (salesDetailController.cashPortionController.text.trim() == '0.0' ||
@@ -429,7 +472,7 @@ class _EntryScreenState extends State<EntryScreen> {
                         label: 'A/C portion',
                         hint: 'Enter A/C portion',
                         icon: Icons.account_balance_outlined,
-                        controller: widget.title == "Sales Details" ? salesDetailController.accPortionController : receiptDetailsController.accPortionController,
+                        controller: isSalesDetails ? salesDetailController.accPortionController : receiptDetailsController.accPortionController,
                         keyboardType: TextInputType.number,
                         onTap: () {
                           if (salesDetailController.accPortionController.text.trim() == '0.0' ||
@@ -444,31 +487,32 @@ class _EntryScreenState extends State<EntryScreen> {
                       ),
                       const SizedBox(height: 16),
                     ],
-                    if (widget.title == "Sales Details") ...[
-                      const SizedBox(height: 16),
+                    if (isSalesDetails || isReceiptDetails || isBillDetails) ...[
                       _entryField(
                         label: 'GST %',
                         hint: '0.0%',
                         icon: Icons.percent,
-                        controller: salesDetailController.gstController,
+                        controller: isSalesDetails ? salesDetailController.gstController : isBillDetails ? billDetailsController.gstController : receiptDetailsController.gstController,
                         readOnly: true,
                       ),
                       const SizedBox(height: 16),
+                      ],
+                    if (isSalesDetails || isBillDetails) ...[
                       _entryField(
                         label: 'Net Amount',
                         hint: '0.00',
                         icon: Icons.calculate_outlined,
-                        controller: salesDetailController.netAmountController,
+                        controller: isSalesDetails ? salesDetailController.netAmountController : billDetailsController.netAmountController,
                         readOnly: true,
                       ),
                       const SizedBox(height: 16,),
                       ],
-                    if (widget.title == "Sales Details" || widget.title == "Receipt Details") ...[
+                    if (isSalesDetails || isReceiptDetails) ...[
                       _entryField(
                         label: 'TDS %',
                         hint: '0.0',
                         icon: Icons.percent,
-                        controller: widget.title == "Sales Details" ? salesDetailController.tdsController : receiptDetailsController.tdsController,
+                        controller: isSalesDetails ? salesDetailController.tdsController : receiptDetailsController.tdsController,
                         readOnly: true,
                       ),
                       const SizedBox(height: 16),
@@ -518,7 +562,6 @@ class _EntryScreenState extends State<EntryScreen> {
                           hint: 'Enter GST number',
                           icon: Icons.receipt_long_outlined,
                           controller: companyDetailsController.GSTNoController,
-                          keyboardType: TextInputType.number,
                           requiredField: true,
                         ),
 
@@ -551,7 +594,9 @@ class _EntryScreenState extends State<EntryScreen> {
                     ),
                   ),
                   child: Text(
-                    widget.title == "Company Details" ? companyDetailsController.saveButton.value : widget.title == "Sales Details" ? salesDetailController.saveButton.value : receiptDetailsController.saveButton.value,
+                    widget.title == "Company Details" ? companyDetailsController.saveButton.value :
+                    isSalesDetails ? salesDetailController.saveButton.value :
+                    isReceiptDetails ? receiptDetailsController.saveButton.value : billDetailsController.saveButton.value,
                     style: TextStyle(
                       fontFamily: 'Poppins',
                       fontSize: 15,
@@ -610,7 +655,7 @@ class _EntryScreenState extends State<EntryScreen> {
                     return Theme(
                       data: Theme.of(context).copyWith(
                         colorScheme: ColorScheme.light(
-                          primary: AppColors.accent,
+                          primary: AppColors.primary,
                           onPrimary: AppColors.white,
                           surface: AppColors.white,
                           onSurface: AppColors.text,
@@ -690,12 +735,20 @@ class _EntryScreenState extends State<EntryScreen> {
                   widget.title == "Sales Details";
               final bool isReceiptDetails =
                   widget.title == "Receipt Details";
+              final bool isBillDetails =
+                  widget.title == "Bill Details";
 
-              if (isSalesDetails || isReceiptDetails) {
+              if (isSalesDetails || isReceiptDetails || isBillDetails) {
                 return DropdownButtonFormField2<int>(
                   value: isSalesDetails ? salesDetailController.selectedCompanyId == 0
                       ? null
-                      : salesDetailController.selectedCompanyId : receiptDetailsController.selectedCompanyId == 0 ? null : receiptDetailsController.selectedCompanyId,
+                      : salesDetailController.selectedCompanyId :
+                  isReceiptDetails ? receiptDetailsController.selectedCompanyId == 0
+                      ? null
+                      : receiptDetailsController.selectedCompanyId
+                      : billDetailsController.selectedCompanyId == 0
+                      ? null
+                      : billDetailsController.selectedCompanyId,
 
                   isExpanded: true,
 
@@ -783,9 +836,13 @@ class _EntryScreenState extends State<EntryScreen> {
 
                         salesDetailController.selectedCompany =
                             selected.companyName ?? '';
-                      }
-                      else
-                        {
+                      }else if(isBillDetails){
+                        billDetailsController.selectedCompanyId =
+                            value ?? 0;
+
+                        billDetailsController.selectedCompany =
+                            selected.companyName ?? '';
+                      } else {
                           receiptDetailsController.selectedCompanyId = value ?? 0;
                           receiptDetailsController.selectedCompany = selected.companyName ?? '';
                         }
@@ -931,7 +988,9 @@ class _EntryScreenState extends State<EntryScreen> {
             })
           else
             TextFormField(
+              cursorColor: AppColors.primary,
               controller: controller,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               keyboardType: keyboardType,
               maxLines: maxLines,
               readOnly: readOnly,
@@ -949,18 +1008,6 @@ class _EntryScreenState extends State<EntryScreen> {
                 // Empty validation
                 if (text.isEmpty || text == "--SELECT--") {
                   return '* Required';
-                }
-
-                // Number validation
-                final amount = double.tryParse(text);
-
-                if (amount == null) {
-                  return 'Enter a valid amount';
-                }
-
-                // Zero / negative validation
-                if (amount <= 0) {
-                  return '$label must be greater than 0';
                 }
 
                 return null;
@@ -1026,7 +1073,10 @@ class _EntryScreenState extends State<EntryScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),),
         title: const Text('Alert!',style: TextStyle(fontSize: 20,fontWeight: FontWeight.w500),),
-        content: Text(companyDetailsController.saveButton==RequestConstant.RESUBMIT  || salesDetailController.saveButton.value == RequestConstant.RESUBMIT || receiptDetailsController.saveButton.value == RequestConstant.RESUBMIT ? 'Are you sure to Re-Submit?' :
+        content: Text(companyDetailsController.saveButton==RequestConstant.RESUBMIT  ||
+            salesDetailController.saveButton.value == RequestConstant.RESUBMIT ||
+            receiptDetailsController.saveButton.value == RequestConstant.RESUBMIT ||
+            billDetailsController.saveButton.value == RequestConstant.RESUBMIT ? 'Are you sure to Re-Submit?' :
         'Are you sure to Submit?'),
         actions:[
           Container(
@@ -1066,10 +1116,16 @@ class _EntryScreenState extends State<EntryScreen> {
                                 await receiptDetailsController.SaveButton_ReceiptDetails(
                                 context, receiptDetailsController.receiptId != 0 ? receiptDetailsController.receiptId : 0,);
                               }
+                              else{
+                                await billDetailsController.SaveButton_BillDetails(
+                                  context, billDetailsController.billId != 0 ? billDetailsController.billId : 0,);
+                              }
                             }
                         },
                         child: Text(
-                          widget.title == "Company Details" ? companyDetailsController.saveButton.value : widget.title == "Sales Details" ? salesDetailController.saveButton.value : receiptDetailsController.saveButton.value,
+                          widget.title == "Company Details" ? companyDetailsController.saveButton.value :
+                          widget.title == "Sales Details" ? salesDetailController.saveButton.value :
+                          widget.title == "Receipt Details" ? receiptDetailsController.saveButton.value : billDetailsController.saveButton.value,
                           style: TextStyle(
                             color: AppColors.primary, // Change color when button is disabled
                             fontWeight: FontWeight.bold,

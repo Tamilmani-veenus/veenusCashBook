@@ -19,6 +19,7 @@ class CommonController extends GetxController{
 
   RxString Sales_autoYrsWise = "".obs;
   RxString Receipt_autoYrsWise = "".obs;
+  RxString Bill_autoYrsWise = "".obs;
 
   RxList companyDropdown = [].obs;
 
@@ -34,6 +35,10 @@ class CommonController extends GetxController{
           Receipt_autoYrsWise.value = value["entryAutoNo"];
           return Receipt_autoYrsWise.value;
         }
+        else {
+            Bill_autoYrsWise.value = value["entryAutoNo"];
+            return Bill_autoYrsWise.value;
+          }
       }
       else {
         BaseUtitiles.showToast(value?.message ?? RequestConstant.NETWORKERROR);
@@ -80,13 +85,16 @@ class CommonController extends GetxController{
     erpCostController.text = total.toStringAsFixed(2);
   }
 
-  void calculateGst() {
+  void calculateGst(
+      TextEditingController accPortionController,
+      TextEditingController gstController
+      ) {
     final double acPortion =
-        double.tryParse(salesDetailController.accPortionController.text.trim()) ?? 0;
+        double.tryParse(accPortionController.text.trim()) ?? 0;
 
     final double gst = acPortion * 18 / 100;
 
-    salesDetailController.gstController.text = gst.toStringAsFixed(2);
+    gstController.text = gst.toStringAsFixed(2);
   }
 
   void calculateTds(
@@ -114,6 +122,18 @@ class CommonController extends GetxController{
     final double netAmount = cash + acc + gst;
 
     salesDetailController.netAmountController.text = netAmount.toStringAsFixed(2);
+  }
+
+  void calculateBillNetAmount() {
+    final double cash =
+        double.tryParse(billDetailsController.billCostController.text.trim()) ?? 0;
+
+    final double gst =
+        double.tryParse(billDetailsController.gstController.text.trim()) ?? 0;
+
+    final double netAmount = cash + gst;
+
+    billDetailsController.netAmountController.text = netAmount.toStringAsFixed(2);
   }
 
   void salesTdsListener() {
@@ -144,6 +164,20 @@ class CommonController extends GetxController{
       receiptDetailsController.cashPortionController,
       receiptDetailsController.accPortionController,
       receiptDetailsController.receiptCostController,
+    );
+  }
+
+  void salesGSTListener() {
+    calculateGst(
+      salesDetailController.accPortionController,
+      salesDetailController.gstController,
+    );
+  }
+
+  void billGSTListener() {
+    calculateGst(
+      billDetailsController.billCostController,
+      billDetailsController.gstController,
     );
   }
 
@@ -254,5 +288,4 @@ class CommonController extends GetxController{
       ),
     );
   }
-
 }

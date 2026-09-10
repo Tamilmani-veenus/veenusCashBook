@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
+import '../common_utils/common_listScreen.dart';
+
 
 String? punchStatus;
 bool punchIn = false;
@@ -183,6 +185,28 @@ class BaseUtitiles {
     } else {
       Fluttertoast.showToast(msg: "No Internet Connection. Please check your network.");
       return false;
+    }
+  }
+
+  static Future<void> showSuccessAnimation(
+      BuildContext context,
+      String message, {
+        Duration displayDuration = const Duration(milliseconds: 1400),
+      }) async {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.35),
+      transitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (context, anim1, anim2) => SuccessPopup(message: message),
+      transitionBuilder: (context, anim, secondaryAnim, child) {
+        return FadeTransition(opacity: anim, child: child);
+      },
+    );
+
+    await Future.delayed(displayDuration);
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop(); // close the popup
     }
   }
 }

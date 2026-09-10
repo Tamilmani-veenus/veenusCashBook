@@ -16,6 +16,7 @@ class ReceiptDetailsController extends GetxController{
   final receiptCostController = TextEditingController();
   final cashPortionController = TextEditingController();
   final accPortionController = TextEditingController();
+  final gstController = TextEditingController();
   final tdsController = TextEditingController();
 
   int receiptId = 0;
