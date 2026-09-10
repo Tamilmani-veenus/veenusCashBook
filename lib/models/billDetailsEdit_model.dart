@@ -35,11 +35,11 @@ class BillDetailsEditResponse {
 class Result {
   int? id;
   String? billNo;
-  DateTime? billDate;
+  String? billDate;
   int? companyId;
-  int? billAmount;
-  int? gst;
-  int? netAmount;
+  double? billAmount;
+  double? gst;
+  double? netAmount;
   String? companyName;
 
   Result({
@@ -56,7 +56,7 @@ class Result {
   factory Result.fromJson(Map<String, dynamic> json) => Result(
     id: json["id"],
     billNo: json["billNo"],
-    billDate: json["billDate"] == null ? null : DateTime.parse(json["billDate"]),
+    billDate: json["billDate"],
     companyId: json["companyId"],
     billAmount: json["billAmount"],
     gst: json["gst"],
@@ -67,7 +67,7 @@ class Result {
   Map<String, dynamic> toJson() => {
     "id": id,
     "billNo": billNo,
-    "billDate": billDate == null ? null : "${billDate!.year.toString().padLeft(4, '0')}-${billDate!.month.toString().padLeft(2, '0')}-${billDate!.day.toString().padLeft(2, '0')}",
+    "billDate": billDate,
     "companyId": companyId,
     "billAmount": billAmount,
     "gst": gst,

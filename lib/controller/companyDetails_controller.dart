@@ -88,7 +88,7 @@ class CompanyDetailsController extends GetxController{
         Fluttertoast.showToast(msg: list["message"]);
         await getCompanyDetails_List();
         // clearDatas();
-        BaseUtitiles.popMultiple(context, count: 2);
+        BaseUtitiles.popMultiple(context, count: 3);
       }
       else {
         Fluttertoast.showToast(msg: list["message"] ?? RequestConstant.NETWORKERROR);

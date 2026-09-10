@@ -16,7 +16,10 @@ class ReceiptDetailsController extends GetxController{
   final receiptCostController = TextEditingController();
   final cashPortionController = TextEditingController();
   final accPortionController = TextEditingController();
+  final gstController = TextEditingController();
+  final gstAmtController = TextEditingController();
   final tdsController = TextEditingController();
+  final tdsAmtController = TextEditingController();
 
   int receiptId = 0;
   int selectedCompanyId = 0;
@@ -66,15 +69,27 @@ class ReceiptDetailsController extends GetxController{
 
     final list = await ReceiptDetailsProvider.SaveReceiptScreenEntryAPI(body, id, context);
 
-    if (list != null ) {
-      if(list["success"] == true){
-        Fluttertoast.showToast(msg: list["message"]);
+    if (list != null) {
+      if (list["success"] == true) {
+        final bool success = list["success"] == true;
+        final String msg = list["message"] ?? '';
         await getReceiptDetails_List();
-        // clearDatas();
-        BaseUtitiles.popMultiple(context, count: 3);
-      }
-      else {
-        Fluttertoast.showToast(msg: list["message"] ?? RequestConstant.NETWORKERROR);
+
+        await BaseUtitiles.showSuccessAnimation(
+          context,
+          title: success ? 'Submitted' : 'Failed',
+          message: msg,
+          isSuccess: success,
+        );
+
+        BaseUtitiles.popMultiple(context, count: success ? 3 : 2);
+      } else {
+        await BaseUtitiles.showSuccessAnimation(
+          context,
+          title: 'Failed',
+          message: RequestConstant.NETWORKERROR,
+          isSuccess: false,
+        );
         BaseUtitiles.popMultiple(context, count: 2);
       }
     }

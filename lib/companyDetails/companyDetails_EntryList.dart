@@ -101,23 +101,6 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                 ),
 
                 const SizedBox(width: 10),
-
-                Container(
-                  height: 48,
-                  width: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.border,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.tune_rounded,
-                    color: AppColors.drawerIcon,
-                    size: 22,
-                  ),
-                ),
               ],
             ),
           ),

@@ -5,6 +5,9 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:veenuscashbook/app_theme.dart';
+import 'dart:math' as math;
+import '../common_utils/common_listScreen.dart';
 
 
 String? punchStatus;
@@ -145,30 +148,20 @@ class BaseUtitiles {
     return dateformate;
   }
 
-  static  Future<void> showLoadingDialog(BuildContext context) async {
+  static Future<void> showLoadingDialog(BuildContext context) async {
     return showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return new WillPopScope(
-              onWillPop: () async => false,
-              child: SimpleDialog(
-                  backgroundColor: Colors.transparent,
-                  children: <Widget>[
-                    Center(
-                      child: Column(children: [
-                        CircularProgressIndicator(
-                          valueColor: new AlwaysStoppedAnimation<Color>(BaseUtitiles.primaryColor),
-                        ),
-                        SizedBox(height: 10),
-                        Text(
-                          "Please Wait....",
-                          style: TextStyle(color: Colors.white),
-                        )
-                      ]),
-                    )
-                  ]));
-        });
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.40),
+      builder: (BuildContext context) {
+        return const PopScope(
+          canPop: false,
+          child: Center(
+            child: _ModernLoadingCard(),
+          ),
+        );
+      },
+    );
   }
 
   static Future<bool> isConnectedToNetwork() async {
@@ -185,6 +178,213 @@ class BaseUtitiles {
       return false;
     }
   }
+
+  static Future<void> showSuccessAnimation(
+      BuildContext context, {
+        String title = 'Submitted',
+        required String message,
+        bool isSuccess = true,
+        Duration displayDuration = const Duration(milliseconds: 1600),
+      }) async {
+    if (!context.mounted) return;
+
+    showGeneralDialog(
+      context: context,
+      useRootNavigator: true,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.35),
+      transitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (context, anim1, anim2) => SuccessPopup(
+        title: title,
+        message: message,
+        isSuccess: isSuccess,
+      ),
+      transitionBuilder: (context, anim, secondaryAnim, child) {
+        return FadeTransition(opacity: anim, child: child);
+      },
+    );
+
+    await Future.delayed(displayDuration);
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+  }
 }
 
+class _ModernLoadingCard extends StatefulWidget {
+  const _ModernLoadingCard();
 
+  @override
+  State<_ModernLoadingCard> createState() => _ModernLoadingCardState();
+}
+
+class _ModernLoadingCardState extends State<_ModernLoadingCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = AppColors.primary;
+
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        width: 185,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 24,
+          vertical: 24,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(.16),
+              blurRadius: 35,
+              spreadRadius: 2,
+              offset: const Offset(0, 15),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 58,
+              height: 58,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  RotationTransition(
+                    turns: _controller,
+                    child: CustomPaint(
+                      size: const Size(58, 58),
+                      painter: _LoaderRingPainter(
+                        color: primary,
+                      ),
+                    ),
+                  ),
+
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: primary.withOpacity(.10),
+                    ),
+                    child: Icon(
+                      Icons.sync_rounded,
+                      size: 21,
+                      color: primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 18),
+
+            Text(
+              "Please Wait",
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: Colors.grey.shade900,
+              ),
+            ),
+
+            const SizedBox(height: 5),
+
+            Text(
+              "Processing your request",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 10.5,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade500,
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            SizedBox(
+              width: 90,
+              child: LinearProgressIndicator(
+                minHeight: 3,
+                borderRadius: BorderRadius.circular(10),
+                backgroundColor: primary.withOpacity(.10),
+                valueColor: AlwaysStoppedAnimation<Color>(primary),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LoaderRingPainter extends CustomPainter {
+  final Color color;
+
+  _LoaderRingPainter({
+    required this.color,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(
+      size.width / 2,
+      size.height / 2,
+    );
+
+    final radius = size.width / 2 - 4;
+
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round
+      ..color = color.withOpacity(.18);
+
+    canvas.drawCircle(
+      center,
+      radius,
+      paint,
+    );
+
+    paint.color = color;
+
+    canvas.drawArc(
+      Rect.fromCircle(
+        center: center,
+        radius: radius,
+      ),
+      -math.pi / 2,
+      math.pi * 1.25,
+      false,
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _LoaderRingPainter oldDelegate) {
+    return oldDelegate.color != color;
+  }
+}
