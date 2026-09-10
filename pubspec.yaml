@@ -42,6 +42,10 @@ dependencies:
   path_provider:
   fluttertoast:
   connectivity_plus: ^1.0.6
+  intl: ^0.17.0
+  flutter_bloc:
+  bloc:
+  equatable: ^2.0.2
 
 dev_dependencies:
   flutter_test:

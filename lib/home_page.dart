@@ -259,7 +259,7 @@ class CashBookDrawer extends StatelessWidget {
               icon: Icons.receipt_long_outlined,
               title: 'Receipts Details',
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context)=> const ListScreen(title: 'Receipts Details')));
+                Navigator.push(context, MaterialPageRoute(builder: (context)=> const ListScreen(title: 'Receipt Details')));
               },
             ),
 

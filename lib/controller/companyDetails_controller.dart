@@ -50,7 +50,7 @@ class CompanyDetailsController extends GetxController{
 
   Future getDropDownCityValues() async {
     cityDropDown.value = [];
-    var response = await CompanyDetailsProvider.getDropDownValues();
+    var response = await CompanyDetailsProvider.getDropDownValues("CompanyDetails");
     if (response != null) {
       if (response.success == true) {
         if (response.result!.isNotEmpty) {

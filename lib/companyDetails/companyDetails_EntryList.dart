@@ -228,14 +228,7 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.primary.withOpacity(.15),
-                      AppColors.lightBlue,
-                    ],
-                  ),
+                  color: AppColors.lightBlue,
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Center(

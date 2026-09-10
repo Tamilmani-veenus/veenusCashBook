@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:veenuscashbook/controller/billDetails_controller.dart';
+import 'package:veenuscashbook/controller/common_controller.dart';
+import 'package:veenuscashbook/controller/receiptDetails_controller.dart';
+import 'package:veenuscashbook/controller/salesDetails_controller.dart';
+import 'package:veenuscashbook/utilities/requestconstant.dart';
 
 import 'app_theme.dart';
 import 'entry_screen.dart';
@@ -16,7 +23,20 @@ class ListScreen extends StatefulWidget {
 }
 
 class _ListScreenState extends State<ListScreen> {
+  SalesDetailController salesDetailController = Get.put(SalesDetailController());
+  ReceiptDetailsController receiptDetailsController = Get.put(ReceiptDetailsController());
+  BillDetailsController billDetailsController = Get.put(BillDetailsController());
+  CommonController commonController = Get.put(CommonController());
   int? expandedIndex;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    salesDetailController.getSalesDetails_List();
+    receiptDetailsController.getReceiptDetails_List();
+    billDetailsController.getBillDetails_List();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,113 +110,113 @@ class _ListScreenState extends State<ListScreen> {
 
                 const SizedBox(width: 10),
 
-                Container(
-                  height: 48,
-                  width: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: AppColors.border,
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.tune_rounded,
-                    color: AppColors.drawerIcon,
-                    size: 22,
-                  ),
-                ),
               ],
             ),
           ),
 
           // Summary
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 18,
-              vertical: 8,
-            ),
-            child: Container(
-              width: double.infinity,
+          Obx(() {
+            final int totalEntries =
+                widget.title == "Sales Details" ? salesDetailController.SalesDetailsList.length : widget.title == "Receipt Details" ? receiptDetailsController.ReceiptDetailsList.length : billDetailsController.BillDetailsList.length;
+
+            final double totalAmount =
+            widget.title == "Sales Details" ? salesDetailController.SalesDetailsList.fold<double>(
+              0.0,
+                  (sum, item) => sum + (item.erpCost ?? 0),
+            ) :widget.title == "Receipt Details" ? receiptDetailsController.ReceiptDetailsList.fold<double>(
+              0.0,
+                  (sum, item) => sum + (item.receivedAmount ?? 0) ) : billDetailsController.BillDetailsList.fold<double>(
+                0.0,
+                    (sum, item) => sum + (item.billAmount ?? 0) ) ;
+
+            return Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 18,
-                vertical: 15,
+                vertical: 8,
               ),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 15,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Total Entries',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            color: Colors.white70,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '$totalEntries',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
 
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Total Entries',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 12,
-                          color: Colors.white70,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text(
+                          'Total Amount',
+                          style: TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 12,
+                            color: Colors.white70,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        '24',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                        const SizedBox(height: 3),
+                        Text(
+                          '₹ ${totalAmount.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontFamily: 'Poppins',
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: const [
-                      Text(
-                        'Total Amount',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 12,
-                          color: Colors.white70,
-                        ),
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        '₹ 1,25,500',
-                        style: TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
+            );
+          }),
 
           const SizedBox(height: 8),
 
           // List
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(
-                18,
-                5,
-                18,
-                90,
+            child: Obx(()=>
+                ListView.builder(
+                padding: const EdgeInsets.fromLTRB(
+                  18,
+                  5,
+                  18,
+                  90,
+                ),
+                itemCount: widget.title == "Sales Details" ? salesDetailController.SalesDetailsList.length : widget.title == "Receipt Details" ? receiptDetailsController.ReceiptDetailsList.length : billDetailsController.BillDetailsList.length,
+                itemBuilder: (context, index) {
+                  return _listItem(index);
+                },
               ),
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                return _listItem(index);
-              },
             ),
           ),
         ],
@@ -206,6 +226,9 @@ class _ListScreenState extends State<ListScreen> {
         backgroundColor: AppColors.primary,
         elevation: 4,
         onPressed: () {
+          widget.title == "Sales Details" ? salesDetailController.saveButton.value = RequestConstant.SUBMIT :
+          widget.title == "Receipt Details" ?
+          receiptDetailsController.saveButton.value = RequestConstant.SUBMIT : billDetailsController.saveButton.value = RequestConstant.SUBMIT;
           Navigator.push(context, MaterialPageRoute(builder: (context)=>EntryScreen(title: widget.title)));
         },
         child: const Icon(
@@ -219,6 +242,10 @@ class _ListScreenState extends State<ListScreen> {
 
   Widget _listItem(int index) {
     final bool isExpanded = expandedIndex == index;
+
+    final sales = salesDetailController.SalesDetailsList[index];
+    final receipt = receiptDetailsController.ReceiptDetailsList[index];
+    final bill = billDetailsController.BillDetailsList[index];
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -253,7 +280,9 @@ class _ListScreenState extends State<ListScreen> {
             child: Row(
               children: [
 
-                // Date
+                // =========================
+                // DATE
+                // =========================
                 Container(
                   width: 48,
                   height: 52,
@@ -261,12 +290,12 @@ class _ListScreenState extends State<ListScreen> {
                     color: AppColors.lightBlue,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Column(
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        '02',
-                        style: TextStyle(
+                        _getDay(widget.title == "Sales Details" ? sales.date : widget.title == "Receipt Details" ? receipt.date : bill.date),
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
@@ -274,8 +303,8 @@ class _ListScreenState extends State<ListScreen> {
                         ),
                       ),
                       Text(
-                        'SEP',
-                        style: TextStyle(
+                        _getMonth(widget.title == "Sales Details" ? sales.date : widget.title == "Receipt Details" ? receipt.date : bill.date),
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 9,
                           fontWeight: FontWeight.w600,
@@ -288,26 +317,35 @@ class _ListScreenState extends State<ListScreen> {
 
                 const SizedBox(width: 13),
 
-                // Details
-                const Expanded(
+                // =========================
+                // COMPANY + SALES NO
+                // =========================
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'ABC Traders',
-                        style: TextStyle(
+                        widget.title == "Sales Details" ? sales.companyName ?? '' : widget.title == "Receipt Details" ? receipt.companyName ?? '' : bill.companyName ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.text,
                         ),
                       ),
-                      SizedBox(height: 4),
+
+                      const SizedBox(height: 4),
+
                       Text(
-                        'Sales entry',
-                        style: TextStyle(
+                        widget.title == "Sales Details" ? "SalesNo : ${sales.salesNo ?? ''}" :
+                        widget.title == "Receipt Details" ? "ReceiptNo : ${receipt.receiptNo ?? ''}" : "BillNo : ${bill.billNo ?? ''}",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
                           fontFamily: 'Poppins',
-                          fontSize: 11,
+                          fontSize: 12,
                           color: AppColors.subText,
                         ),
                       ),
@@ -315,10 +353,12 @@ class _ListScreenState extends State<ListScreen> {
                   ),
                 ),
 
-                // Amount
-                const Text(
-                  '₹ 5,500',
-                  style: TextStyle(
+                // =========================
+                // ERP COST
+                // =========================
+                Text(
+                  widget.title == "Sales Details" ? '₹ ${sales.erpCost ?? 0}' : widget.title == "Receipt Details" ? '₹ ${receipt.receivedAmount ?? 0}' : '₹ ${bill.billAmount ?? 0}',
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
@@ -328,7 +368,9 @@ class _ListScreenState extends State<ListScreen> {
 
                 const SizedBox(width: 4),
 
-                // More button
+                // =========================
+                // MORE BUTTON
+                // =========================
                 InkWell(
                   borderRadius: BorderRadius.circular(20),
                   onTap: () {
@@ -380,12 +422,35 @@ class _ListScreenState extends State<ListScreen> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
 
+                  // =========================
                   // EDIT
+                  // =========================
                   InkWell(
                     borderRadius: BorderRadius.circular(10),
                     onTap: () {
-                      // Edit action
-                      print('Edit $index');
+                      FocusScope.of(
+                          context)
+                          .unfocus();
+                      widget.title == "Sales Details" ?
+                      salesDetailController.SalesDetails_List_EditApi(
+                          salesDetailController
+                              .SalesDetailsList
+                              .value[
+                          index]
+                              .id,widget.title,
+                          context) : widget.title == "Receipt Details" ? receiptDetailsController.ReceiptDetails_List_EditApi(
+                          receiptDetailsController
+                              .ReceiptDetailsList
+                              .value[
+                          index]
+                              .id,widget.title,
+                          context) : billDetailsController.BillDetails_List_EditApi(
+                          billDetailsController
+                              .BillDetailsList
+                              .value[
+                          index]
+                              .id,widget.title,
+                          context);
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -420,12 +485,15 @@ class _ListScreenState extends State<ListScreen> {
 
                   const SizedBox(width: 10),
 
+                  // =========================
                   // DELETE
+                  // =========================
                   InkWell(
                     borderRadius: BorderRadius.circular(10),
-                    onTap: () {
-                      // Delete action
-                      print('Delete $index');
+                    onTap: () async {
+                      await commonController.DeleteAlert(
+                          context,
+                          index,widget.title);
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -464,6 +532,48 @@ class _ListScreenState extends State<ListScreen> {
         ],
       ),
     );
+  }
+
+  String _getDay(String? date) {
+    if (date == null || date.isEmpty) {
+      return '--';
+    }
+
+    try {
+      final parsedDate = DateTime.parse(date);
+      return parsedDate.day.toString().padLeft(2, '0');
+    } catch (e) {
+      return '--';
+    }
+  }
+
+  String _getMonth(String? date) {
+    if (date == null || date.isEmpty) {
+      return '--';
+    }
+
+    try {
+      final parsedDate = DateTime.parse(date);
+
+      const months = [
+        'JAN',
+        'FEB',
+        'MAR',
+        'APR',
+        'MAY',
+        'JUN',
+        'JUL',
+        'AUG',
+        'SEP',
+        'OCT',
+        'NOV',
+        'DEC',
+      ];
+
+      return months[parsedDate.month - 1];
+    } catch (e) {
+      return '--';
+    }
   }
 
 }
