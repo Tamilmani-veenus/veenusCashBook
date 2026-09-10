@@ -131,6 +131,36 @@ class _EntryScreenState extends State<EntryScreen> {
         }
       }
 
+      // else if (widget.title == "Bill Details") {
+      //   if(billDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
+      //     billDetailsController.Bill_EditListApiValue.forEach((element) {
+      //       billDetailsController.bi=element.id!;
+      //       billDetailsController.ReceiptNoController.text = element.receiptNo;
+      //       billDetailsController.selectedCompanyId = element.companyId;
+      //       billDetailsController.selectedCompany = element.companyName;
+      //       billDetailsController.ReceiptDate.text = DateFormat('dd/MM/yyyy').format(
+      //           DateFormat('yyyy-MM-dd').parse(element.date));
+      //       billDetailsController.receiptCostController.text = element.receivedAmount.toString();
+      //       billDetailsController.cashPortionController.text = element.cashPortion.toString();
+      //       billDetailsController.accPortionController.text = element.bankPortion.toString();
+      //       billDetailsController.tdsController.text = element.tds.toString();
+      //     });
+      //   }
+      //
+      //   else if(receiptDetailsController.saveButton.value ==RequestConstant.SUBMIT){
+      //     receiptDetailsController.receiptId=0;
+      //     await commmonController.AutoYearWiseNo("RECEIPT");
+      //     receiptDetailsController.ReceiptNoController.text = commmonController.Receipt_autoYrsWise.value;
+      //     receiptDetailsController.selectedCompanyId = 0;
+      //     receiptDetailsController.selectedCompany = "--SELECT--";
+      //     receiptDetailsController.ReceiptDate.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
+      //     receiptDetailsController.receiptCostController.text = "0.0";
+      //     receiptDetailsController.cashPortionController.text = "0.0";
+      //     receiptDetailsController.accPortionController.text = "0.0";
+      //     receiptDetailsController.tdsController.text = "0.0";
+      //   }
+      // }
+
       salesDetailController.cashPortionController.addListener(() {
         commmonController.calculateErpCost(
           salesDetailController.cashPortionController,
@@ -334,12 +364,12 @@ class _EntryScreenState extends State<EntryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
 
-                    if (widget.title == "Sales Details" || widget.title == "Receipt Details") ...[
+                    if (widget.title != "Company Details") ...[
                       _entryField(
-                        label: widget.title == "Sales Details" ? 'Sales No' : 'Receipt No',
+                        label: widget.title == "Sales Details" ? 'Sales No' : widget.title == "Receipt Details" ? 'Receipt No' : 'Bill No',
                         hint: '',
                         icon: Icons.numbers,
-                        controller: widget.title == "Sales Details" ? salesDetailController.SalesNoController : receiptDetailsController.ReceiptNoController,
+                        controller: widget.title == "Sales Details" ? salesDetailController.SalesNoController : widget.title == "Receipt Details" ? receiptDetailsController.ReceiptNoController : billDetailsController.BillNoController,
                         isDateField: true,
                       ),
                       const SizedBox(height: 16),

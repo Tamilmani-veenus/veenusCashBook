@@ -15,6 +15,8 @@ class BillDetailsController extends GetxController{
   final gstController = TextEditingController();
   final netAmountController = TextEditingController();
 
+  int receiptId = 0;
+
   RxList BillDetailsList = [].obs;
   RxList Bill_EditListApiValue = [].obs;
 
