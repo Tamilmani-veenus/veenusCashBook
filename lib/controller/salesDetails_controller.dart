@@ -5,10 +5,8 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:veenuscashbook/provider/common_provider.dart';
 import 'package:veenuscashbook/provider/salesDetails_provider.dart';
-
 import '../entry_screen.dart';
 import '../models/salesDetailsSave_model.dart';
-import '../provider/companyDetails_provider.dart';
 import '../utilities/baseutitiles.dart';
 import '../utilities/requestconstant.dart';
 

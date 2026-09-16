@@ -20,8 +20,11 @@ class CommonController extends GetxController{
   RxString Sales_autoYrsWise = "".obs;
   RxString Receipt_autoYrsWise = "".obs;
   RxString Bill_autoYrsWise = "".obs;
-
+  RxList gstDropdown = [].obs;
+  RxList tdsDropdown = [].obs;
   RxList companyDropdown = [].obs;
+  var selectedGstPercentage = Rxn<double>();
+
 
   Future AutoYearWiseNo(Url) async {
     final value =await CommonProvider.getAutoYearWise(Url);
@@ -46,6 +49,51 @@ class CommonController extends GetxController{
     }
     else{
       BaseUtitiles.showToast(RequestConstant.NETWORKERROR);
+    }
+  }
+
+  Future getDropDownGSTValues() async {
+    gstDropdown.value = [];
+    var response = await CompanyDetailsProvider.getDropDownGST_TDSValues("GST");
+    if (response != null) {
+      if (response.success == true) {
+        if (response.messge!.isNotEmpty) {
+          gstDropdown.assignAll(response.messge!);
+          final defaultItem = gstDropdown.firstWhereOrNull(
+                (g) => g.percentage == 18.0,
+          );
+          selectedGstPercentage.value =
+              (defaultItem ?? gstDropdown.first).percentage;
+        }
+        else {
+          Fluttertoast.showToast(msg: "No Data Found");
+        }
+      } else {
+        Fluttertoast.showToast(msg:
+        response.message ?? RequestConstant.NETWORKERROR);
+      }
+    } else {
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+    }
+  }
+
+  Future getDropDownTDSValues() async {
+    tdsDropdown.value = [];
+    var response = await CompanyDetailsProvider.getDropDownGST_TDSValues("TDS");
+    if (response != null) {
+      if (response.success == true) {
+        if (response.messge!.isNotEmpty) {
+          tdsDropdown.assignAll(response.messge!);
+        }
+        else {
+          Fluttertoast.showToast(msg: "No Data Found");
+        }
+      } else {
+        Fluttertoast.showToast(msg:
+        response.message ?? RequestConstant.NETWORKERROR);
+      }
+    } else {
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
     }
   }
 
@@ -85,16 +133,29 @@ class CommonController extends GetxController{
     erpCostController.text = total.toStringAsFixed(2);
   }
 
+  // void calculateGst(
+  //     TextEditingController accPortionController,
+  //     TextEditingController gstController
+  //     ) {
+  //   final double acPortion =
+  //       double.tryParse(accPortionController.text.trim()) ?? 0;
+  //
+  //   final double gst = acPortion * 18 / 100;
+  //
+  //   gstController.text = gst.toStringAsFixed(2);
+  // }
+
   void calculateGst(
       TextEditingController accPortionController,
-      TextEditingController gstController
+      TextEditingController gstAmountController,
+      double? gstPercentage,
       ) {
-    final double acPortion =
-        double.tryParse(accPortionController.text.trim()) ?? 0;
+    final double acPortion = double.tryParse(accPortionController.text.trim()) ?? 0;
+    final double percentage = gstPercentage ?? 0;
 
-    final double gst = acPortion * 18 / 100;
+    final double gst = acPortion * percentage / 100;
 
-    gstController.text = gst.toStringAsFixed(2);
+    gstAmountController.text = gst.toStringAsFixed(2);
   }
 
   void calculateTds(
@@ -171,6 +232,7 @@ class CommonController extends GetxController{
     calculateGst(
       salesDetailController.accPortionController,
       salesDetailController.gstController,
+      selectedGstPercentage.value,
     );
   }
 
@@ -178,6 +240,7 @@ class CommonController extends GetxController{
     calculateGst(
       billDetailsController.billCostController,
       billDetailsController.gstController,
+      selectedGstPercentage.value,
     );
   }
 

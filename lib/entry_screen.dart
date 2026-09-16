@@ -45,6 +45,7 @@ class _EntryScreenState extends State<EntryScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         companyDetailsController.getDropDownCityValues();
         commmonController.getDropDownCompanyValues();
+        commmonController.getDropDownGSTValues();
       });
       if (widget.title == "Company Details") {
         if(companyDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
@@ -199,17 +200,19 @@ class _EntryScreenState extends State<EntryScreen> {
         );
       });
 
-      salesDetailController.accPortionController.addListener(() {
+      ever(commmonController.selectedGstPercentage, (_) {
         commmonController.calculateGst(
-        salesDetailController.accPortionController,
-        salesDetailController.gstController
+          salesDetailController.accPortionController,
+          salesDetailController.gstAmtController,
+          commmonController.selectedGstPercentage.value,
         );
       });
 
       billDetailsController.billCostController.addListener(() {
         commmonController.calculateGst(
             billDetailsController.billCostController,
-            billDetailsController.gstController
+            billDetailsController.gstController,
+          commmonController.selectedGstPercentage.value,
         );
       });
 
@@ -257,11 +260,13 @@ class _EntryScreenState extends State<EntryScreen> {
       );
       commmonController.calculateGst(
         salesDetailController.accPortionController,
-        salesDetailController.gstController
+        salesDetailController.gstController,
+        commmonController.selectedGstPercentage.value,
       );
       commmonController.calculateGst(
           billDetailsController.billCostController,
-          billDetailsController.gstController
+          billDetailsController.gstController,
+        commmonController.selectedGstPercentage.value,
       );
       commmonController.calculateTds(
         salesDetailController.accPortionController,
@@ -654,6 +659,7 @@ class _EntryScreenState extends State<EntryScreen> {
             icon: Icons.percent_rounded,
             controller: gstController,
             readOnly: true,
+            isDropdown: true,
           ),
         ),
 
@@ -860,6 +866,66 @@ class _EntryScreenState extends State<EntryScreen> {
                   widget.title == "Receipt Details";
               final bool isBillDetails =
                   widget.title == "Bill Details";
+              final bool isGst = label == 'GST %';
+              if (isGst) {
+                return DropdownButtonFormField2<double>(
+                  value: commmonController.selectedGstPercentage.value,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    hintText: hint,
+                    hintStyle: const TextStyle(
+                      fontFamily: 'Poppins', fontSize: 13, color: AppColors.subText,
+                    ),
+                    prefixIcon: Icon(icon, color: AppColors.drawerIcon, size: 21),
+                    filled: true,
+                    fillColor: AppColors.background,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(color: AppColors.accent, width: 1.3),
+                    ),
+                  ),
+                  hint: Text(
+                    hint,
+                    style: const TextStyle(fontFamily: 'Poppins', fontSize: 13, color: AppColors.subText),
+                  ),
+                  items: commmonController.gstDropdown.map((gst) {
+                    return DropdownMenuItem<double>(
+                      value: gst.percentage ?? 0.0,
+                      child: Text(
+                        formatPercentage(gst.percentage),
+                        style: const TextStyle(
+                          fontFamily: 'Poppins', fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.text,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      commmonController.selectedGstPercentage.value = value;
+                    });
+                  },
+                  buttonStyleData: const ButtonStyleData(height: 20, padding: EdgeInsets.zero),
+                  iconStyleData: const IconStyleData(
+                    icon: Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.subText),
+                  ),
+                  dropdownStyleData: DropdownStyleData(
+                    maxHeight: 220,
+                    decoration: BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.circular(11)),
+                  ),
+                  menuItemStyleData: const MenuItemStyleData(
+                    height: 45, padding: EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                );
+              }
 
               if (isSalesDetails || isReceiptDetails || isBillDetails) {
                 return DropdownButtonFormField2<int>(
@@ -1204,6 +1270,13 @@ class _EntryScreenState extends State<EntryScreen> {
             ),
       ],
     );
+  }
+
+  String formatPercentage(double? p) {
+    if (p == null) return '0%';
+    return p == p.truncateToDouble()
+        ? '${p.toInt()}%'
+        : '$p%';
   }
 
   Future SubmitAlert(BuildContext context) async {
