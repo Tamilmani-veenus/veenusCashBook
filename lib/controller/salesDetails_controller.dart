@@ -11,18 +11,18 @@ import '../utilities/baseutitiles.dart';
 import '../utilities/requestconstant.dart';
 
 class SalesDetailController extends GetxController{
+
   final SalesDate = TextEditingController();
   final SalesNoController = TextEditingController();
   final erpCostController = TextEditingController();
   final cashPortionController = TextEditingController();
   final accPortionController = TextEditingController();
-  final gstController = TextEditingController();
   final gstAmtController = TextEditingController();
-  final tdsController = TextEditingController();
   final netAmountController = TextEditingController();
   final tdsAmtController = TextEditingController();
 
   int salesId = 0;
+  final RxBool isTdsEnabled = false.obs;
 
   RxList SalesDetailsList = [].obs;
   String selectedCompany = "--SELECT--";
@@ -67,8 +67,11 @@ class SalesDetailController extends GetxController{
       erpCost: double.tryParse(erpCostController.text) ?? 0.0,
       accountPortion: double.tryParse(accPortionController.text) ?? 0.0,
       netAmount: double.tryParse(netAmountController.text) ?? 0.0,
-      gst: double.tryParse(gstController.text) ?? 0.0,
-      tds: double.tryParse(tdsController.text) ?? 0.0,
+      gst: double.tryParse(gstAmtController.text) ?? 0.0,
+      // gstPercentage: commonController.selectedGstPercentage.value,
+      tds: double.tryParse(tdsAmtController.text) ?? 0.0,
+      // tdsPercentage: commonController.selectedTdsPercentage.value,
+      tdsCheck: isTdsEnabled.value,
     ));
 
     final list = await SalesDetailsProvider.SaveSalesScreenEntryAPI(body, id, context);

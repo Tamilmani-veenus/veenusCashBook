@@ -42,6 +42,10 @@ class Result {
   double? bankPortion;
   double? tds;
   String? companyName;
+  double? tdsPercentage;
+  double? gst;
+  double? gstPercentage;
+  bool? tdsCheck;
 
   Result({
     this.id,
@@ -53,6 +57,10 @@ class Result {
     this.bankPortion,
     this.tds,
     this.companyName,
+    this.tdsPercentage,
+    this.gst,
+    this.gstPercentage,
+    this.tdsCheck,
   });
 
   factory Result.fromJson(Map<String, dynamic> json) => Result(
@@ -65,6 +73,10 @@ class Result {
     bankPortion: json["bankPortion"],
     tds: json["tds"],
     companyName: json["companyName"],
+    tdsPercentage: json["tdsPercentage"],
+    gst: json["gst"],
+    gstPercentage: json["gstPercentage"],
+    tdsCheck: json["tdsCheck"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -77,5 +89,9 @@ class Result {
     "bankPortion": bankPortion,
     "tds": tds,
     "companyName": companyName,
+    "tdsPercentage": tdsPercentage,
+    "gst": gst,
+    "gstPercentage": gstPercentage,
+    "tdsCheck": tdsCheck,
   };
 }

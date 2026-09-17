@@ -17,6 +17,11 @@ class ReceiptDetailsSaveResponse {
   double? cashPortion;
   double? bankPortion;
   double? tds;
+  String? companyName;
+  double? tdsPercentage;
+  double? gst;
+  double? gstPercentage;
+  bool? tdsCheck;
 
   ReceiptDetailsSaveResponse({
     this.id,
@@ -27,6 +32,11 @@ class ReceiptDetailsSaveResponse {
     this.cashPortion,
     this.bankPortion,
     this.tds,
+    this.companyName,
+    this.tdsPercentage,
+    this.gst,
+    this.gstPercentage,
+    this.tdsCheck,
   });
 
   factory ReceiptDetailsSaveResponse.fromJson(Map<String, dynamic> json) => ReceiptDetailsSaveResponse(
@@ -38,6 +48,11 @@ class ReceiptDetailsSaveResponse {
     cashPortion: json["cashPortion"],
     bankPortion: json["bankPortion"],
     tds: json["tds"],
+    companyName: json["companyName"],
+    tdsPercentage: json["tdsPercentage"],
+    gst: json["gst"],
+    gstPercentage: json["gstPercentage"],
+    tdsCheck: json["tdsCheck"],
   );
 
   Map<String, dynamic> toJson() => {
@@ -49,5 +64,10 @@ class ReceiptDetailsSaveResponse {
     "cashPortion": cashPortion,
     "bankPortion": bankPortion,
     "tds": tds,
+    "companyName": companyName,
+    "tdsPercentage": tdsPercentage,
+    "gst": gst,
+    "gstPercentage": gstPercentage,
+    "tdsCheck": tdsCheck,
   };
 }

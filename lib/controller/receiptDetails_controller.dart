@@ -16,14 +16,13 @@ class ReceiptDetailsController extends GetxController{
   final receiptCostController = TextEditingController();
   final cashPortionController = TextEditingController();
   final accPortionController = TextEditingController();
-  final gstController = TextEditingController();
   final gstAmtController = TextEditingController();
-  final tdsController = TextEditingController();
   final tdsAmtController = TextEditingController();
 
   int receiptId = 0;
   int selectedCompanyId = 0;
   String selectedCompany = "--SELECT--";
+  final RxBool isTdsEnabled = false.obs;
 
   RxList ReceiptDetailsList = [].obs;
   RxList Receipt_EditListApiValue = [].obs;
@@ -64,7 +63,7 @@ class ReceiptDetailsController extends GetxController{
       cashPortion: double.tryParse(cashPortionController.text) ?? 0.0,
       receivedAmount: double.tryParse(receiptCostController.text) ?? 0.0,
       bankPortion: double.tryParse(accPortionController.text) ?? 0.0,
-      tds: double.tryParse(tdsController.text) ?? 0.0,
+      tds: double.tryParse(tdsAmtController.text) ?? 0.0,
     ));
 
     final list = await ReceiptDetailsProvider.SaveReceiptScreenEntryAPI(body, id, context);

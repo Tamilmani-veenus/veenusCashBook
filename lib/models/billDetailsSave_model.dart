@@ -15,6 +15,7 @@ class BillDetailsSaveResponse {
   int? companyId;
   double? billAmount;
   double? gst;
+  double? gstPercentage;
   double? netAmount;
   String? companyName;
 
@@ -25,6 +26,7 @@ class BillDetailsSaveResponse {
     this.companyId,
     this.billAmount,
     this.gst,
+    this.gstPercentage,
     this.netAmount,
     this.companyName,
   });
@@ -36,6 +38,7 @@ class BillDetailsSaveResponse {
     companyId: json["companyId"],
     billAmount: json["billAmount"],
     gst: json["gst"],
+    gstPercentage: json["gstPercentage"],
     netAmount: json["netAmount"],
     companyName: json["companyName"],
   );
@@ -47,6 +50,7 @@ class BillDetailsSaveResponse {
     "companyId": companyId,
     "billAmount": billAmount,
     "gst": gst,
+    "gstPercentage": gstPercentage,
     "netAmount": netAmount,
     "companyName": companyName,
   };

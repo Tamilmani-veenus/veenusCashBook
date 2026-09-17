@@ -15,7 +15,6 @@ class BillDetailsController extends GetxController{
   final BillDate = TextEditingController();
   final BillNoController = TextEditingController();
   final billCostController = TextEditingController();
-  final gstController = TextEditingController();
   final gstAmtController = TextEditingController();
   final netAmountController = TextEditingController();
 
@@ -59,7 +58,7 @@ class BillDetailsController extends GetxController{
       billDate: apiDate,
       companyId: selectedCompanyId,
       billAmount: double.tryParse(billCostController.text) ?? 0.0,
-      gst: double.tryParse(gstController.text) ?? 0.0,
+      gst: double.tryParse(gstAmtController.text) ?? 0.0,
       netAmount: double.tryParse(netAmountController.text) ?? 0.0,
       companyName: selectedCompany,
     ));
