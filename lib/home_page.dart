@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:veenuscashbook/reportScreen.dart';
 
 import 'app_theme.dart';
 import 'companyDetails/companyDetails_EntryList.dart';
@@ -277,7 +278,7 @@ class CashBookDrawer extends StatelessWidget {
               icon: Icons.bar_chart_outlined,
               title: 'Reports',
               onTap: () {
-                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (context)=> SalesReport(title: "Sales Report")));
                 // EntryScreen
               },
             ),

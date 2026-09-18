@@ -17,6 +17,7 @@ class CompanyDetailsController extends GetxController{
   final ContactNoController = TextEditingController();
   final emailController = TextEditingController();
   final GSTNoController = TextEditingController();
+  final CompanyDate = TextEditingController();
 
   int companyId = 0;
 
@@ -24,7 +25,7 @@ class CompanyDetailsController extends GetxController{
   RxList cityDropDown = [].obs;
 
   String selectedCity = "--SELECT--";
-  RxList<CompanyEditResult> Company_EditListApiValue = <CompanyEditResult>[].obs;
+  RxList Company_EditListApiValue = [].obs;
 
   RxString saveButton = RequestConstant.SUBMIT.obs;
 
@@ -74,6 +75,7 @@ class CompanyDetailsController extends GetxController{
     String body = companyDetailsSaveResponseToJson(CompanyDetailsSaveResponse(
       id: id != 0 ? id : 0,
       companyName: companyNameController.text,
+      companyDate: CompanyDate.text,
       companyAddress: AdressController.text,
       city: selectedCity,
       contactNo: ContactNoController.text,

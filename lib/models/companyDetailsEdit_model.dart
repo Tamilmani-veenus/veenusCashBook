@@ -36,6 +36,7 @@ class CompanyEditResult {
   int? id;
   String? companyName;
   String? companyAddress;
+  String? date;
   String? contactNo;
   String? city;
   String? email;
@@ -46,6 +47,7 @@ class CompanyEditResult {
     this.id,
     this.companyName,
     this.companyAddress,
+    this.date,
     this.contactNo,
     this.city,
     this.email,
@@ -57,6 +59,7 @@ class CompanyEditResult {
     id: json["id"],
     companyName: json["companyName"],
     companyAddress: json["companyAddress"],
+    date: json["companyDate"],
     contactNo: json["contactNo"],
     city: json["city"],
     email: json["email"],
@@ -68,6 +71,7 @@ class CompanyEditResult {
     "id": id,
     "companyName": companyName,
     "companyAddress": companyAddress,
+    "companyDate": date,
     "contactNo": contactNo,
     "city": city,
     "email": email,

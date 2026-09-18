@@ -45,24 +45,24 @@ class _EntryScreenState extends State<EntryScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         companyDetailsController.getDropDownCityValues();
         commmonController.getDropDownCompanyValues();
-        // commmonController.getDropDownGSTValues();
-        // commmonController.getDropDownTDSValues();
       });
       if (widget.title == "Company Details") {
         if(companyDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
           companyDetailsController.Company_EditListApiValue.forEach((element) {
             companyDetailsController.companyId=element.id!;
-            companyDetailsController.companyNameController.text = element.companyName!;
-            companyDetailsController.AdressController.text = element.companyAddress!;
-            companyDetailsController.ContactNoController.text = element.contactNo!;
-            companyDetailsController.selectedCity = element.city!;
-            companyDetailsController.emailController.text = element.email!;
-            companyDetailsController.GSTNoController.text = element.gstNo!;
+            companyDetailsController.companyNameController.text = element.companyName;
+            companyDetailsController.CompanyDate.text = element.date.toString();
+            companyDetailsController.AdressController.text = element.companyAddress;
+            companyDetailsController.ContactNoController.text = element.contactNo.toString();
+            companyDetailsController.selectedCity = element.city.toString();
+            companyDetailsController.emailController.text = element.email.toString();
+            companyDetailsController.GSTNoController.text = element.gstNo.toString();
           });
         }
 
         else if(companyDetailsController.saveButton.value ==RequestConstant.SUBMIT){
           companyDetailsController.companyNameController.text = "";
+          companyDetailsController.CompanyDate.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
           companyDetailsController.AdressController.text = "";
           companyDetailsController.ContactNoController.text = "";
           companyDetailsController.selectedCity = "--SELECT--";
@@ -125,10 +125,10 @@ class _EntryScreenState extends State<EntryScreen> {
             receiptDetailsController.receiptCostController.text = element.receivedAmount.toString();
             receiptDetailsController.cashPortionController.text = element.cashPortion.toString();
             receiptDetailsController.accPortionController.text = element.bankPortion.toString();
-            receiptDetailsController.gstAmtController.text = element.gst.toString();
             commmonController.selectedGstPercentage.value = element.gstPercentage;
-            receiptDetailsController.tdsAmtController.text = element.tds.toString();
+            receiptDetailsController.gstAmtController.text = element.gst.toString();
             commmonController.selectedTdsPercentage.value = element.tdsPercentage;
+            receiptDetailsController.tdsAmtController.text = element.tds.toString();
             receiptDetailsController.isTdsEnabled.value = element.tdsCheck;
 
           });
@@ -398,17 +398,17 @@ class _EntryScreenState extends State<EntryScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    if (isSalesDetails || isReceiptDetails || isBillDetails) ...[
+
                       _entryField(
                         label: 'Date',
                         hint: '',
                         icon: Icons.calendar_month_outlined,
                         controller: isSalesDetails ? salesDetailController.SalesDate :
-                        isReceiptDetails ? receiptDetailsController.ReceiptDate : billDetailsController.BillDate,
+                        isReceiptDetails ? receiptDetailsController.ReceiptDate : isBillDetails ? billDetailsController.BillDate : companyDetailsController.CompanyDate,
                         isDateField: true,
                       ),
                       const SizedBox(height: 16),
-
+                    if (isSalesDetails || isReceiptDetails || isBillDetails) ...[
                       _entryField(
                         label: isSalesDetails ? 'ERP Cost' : isReceiptDetails ? 'Receipt Amount' : 'Bill Amount',
                         hint: '0.0',

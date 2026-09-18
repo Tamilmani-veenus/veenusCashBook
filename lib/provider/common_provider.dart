@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:fluttertoast/fluttertoast.dart';
 
 import '../apimanager/apimanager.dart';
+import '../models/salesReport_model.dart';
 import '../utilities/apiconstant.dart';
 import '../utilities/requestconstant.dart';
 
@@ -63,6 +64,20 @@ class CommonProvider{
       print("Delete API Error: $error");
       Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
       return false;
+    }
+  }
+
+  static Future<SalesReportResponse?> getSalesReport(String fromDate,String toDate) async {
+    try {
+      var value = await ApiManager.getAPICall(
+          "${ApiConstant.GETSALES_REPORTLIST}?FromDate=$fromDate&ToDate=$toDate");
+
+      return salesReportResponseFromJson(value);
+
+    } catch (error,E) {
+      print(error);
+      print("EEEE...${E}");
+      return null;
     }
   }
 }

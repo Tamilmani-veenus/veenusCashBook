@@ -11,6 +11,7 @@ String companyDetailsSaveResponseToJson(CompanyDetailsSaveResponse data) => json
 class CompanyDetailsSaveResponse {
   int? id;
   String? companyName;
+  String? companyDate;
   String? companyAddress;
   String? contactNo;
   String? city;
@@ -20,6 +21,7 @@ class CompanyDetailsSaveResponse {
   CompanyDetailsSaveResponse({
     this.id,
     this.companyName,
+    this.companyDate,
     this.companyAddress,
     this.contactNo,
     this.city,
@@ -30,6 +32,7 @@ class CompanyDetailsSaveResponse {
   factory CompanyDetailsSaveResponse.fromJson(Map<String, dynamic> json) => CompanyDetailsSaveResponse(
     id: json["id"],
     companyName: json["companyName"],
+    companyDate: json["companyDate"],
     companyAddress: json["companyAddress"],
     contactNo: json["contactNo"],
     city: json["city"],
