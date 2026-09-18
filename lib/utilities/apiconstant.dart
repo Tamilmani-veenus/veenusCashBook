@@ -48,6 +48,8 @@ class ApiConstant{
   static String GETDROPDOWN_GSTLIST = BASE_URL_CORE + "api/Company/GetGstPercentage";
   static String GETDROPDOWN_TDSLIST = BASE_URL_CORE + "api/Company/GetTDSPercentage";
   static String GETSALES_REPORTLIST = BASE_URL_CORE + "api/Reports/GetSalesReport";
+  static String GETRECEIPT_REPORTLIST = BASE_URL_CORE + "api/Reports/GetReceiptReport";
+  static String GETBILL_REPORTLIST = BASE_URL_CORE + "api/Reports/GetBillReport";
 
   static String EDITCOMPANY_DETAILSLIST = BASE_URL_CORE + "api/Company/CompanyDetailsGetById";
   static String EDITSALES_DETAILSLIST = BASE_URL_CORE + "api/Sales/SalesDetailsById";

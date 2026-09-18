@@ -10,7 +10,8 @@ import '../../utilities/baseutitiles.dart';
 import '../../utilities/requestconstant.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+import 'models/billReport_model.dart';
+import 'models/receiptReport_model.dart';
 import 'models/salesReport_model.dart';
 
 
@@ -37,7 +38,16 @@ class _SalesReportState extends State<SalesReport> {
       DateTime oneWeekBefore = currentDate.subtract(const Duration(days: 7));
       commonController.salesRptFromDate.text = oneWeekBefore.toString().substring(0, 10);
       commonController.salesRptToDate.text = currentDate.toString().substring(0, 10);
-      await commonController.getSalesReport();
+      if(widget.title == "Sales Report"){
+        await commonController.getSalesReport();
+      }
+      else if(widget.title == "Receipt Report"){
+        await commonController.getReceiptReport();
+      }
+      else if(widget.title == "Bill Report"){
+        await commonController.getBillReport();
+      }
+
       commonController.getDropDownCompanyValues();
     });
     super.initState();
@@ -50,9 +60,9 @@ class _SalesReportState extends State<SalesReport> {
     final bool isSalesDetails =
         widget.title == "Sales Report";
     final bool isReceiptDetails =
-        widget.title == "Receipt Details";
+        widget.title == "Receipt Report";
     final bool isBillDetails =
-        widget.title == "Bill Details";
+        widget.title == "Bill Report";
     return SafeArea(
       top: false,
       child: Form(
@@ -70,7 +80,7 @@ class _SalesReportState extends State<SalesReport> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Sales Report",
+                        widget.title,
                         style: TextStyle(
                             fontSize: RequestConstant.Heading_Font_SIZE,
                             fontWeight: FontWeight.bold),
@@ -231,19 +241,12 @@ class _SalesReportState extends State<SalesReport> {
                     ),
                     child: Obx(
                           () => DropdownButtonFormField2<int>(
-                        value: isSalesDetails
-                            ? (salesDetailController.selectedCompanyId == 0
+                        value:
+                            commonController.selectedCompanyId == 0
                             ? null
-                            : salesDetailController.selectedCompanyId)
-                            : isReceiptDetails
-                            ? (receiptDetailsController.selectedCompanyId == 0
-                            ? null
-                            : receiptDetailsController.selectedCompanyId)
-                            : (billDetailsController.selectedCompanyId == 0
-                            ? null
-                            : billDetailsController.selectedCompanyId),
+                            : commonController.selectedCompanyId,
 
-                        isExpanded: true,
+                            isExpanded: true,
 
                         // Remove default TextFormField border
                         decoration: const InputDecoration(
@@ -378,19 +381,9 @@ class _SalesReportState extends State<SalesReport> {
                           );
 
                           setState(() {
-                            if (isSalesDetails) {
-                              salesDetailController.selectedCompanyId = value;
-                              salesDetailController.selectedCompany =
+                              commonController.selectedCompanyId = value;
+                              commonController.selectedCompany =
                                   selected.companyName ?? '';
-                            } else if (isBillDetails) {
-                              billDetailsController.selectedCompanyId = value;
-                              billDetailsController.selectedCompany =
-                                  selected.companyName ?? '';
-                            } else {
-                              receiptDetailsController.selectedCompanyId = value;
-                              receiptDetailsController.selectedCompany =
-                                  selected.companyName ?? '';
-                            }
                           });
                         },
 
@@ -546,14 +539,32 @@ class _SalesReportState extends State<SalesReport> {
 
   Widget ListDetails() {
     return Obx(() {
-      if (commonController.salesReportList.isEmpty) {
-        return const Center(
+      late final List<Object> list;
+      late final String emptyLabel;
+
+      switch (widget.title) {
+        case "Sales Report":
+          list = commonController.salesReportList;
+          emptyLabel = "No Sales Report Found";
+          break;
+        case "Receipt Report":
+          list = commonController.receiptReportList;
+          emptyLabel = "No Receipt Report Found";
+          break;
+        case "Bill Report":
+          list = commonController.billReportList; // make sure this exists
+          emptyLabel = "No Bill Report Found";
+          break;
+        default:
+          list = const [];
+          emptyLabel = "No Data Found";
+      }
+
+      if (list.isEmpty) {
+        return Center(
           child: Text(
-            "No Sales Report Found",
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
+            emptyLabel,
+            style: const TextStyle(fontSize: 16, color: Colors.grey),
           ),
         );
       }
@@ -561,31 +572,319 @@ class _SalesReportState extends State<SalesReport> {
       return ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 10,
-          vertical: 8,
-        ),
-        itemCount: commonController.salesReportList.length,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        itemCount: list.length,
         itemBuilder: (context, index) {
-          final SalesResult result =
-          commonController.salesReportList[index];
+          final item = list[index];
 
-          final details = result.salesDetails ?? [];
+          if (item is SalesResult) {
+            final details = item.salesDetails ?? [];
+            return Column(
+              children: details
+                  .map((detail) => _salesReportCard(result: item, detail: detail))
+                  .toList(),
+            );
+          } else if (item is ReceiptResult) {
+            final details = item.receiptDetails ?? []; // adjust field name
+            return Column(
+              children: details
+                  .map((detail) => _receiptReportCard(result: item, detail: detail))
+                  .toList(),
+            );
+          }else if (item is BillResult) {
+            final details = item.billDetails ?? []; // adjust field name
+            return Column(
+              children: details
+                  .map((detail) => _billReportCard(result: item, detail: detail))
+                  .toList(),
+            );
+          }
 
-          return Column(
-            children: details.map((detail) {
-              return _salesReportCard(
-                result: result,
-                detail: detail,
-              );
-            }).toList(),
-          );
+          return const SizedBox.shrink();
         },
       );
     });
   }
 
+  Widget _commonReportCard({
+    required String date,
+    required String documentNo,
+    required String companyName,
+    required dynamic erpCost,
+    dynamic cash,
+    dynamic account,
+    required dynamic gst,
+    dynamic tds,
+    dynamic netAmount,
+    String noLabel = "No",
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFFE1E1E1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // ==================================================
+          // DATE + DOCUMENT NO + COMPANY
+          // ==================================================
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              14,
+              8,
+              14,
+              8,
+            ),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.calendar_month_outlined,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
+
+                    const SizedBox(width: 8),
+
+                    Expanded(
+                      child: Text(
+                        date.isNotEmpty ? date : "--",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+
+                    Text(
+                      documentNo.isNotEmpty ? documentNo : "--",
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1763A8),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 2),
+
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    companyName.isNotEmpty ? companyName : "--",
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          if(widget.title != "Bill Report")
+          const Divider(
+            height: 1,
+            thickness: 1,
+            color: Color(0xFFE0E0E0),
+          ),
+
+          // ==================================================
+          // ERP COST + CASH + ACCOUNT
+          // ==================================================
+          if(widget.title != "Bill Report")
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 8,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _reportAmountItem(
+                    title: widget.title == "Sales Report" ? "ERP Cost" : "Receipt Amount",
+                    value: erpCost,
+                  ),
+                ),
+
+                _reportDivider(),
+
+                Expanded(
+                  child: _reportAmountItem(
+                    title: "Cash",
+                    value: cash,
+                  ),
+                ),
+
+                _reportDivider(),
+
+                Expanded(
+                  child: _reportAmountItem(
+                    title: "Account",
+                    value: account,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(
+            height: 1,
+            thickness: 1,
+            color: Color(0xFFE0E0E0),
+          ),
+
+          // ==================================================
+          // GST + TDS
+          // ==================================================
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 8,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _reportAmountItem(
+                    title: widget.title == "Bill Report" ? "Bill Amt" : "GST",
+                    value: widget.title == "Bill Report" ? erpCost : gst,
+                  ),
+                ),
+
+                _reportDivider(),
+
+                Expanded(
+                  child: _reportAmountItem(
+                    title: widget.title == "Bill Report" ? "GST" : "TDS",
+                    value: widget.title == "Bill Report" ? gst : tds,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const Divider(
+            height: 1,
+            thickness: 1,
+            color: Color(0xFFE0E0E0),
+          ),
+
+          // ==================================================
+          // NET AMOUNT
+          // ==================================================
+          if(widget.title == "Sales Report" || widget.title == "Bill Report")
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 10,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Net Amount",
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF3F6F55),
+                  ),
+                ),
+
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      "₹ ${netAmount ?? 0}",
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF278447),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _salesReportCard({
+    required SalesResult result,
+    required SalesDetail detail,
+  }) {
+    return _commonReportCard(
+      date: detail.date ??
+          result.companyDate ??
+          "--",
+      documentNo: detail.salesNo ?? "--",
+      companyName: result.companyName ?? "--",
+      erpCost: detail.erpCost,
+      cash: detail.cashPortion,
+      account: detail.accountPortion,
+      gst: detail.gst,
+      tds: detail.tds,
+      netAmount: detail.netAmount,
+      noLabel: "Sales No",
+    );
+  }
+
+  Widget _receiptReportCard({
+    required ReceiptResult result,
+    required ReceiptDetail detail,
+  }) {
+    return _commonReportCard(
+      date: detail.date?.toString() ??
+          result.companyDate?.toString() ??
+          "--",
+      documentNo: detail.receiptNo ?? "--",
+      companyName: result.companyName ?? "--",
+      erpCost: detail.receivedAmount,
+      cash: detail.cashPortion,
+      account: detail.bankPortion,
+      gst: detail.gst,
+      tds: detail.tds,
+      noLabel: "Receipt No",
+    );
+  }
+
+  Widget _billReportCard({
+    required BillResult result,
+    required BillDetail detail,
+  }) {
+    return _commonReportCard(
+      date: detail.date ??
+          result.companyDate ??
+          "--",
+      documentNo: detail.billNo ?? "--",
+      companyName: result.companyName ?? "--",
+      erpCost: detail.billAmount,
+      gst: detail.gst,
+      netAmount: detail.netAmount,
+      noLabel: "Bill No",
+    );
+  }
+
+  Widget _salesReportCards({
     required SalesResult result,
     required SalesDetail detail,
   }) {
@@ -805,6 +1104,7 @@ class _SalesReportState extends State<SalesReport> {
     required String title,
     required num? value,
     bool isNetAmount = false,
+    Color? valueColor,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -822,21 +1122,25 @@ class _SalesReportState extends State<SalesReport> {
               fontWeight: FontWeight.w400,
               color: isNetAmount
                   ? const Color(0xFF267A42)
-                  : const Color(0xFF222222),
+                  : (valueColor ?? const Color(0xFF222222)),
             ),
           ),
 
           const SizedBox(height: 2),
 
-          Text(
-            _formatAmount(1220098475),
-            style: TextStyle(
-              fontSize: isNetAmount ? 19 : 16,
-              fontWeight:
-              isNetAmount ? FontWeight.w700 : FontWeight.w500,
-              color: isNetAmount
-                  ? const Color(0xFF155A2F)
-                  : const Color(0xFF202020),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Text(
+              _formatAmount(value),
+              style: TextStyle(
+                fontSize: isNetAmount ? 19 : 16,
+                fontWeight:
+                isNetAmount ? FontWeight.w700 : FontWeight.w500,
+                color: isNetAmount
+                    ? const Color(0xFF155A2F)
+                    : const Color(0xFF202020),
+              ),
             ),
           ),
         ],

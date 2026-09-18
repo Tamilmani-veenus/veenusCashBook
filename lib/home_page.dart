@@ -165,8 +165,15 @@ class CashBookHomeScreen extends StatelessWidget {
   }
 }
 
-class CashBookDrawer extends StatelessWidget {
+class CashBookDrawer extends StatefulWidget {
   const CashBookDrawer({super.key});
+
+  @override
+  State<CashBookDrawer> createState() => _CashBookDrawerState();
+}
+
+class _CashBookDrawerState extends State<CashBookDrawer> {
+  bool _reportsExpanded = false;
 
   @override
   Widget build(BuildContext context) {
@@ -278,10 +285,62 @@ class CashBookDrawer extends StatelessWidget {
               icon: Icons.bar_chart_outlined,
               title: 'Reports',
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context)=> SalesReport(title: "Sales Report")));
-                // EntryScreen
+                setState(() {
+                  _reportsExpanded = !_reportsExpanded;
+                });
               },
+              trailing: Icon(
+                _reportsExpanded
+                    ? Icons.keyboard_arrow_up_rounded
+                    : Icons.keyboard_arrow_down_rounded,
+                color: AppColors.subText,
+                size: 27,
+              ),
             ),
+
+            if (_reportsExpanded) ...[
+              _drawerSubItem(
+                title: 'Sales Report',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SalesReport(
+                        title: 'Sales Report',
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              _drawerSubItem(
+                title: 'Receipt Report',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SalesReport(
+                        title: 'Receipt Report',
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              _drawerSubItem(
+                title: 'Bill Report',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SalesReport(
+                        title: 'Bill Report',
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
           ],
         ),
       ),
@@ -293,6 +352,7 @@ class CashBookDrawer extends StatelessWidget {
         required IconData icon,
         required String title,
         required VoidCallback onTap,
+        Widget? trailing,
       }) {
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -344,10 +404,68 @@ class CashBookDrawer extends StatelessWidget {
                 // =====================
                 // ARROW
                 // =====================
+                trailing ??
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.subText,
+                      size: 27,
+                    ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _drawerSubItem({
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(
+        left: 62,
+        right: 12,
+        top: 1,
+        bottom: 1,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            height: 46,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: AppColors.drawerIcon,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.text,
+                    ),
+                  ),
+                ),
+
                 const Icon(
                   Icons.chevron_right_rounded,
                   color: AppColors.subText,
-                  size: 27,
+                  size: 21,
                 ),
               ],
             ),

@@ -10,7 +10,9 @@ import 'package:veenuscashbook/provider/common_provider.dart';
 
 import '../entry_screen.dart';
 import '../models/billDetailsSave_model.dart';
+import '../models/billReport_model.dart';
 import '../models/receiptDetailsSave_model.dart';
+import '../models/receiptReport_model.dart';
 import '../models/salesDetailsSave_model.dart';
 import '../models/salesReport_model.dart';
 import '../provider/billDetails_provider.dart';
@@ -40,6 +42,12 @@ class CommonController extends GetxController{
   var selectedTdsPercentage = Rxn<double>();
 
   RxList<SalesResult> salesReportList = <SalesResult>[].obs;
+  RxList<ReceiptResult> receiptReportList = <ReceiptResult>[].obs;
+  RxList<BillResult> billReportList = <BillResult>[].obs;
+
+  int selectedCompanyId = 0;
+  String selectedCompany = "--SELECT--";
+
 
   Future AutoYearWiseNo(Url) async {
     final value =await CommonProvider.getAutoYearWise(Url);
@@ -346,6 +354,36 @@ class CommonController extends GetxController{
       } else {
         Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
       }
+  }
+
+  Future getReceiptReport() async {
+    receiptReportList.value = [];
+    ReceiptReportDetails? response = await CommonProvider.getReceiptReport(salesRptFromDate.text, salesRptToDate.text);
+    if (response != null) {
+      if(response.success == true) {
+        receiptReportList.assignAll(response.result ?? []);
+      }else {
+        Fluttertoast.showToast(msg:
+        response.message ?? RequestConstant.NETWORKERROR);
+      }
+    } else {
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+    }
+  }
+
+  Future getBillReport() async {
+    billReportList.value = [];
+    BillReportDetails? response = await CommonProvider.getBillReport(salesRptFromDate.text, salesRptToDate.text);
+    if (response != null) {
+      if(response.success == true) {
+        billReportList.assignAll(response.result ?? []);
+      }else {
+        Fluttertoast.showToast(msg:
+        response.message ?? RequestConstant.NETWORKERROR);
+      }
+    } else {
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+    }
   }
 
   void calculateErpCost(
