@@ -2,12 +2,20 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:veenuscashbook/controller/billDetails_controller.dart';
 import 'package:veenuscashbook/controller/receiptDetails_controller.dart';
 import 'package:veenuscashbook/controller/salesDetails_controller.dart';
 import 'package:veenuscashbook/provider/common_provider.dart';
 
+import '../entry_screen.dart';
+import '../models/billDetailsSave_model.dart';
+import '../models/receiptDetailsSave_model.dart';
+import '../models/salesDetailsSave_model.dart';
+import '../provider/billDetails_provider.dart';
 import '../provider/companyDetails_provider.dart';
+import '../provider/receiptDetails_provider.dart';
+import '../provider/salesDetails_provider.dart';
 import '../utilities/baseutitiles.dart';
 import '../utilities/requestconstant.dart';
 
@@ -20,8 +28,12 @@ class CommonController extends GetxController{
   RxString Sales_autoYrsWise = "".obs;
   RxString Receipt_autoYrsWise = "".obs;
   RxString Bill_autoYrsWise = "".obs;
-
+  RxList gstDropdown = [].obs;
+  RxList tdsDropdown = [].obs;
   RxList companyDropdown = [].obs;
+  var selectedGstPercentage = Rxn<double>();
+  var selectedTdsPercentage = Rxn<double>();
+
 
   Future AutoYearWiseNo(Url) async {
     final value =await CommonProvider.getAutoYearWise(Url);
@@ -49,6 +61,60 @@ class CommonController extends GetxController{
     }
   }
 
+  Future getDropDownGSTValues() async {
+    gstDropdown.value = [];
+    var response = await CompanyDetailsProvider.getDropDownGST_TDSValues("GST");
+    if (response != null) {
+      if (response.success == true) {
+        if (response.messge!.isNotEmpty) {
+          gstDropdown.assignAll(response.messge!);
+          final defaultGst = gstDropdown.firstWhere(
+                (gst) => gst.percentage == 18,
+            orElse: () => gstDropdown.first,
+          );
+
+          selectedGstPercentage.value =
+              (defaultGst.percentage ?? 0).toDouble();
+        }
+        else {
+          Fluttertoast.showToast(msg: "No Data Found");
+        }
+      } else {
+        Fluttertoast.showToast(msg:
+        response.message ?? RequestConstant.NETWORKERROR);
+      }
+    } else {
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+    }
+  }
+
+  Future getDropDownTDSValues() async {
+    tdsDropdown.value = [];
+    var response = await CompanyDetailsProvider.getDropDownGST_TDSValues("TDS");
+    if (response != null) {
+      if (response.success == true) {
+        if (response.messge!.isNotEmpty) {
+          tdsDropdown.assignAll(response.messge!);
+          final defaultTds = tdsDropdown.firstWhere(
+                (tds) => tds.percentage == 10,
+            orElse: () => tdsDropdown.first,
+          );
+
+          selectedTdsPercentage.value =
+              (defaultTds.percentage ?? 0).toDouble();
+        }
+        else {
+          Fluttertoast.showToast(msg: "No Data Found");
+        }
+      } else {
+        Fluttertoast.showToast(msg:
+        response.message ?? RequestConstant.NETWORKERROR);
+      }
+    } else {
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+    }
+  }
+
   Future getDropDownCompanyValues() async {
     companyDropdown.value = [];
     var response = await CompanyDetailsProvider.getDropDownValues("SalesDetails");
@@ -69,6 +135,165 @@ class CommonController extends GetxController{
     }
   }
 
+  Future SaveButton_SalesDetails(BuildContext context, int id) async {
+    final String apiDate = DateFormat('yyyy-MM-dd').format(
+      DateFormat('dd/MM/yyyy').parse(salesDetailController.SalesDate.text),
+    );
+
+    String body = salesDetailsSaveResponseToJson(SalesDetailsSaveResponse(
+      id: id != 0 ? id : 0,
+      salesNo: salesDetailController.SalesNoController.text,
+      date: apiDate,
+      companyId: salesDetailController.selectedCompanyId,
+      companyName: salesDetailController.selectedCompany,
+      cashPortion: double.tryParse(salesDetailController.cashPortionController.text) ?? 0.0,
+      erpCost: double.tryParse(salesDetailController.erpCostController.text) ?? 0.0,
+      accountPortion: double.tryParse(salesDetailController.accPortionController.text) ?? 0.0,
+      netAmount: double.tryParse(salesDetailController.netAmountController.text) ?? 0.0,
+      gst: double.tryParse(salesDetailController.gstAmtController.text) ?? 0.0,
+      gstPercentage: selectedGstPercentage.value,
+      tds: double.tryParse(salesDetailController.tdsAmtController.text) ?? 0.0,
+      tdsPercentage: selectedTdsPercentage.value,
+      tdsCheck: salesDetailController.isTdsEnabled.value,
+    ));
+
+    final list = await SalesDetailsProvider.SaveSalesScreenEntryAPI(body, id, context);
+
+    if (list != null) {
+      if (list["success"] == true) {
+        final bool success = list["success"] == true;
+        final String msg = list["message"] ?? '';
+        await salesDetailController.getSalesDetails_List();
+
+        await BaseUtitiles.showSuccessAnimation(
+          context,
+          title: success ? 'Submitted' : 'Failed',
+          message: msg,
+          isSuccess: success,
+        );
+
+        BaseUtitiles.popMultiple(context, count: success ? 3 : 2);
+      } else {
+        await BaseUtitiles.showSuccessAnimation(
+          context,
+          title: 'Failed',
+          message: RequestConstant.NETWORKERROR,
+          isSuccess: false,
+        );
+        BaseUtitiles.popMultiple(context, count: 2);
+      }
+    } else {
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+      BaseUtitiles.popMultiple(context, count: 2);
+    }
+  }
+
+  Future SaveButton_BillDetails(BuildContext context, int id) async {
+    int i = 0;
+    final String apiDate = DateFormat('yyyy-MM-dd').format(
+      DateFormat('dd/MM/yyyy').parse(billDetailsController.BillDate.text),
+    );
+    await Future.delayed(const Duration(seconds: 0));
+    String body = billDetailsSaveResponseToJson(BillDetailsSaveResponse(
+      id: id != 0 ? id : 0,
+      billNo: billDetailsController.BillNoController.text,
+      billDate: apiDate,
+      companyId: billDetailsController.selectedCompanyId,
+      billAmount: double.tryParse(billDetailsController.billCostController.text) ?? 0.0,
+      gst: double.tryParse(billDetailsController.gstAmtController.text) ?? 0.0,
+      gstPercentage: selectedGstPercentage.value,
+      netAmount: double.tryParse(billDetailsController.netAmountController.text) ?? 0.0,
+      companyName: billDetailsController.selectedCompany,
+    ));
+
+    final list = await BillDetailsProvider.SaveBillScreenEntryAPI(body, id, context);
+
+    if (list != null) {
+      if (list["success"] == true) {
+        final bool success = list["success"] == true;
+        final String msg = list["message"] ?? '';
+        await billDetailsController.getBillDetails_List();
+        await BaseUtitiles.showSuccessAnimation(
+          context,
+          title: success ? 'Submitted' : 'Failed',
+          message: msg,
+          isSuccess: success,
+        );
+
+        BaseUtitiles.popMultiple(context, count: success ? 3 : 2);
+      } else {
+        await BaseUtitiles.showSuccessAnimation(
+          context,
+          title: 'Failed',
+          message: RequestConstant.NETWORKERROR,
+          isSuccess: false,
+        );
+        BaseUtitiles.popMultiple(context, count: 2);
+      }
+    }
+    else {
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+      BaseUtitiles.popMultiple(context, count: 2);
+    }
+  }
+
+  Future SaveButton_ReceiptDetails(BuildContext context, int id) async {
+    int i = 0;
+    final String apiDate = DateFormat('yyyy-MM-dd').format(
+      DateFormat('dd/MM/yyyy').parse(receiptDetailsController.ReceiptDate.text),
+    );
+    await Future.delayed(const Duration(seconds: 0));
+    String body = receiptDetailsSaveResponseToJson(ReceiptDetailsSaveResponse(
+      id: id != 0 ? id : 0,
+      receiptNo: receiptDetailsController.ReceiptNoController.text,
+      receiptDate: apiDate,
+      companyId: receiptDetailsController.selectedCompanyId,
+      companyName: receiptDetailsController.selectedCompany,
+      cashPortion: double.tryParse(receiptDetailsController.cashPortionController.text) ?? 0.0,
+      receivedAmount: double.tryParse(receiptDetailsController.receiptCostController.text) ?? 0.0,
+      bankPortion: double.tryParse(receiptDetailsController.accPortionController.text) ?? 0.0,
+      tds: double.tryParse(receiptDetailsController.tdsAmtController.text) ?? 0.0,
+        tdsPercentage: selectedTdsPercentage.value,
+        gst: double.tryParse(receiptDetailsController.gstAmtController.text) ?? 0.0,
+        gstPercentage: selectedGstPercentage.value,
+      tdsCheck: receiptDetailsController.isTdsEnabled.value
+    ));
+
+    final list = await ReceiptDetailsProvider.SaveReceiptScreenEntryAPI(body, id, context);
+
+    if (list != null) {
+      if (list["success"] == true) {
+        final bool success = list["success"] == true;
+        final String msg = list["message"] ?? '';
+        await receiptDetailsController.getReceiptDetails_List();
+
+        await BaseUtitiles.showSuccessAnimation(
+          context,
+          title: success ? 'Submitted' : 'Failed',
+          message: msg,
+          isSuccess: success,
+        );
+
+        BaseUtitiles.popMultiple(context, count: success ? 3 : 2);
+      } else {
+        await BaseUtitiles.showSuccessAnimation(
+          context,
+          title: 'Failed',
+          message: RequestConstant.NETWORKERROR,
+          isSuccess: false,
+        );
+        BaseUtitiles.popMultiple(context, count: 2);
+      }
+    }
+    else {
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+      BaseUtitiles.popMultiple(context, count: 2);
+    }
+  }
+
+
+
+
   void calculateErpCost(
       TextEditingController cashPortionController,
       TextEditingController accPortionController,
@@ -85,29 +310,45 @@ class CommonController extends GetxController{
     erpCostController.text = total.toStringAsFixed(2);
   }
 
+  // void calculateGst(
+  //     TextEditingController accPortionController,
+  //     TextEditingController gstController
+  //     ) {
+  //   final double acPortion =
+  //       double.tryParse(accPortionController.text.trim()) ?? 0;
+  //
+  //   final double gst = acPortion * 18 / 100;
+  //
+  //   gstController.text = gst.toStringAsFixed(2);
+  // }
+
   void calculateGst(
       TextEditingController accPortionController,
-      TextEditingController gstController
+      TextEditingController gstAmountController,
+      double? gstPercentage,
       ) {
-    final double acPortion =
-        double.tryParse(accPortionController.text.trim()) ?? 0;
+    final double acPortion = double.tryParse(accPortionController.text.trim()) ?? 0;
+    final double percentage = gstPercentage ?? 0;
 
-    final double gst = acPortion * 18 / 100;
+    final double gst = acPortion * percentage / 100;
 
-    gstController.text = gst.toStringAsFixed(2);
+    gstAmountController.text = gst.toStringAsFixed(2);
   }
 
   void calculateTds(
       TextEditingController accPortionController,
-      TextEditingController tdsController,
+      TextEditingController tdsAmountController,
+      double? tdsPercentage,
       ) {
-    final double accPortion =
-        double.tryParse(accPortionController.text.trim()) ?? 0;
+    final double acPortion = double.tryParse(accPortionController.text.trim()) ?? 0;
+    final double percentage = tdsPercentage ?? 0;
 
-    final double tds = accPortion * 10 / 100;
+    final double tds = acPortion * percentage / 100;
 
-    tdsController.text = tds.toStringAsFixed(2);
+    tdsAmountController.text = tds.toStringAsFixed(2);
   }
+
+
 
   void calculateNetAmount() {
     final double cash =
@@ -117,7 +358,7 @@ class CommonController extends GetxController{
         double.tryParse(salesDetailController.accPortionController.text.trim()) ?? 0;
 
     final double gst =
-        double.tryParse(salesDetailController.gstController.text.trim()) ?? 0;
+        double.tryParse(salesDetailController.gstAmtController.text.trim()) ?? 0;
 
     final double netAmount = cash + acc + gst;
 
@@ -129,7 +370,7 @@ class CommonController extends GetxController{
         double.tryParse(billDetailsController.billCostController.text.trim()) ?? 0;
 
     final double gst =
-        double.tryParse(billDetailsController.gstController.text.trim()) ?? 0;
+        double.tryParse(billDetailsController.gstAmtController.text.trim()) ?? 0;
 
     final double netAmount = cash + gst;
 
@@ -139,14 +380,16 @@ class CommonController extends GetxController{
   void salesTdsListener() {
     calculateTds(
       salesDetailController.accPortionController,
-      salesDetailController.tdsController,
+      salesDetailController.tdsAmtController,
+        selectedTdsPercentage.value
     );
   }
 
   void receiptTdsListener() {
     calculateTds(
       receiptDetailsController.accPortionController,
-      receiptDetailsController.tdsController,
+      receiptDetailsController.tdsAmtController,
+        selectedTdsPercentage.value
     );
   }
 
@@ -170,14 +413,16 @@ class CommonController extends GetxController{
   void salesGSTListener() {
     calculateGst(
       salesDetailController.accPortionController,
-      salesDetailController.gstController,
+      salesDetailController.gstAmtController,
+      selectedGstPercentage.value,
     );
   }
 
   void billGSTListener() {
     calculateGst(
       billDetailsController.billCostController,
-      billDetailsController.gstController,
+      billDetailsController.gstAmtController,
+      selectedGstPercentage.value,
     );
   }
 

@@ -39,6 +39,7 @@ class Result {
   int? companyId;
   double? billAmount;
   double? gst;
+  double? gstPercentage;
   double? netAmount;
   String? companyName;
 
@@ -49,6 +50,7 @@ class Result {
     this.companyId,
     this.billAmount,
     this.gst,
+    this.gstPercentage,
     this.netAmount,
     this.companyName,
   });
@@ -60,6 +62,7 @@ class Result {
     companyId: json["companyId"],
     billAmount: json["billAmount"],
     gst: json["gst"],
+    gstPercentage: json["gstPercentage"],
     netAmount: json["netAmount"],
     companyName: json["companyName"],
   );
@@ -71,6 +74,7 @@ class Result {
     "companyId": companyId,
     "billAmount": billAmount,
     "gst": gst,
+    "gstPercentage": gstPercentage,
     "netAmount": netAmount,
     "companyName": companyName,
   };

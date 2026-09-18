@@ -4,6 +4,7 @@ import '../apimanager/apimanager.dart';
 import '../models/companyDetailsEdit_model.dart';
 import '../models/companyDetailsList_model.dart';
 import '../models/dropdownCityResponse_model.dart';
+import '../models/gstPercent_model.dart';
 import '../utilities/apiconstant.dart';
 import '../utilities/requestconstant.dart';
 
@@ -33,6 +34,21 @@ class CompanyDetailsProvider{
       return null;
     }
   }
+
+  static Future<GstPercentageResponse?> getDropDownGST_TDSValues(type) async {
+    try {
+      var value = await ApiManager.getAPICall(
+          "${type == "GST" ? ApiConstant.GETDROPDOWN_GSTLIST : ApiConstant.GETDROPDOWN_TDSLIST}");
+
+      return gstPercentageResponseFromJson(value);
+
+    } catch (error,E) {
+      print(error);
+      print("EEEEEE...${E}");
+      return null;
+    }
+  }
+
 
   static SaveCompanyScreenEntryAPI(String body, int CompId, context) async {
 

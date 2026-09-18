@@ -41,8 +41,11 @@ class Result {
   double? cashPortion;
   double? accountPortion;
   double? gst;
+  double? gstPercentage;
   double? netAmount;
   double? tds;
+  double?tdsPercentage;
+  bool? tdsCheck;
   String? companyName;
 
   Result({
@@ -54,8 +57,11 @@ class Result {
     this.cashPortion,
     this.accountPortion,
     this.gst,
+    this.gstPercentage,
     this.netAmount,
     this.tds,
+    this.tdsPercentage,
+    this.tdsCheck,
     this.companyName,
   });
 
@@ -68,8 +74,11 @@ class Result {
     cashPortion: json["cashPortion"],
     accountPortion: json["accountPortion"],
     gst: json["gst"],
+    gstPercentage: json["gstPercentage"],
     netAmount: json["netAmount"],
     tds: json["tds"],
+    tdsPercentage: json["tdsPercentage"],
+    tdsCheck: json["tdsCheck"],
     companyName: json["companyName"],
   );
 
@@ -82,8 +91,11 @@ class Result {
     "cashPortion": cashPortion,
     "accountPortion": accountPortion,
     "gst": gst,
+    "gstPercentage": gstPercentage,
     "netAmount": netAmount,
     "tds": tds,
+    "tdsPercentage": tdsPercentage,
+    "tdsCheck": tdsCheck,
     "companyName": companyName,
   };
 }
