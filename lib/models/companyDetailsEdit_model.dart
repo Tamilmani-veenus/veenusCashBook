@@ -36,6 +36,7 @@ class CompanyEditResult {
   int? id;
   String? companyName;
   String? companyAddress;
+  String? companyDate;
   String? date;
   String? contactNo;
   String? city;
@@ -46,6 +47,7 @@ class CompanyEditResult {
   CompanyEditResult({
     this.id,
     this.companyName,
+    this.companyDate,
     this.companyAddress,
     this.date,
     this.contactNo,
@@ -58,6 +60,7 @@ class CompanyEditResult {
   factory CompanyEditResult.fromJson(Map<String, dynamic> json) => CompanyEditResult(
     id: json["id"],
     companyName: json["companyName"],
+    companyDate: json["companyDate"],
     companyAddress: json["companyAddress"],
     date: json["companyDate"],
     contactNo: json["contactNo"],
@@ -70,6 +73,7 @@ class CompanyEditResult {
   Map<String, dynamic> toJson() => {
     "id": id,
     "companyName": companyName,
+    "companyDate": companyDate,
     "companyAddress": companyAddress,
     "companyDate": date,
     "contactNo": contactNo,

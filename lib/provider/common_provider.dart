@@ -69,10 +69,10 @@ class CommonProvider{
     }
   }
 
-  static Future<SalesReportResponse?> getSalesReport(String fromDate,String toDate) async {
+  static Future<SalesReportResponse?> getSalesReport(String fromDate,String toDate,int companyId) async {
     try {
       var value = await ApiManager.getAPICall(
-          "${ApiConstant.GETSALES_REPORTLIST}?FromDate=$fromDate&ToDate=$toDate");
+          "${ApiConstant.GETSALES_REPORTLIST}?FromDate=$fromDate&ToDate=$toDate&CompanyId=$companyId");
 
       return salesReportResponseFromJson(value);
 
@@ -83,10 +83,10 @@ class CommonProvider{
     }
   }
 
-  static Future<ReceiptReportDetails?> getReceiptReport(String fromDate,String toDate) async {
+  static Future<ReceiptReportDetails?> getReceiptReport(String fromDate,String toDate,int companyId) async {
     try {
       var value = await ApiManager.getAPICall(
-          "${ApiConstant.GETRECEIPT_REPORTLIST}?FromDate=$fromDate&ToDate=$toDate");
+          "${ApiConstant.GETRECEIPT_REPORTLIST}?FromDate=$fromDate&ToDate=$toDate&CompanyId=$companyId");
 
       return receiptReportDetailsFromJson(value);
 
@@ -97,10 +97,10 @@ class CommonProvider{
     }
   }
 
-  static Future<BillReportDetails?> getBillReport(String fromDate,String toDate) async {
+  static Future<BillReportDetails?> getBillReport(String fromDate,String toDate,int companyId) async {
     try {
       var value = await ApiManager.getAPICall(
-          "${ApiConstant.GETBILL_REPORTLIST}?FromDate=$fromDate&ToDate=$toDate");
+          "${ApiConstant.GETBILL_REPORTLIST}?FromDate=$fromDate&ToDate=$toDate&CompanyId=$companyId");
 
       return billReportDetailsFromJson(value);
 

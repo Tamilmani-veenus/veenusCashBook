@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+import 'package:intl/intl.dart';
 import 'package:veenuscashbook/provider/companyDetails_provider.dart';
 import '../entry_screen.dart';
 import '../models/companyDetailsEdit_model.dart';
@@ -71,11 +72,16 @@ class CompanyDetailsController extends GetxController{
 
   Future SaveButton_CompanyDetails(BuildContext context, int id) async {
     int i = 0;
+    final String fromDate = DateFormat('yyyy-MM-dd').format(
+      DateFormat('dd/MM/yyyy').parse(
+        CompanyDate.text,
+      ),
+    );
     await Future.delayed(const Duration(seconds: 0));
     String body = companyDetailsSaveResponseToJson(CompanyDetailsSaveResponse(
       id: id != 0 ? id : 0,
       companyName: companyNameController.text,
-      companyDate: CompanyDate.text,
+      companyDate: fromDate,
       companyAddress: AdressController.text,
       city: selectedCity,
       contactNo: ContactNoController.text,
