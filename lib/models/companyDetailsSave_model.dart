@@ -43,6 +43,7 @@ class CompanyDetailsSaveResponse {
   Map<String, dynamic> toJson() => {
     "id": id,
     "companyName": companyName,
+    "companyDate": companyDate,
     "companyAddress": companyAddress,
     "contactNo": contactNo,
     "city": city,

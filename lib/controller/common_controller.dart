@@ -28,8 +28,8 @@ class CommonController extends GetxController{
   ReceiptDetailsController receiptDetailsController = Get.put(ReceiptDetailsController());
   BillDetailsController billDetailsController = Get.put(BillDetailsController());
 
-  final salesRptFromDate = TextEditingController();
-  final salesRptToDate = TextEditingController();
+  final RptFromDate = TextEditingController();
+  final RptToDate = TextEditingController();
 
 
   RxString Sales_autoYrsWise = "".obs;
@@ -341,9 +341,34 @@ class CommonController extends GetxController{
   //   }
   // }
 
+  String apiDate(String date) {
+    return DateFormat('yyyy-MM-dd').format(
+      DateFormat('dd/MM/yyyy').parse(date),
+    );
+  }
+
+  static String formatApiDate(String date) {
+    final parts = date.split('-');
+
+    if (parts.length != 3) return date;
+
+    return '${parts[2]}-${parts[1]}-${parts[0]}';
+  }
+
   Future getSalesReport() async {
     salesReportList.value = [];
-      SalesReportResponse? response = await CommonProvider.getSalesReport(salesRptFromDate.text, salesRptToDate.text);
+    final String fromDate = DateFormat('yyyy-MM-dd').format(
+      DateFormat('dd/MM/yyyy').parse(
+        RptFromDate.text,
+      ),
+    );
+
+    final String toDate = DateFormat('yyyy-MM-dd').format(
+      DateFormat('dd/MM/yyyy').parse(
+        RptToDate.text,
+      ),
+    );
+      SalesReportResponse? response = await CommonProvider.getSalesReport(fromDate, toDate,selectedCompanyId);
       if (response != null) {
         if(response.success == true) {
           salesReportList.assignAll(response.result ?? []);
@@ -358,7 +383,18 @@ class CommonController extends GetxController{
 
   Future getReceiptReport() async {
     receiptReportList.value = [];
-    ReceiptReportDetails? response = await CommonProvider.getReceiptReport(salesRptFromDate.text, salesRptToDate.text);
+    final String fromDate = DateFormat('yyyy-MM-dd').format(
+      DateFormat('dd/MM/yyyy').parse(
+        RptFromDate.text,
+      ),
+    );
+
+    final String toDate = DateFormat('yyyy-MM-dd').format(
+      DateFormat('dd/MM/yyyy').parse(
+        RptToDate.text,
+      ),
+    );
+    ReceiptReportDetails? response = await CommonProvider.getReceiptReport(fromDate, toDate,selectedCompanyId);
     if (response != null) {
       if(response.success == true) {
         receiptReportList.assignAll(response.result ?? []);
@@ -373,7 +409,18 @@ class CommonController extends GetxController{
 
   Future getBillReport() async {
     billReportList.value = [];
-    BillReportDetails? response = await CommonProvider.getBillReport(salesRptFromDate.text, salesRptToDate.text);
+    final String fromDate = DateFormat('yyyy-MM-dd').format(
+      DateFormat('dd/MM/yyyy').parse(
+        RptFromDate.text,
+      ),
+    );
+
+    final String toDate = DateFormat('yyyy-MM-dd').format(
+      DateFormat('dd/MM/yyyy').parse(
+        RptToDate.text,
+      ),
+    );
+    BillReportDetails? response = await CommonProvider.getBillReport(fromDate, toDate,selectedCompanyId);
     if (response != null) {
       if(response.success == true) {
         billReportList.assignAll(response.result ?? []);

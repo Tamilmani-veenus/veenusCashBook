@@ -51,7 +51,8 @@ class _EntryScreenState extends State<EntryScreen> {
           companyDetailsController.Company_EditListApiValue.forEach((element) {
             companyDetailsController.companyId=element.id!;
             companyDetailsController.companyNameController.text = element.companyName;
-            companyDetailsController.CompanyDate.text = element.date.toString();
+            companyDetailsController.CompanyDate.text = DateFormat('dd/MM/yyyy').format(
+                DateFormat('yyyy-MM-dd').parse(element.companyDate));
             companyDetailsController.AdressController.text = element.companyAddress;
             companyDetailsController.ContactNoController.text = element.contactNo.toString();
             companyDetailsController.selectedCity = element.city.toString();
@@ -403,8 +404,9 @@ class _EntryScreenState extends State<EntryScreen> {
                         label: 'Date',
                         hint: '',
                         icon: Icons.calendar_month_outlined,
-                        controller: isSalesDetails ? salesDetailController.SalesDate :
-                        isReceiptDetails ? receiptDetailsController.ReceiptDate : isBillDetails ? billDetailsController.BillDate : companyDetailsController.CompanyDate,
+                        controller: isSalesDetails ? salesDetailController.SalesDate
+                            : isReceiptDetails ? receiptDetailsController.ReceiptDate
+                            : isBillDetails ? billDetailsController.BillDate : companyDetailsController.CompanyDate,
                         isDateField: true,
                       ),
                       const SizedBox(height: 16),
@@ -1206,11 +1208,15 @@ class _EntryScreenState extends State<EntryScreen> {
                     ),
                   ),
 
-                  ...companyDetailsController.cityDropDown.map((city) {
-                    return DropdownMenuItem<String>(
-                      value: city.cityName ?? '',
+                  ...companyDetailsController.cityDropDown
+                      .map((city) => city.cityName?.trim() ?? '')
+                      .where((city) => city.isNotEmpty)
+                      .toSet()
+                      .map(
+                        (city) => DropdownMenuItem<String>(
+                      value: city,
                       child: Text(
-                        city.cityName ?? '',
+                        city,
                         style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 14,
@@ -1218,8 +1224,8 @@ class _EntryScreenState extends State<EntryScreen> {
                           color: AppColors.text,
                         ),
                       ),
-                    );
-                  }),
+                    ),
+                  ),
                 ],
 
                 onChanged: (value) {
