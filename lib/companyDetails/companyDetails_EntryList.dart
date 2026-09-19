@@ -5,6 +5,7 @@ import 'package:veenuscashbook/controller/companyDetails_controller.dart';
 import '../app_theme.dart';
 import '../common_utils/common_listScreen.dart';
 import '../entry_screen.dart';
+import '../utilities/baseutitiles.dart';
 import '../utilities/requestconstant.dart';
 
 class CompanyListScreen extends StatefulWidget {
@@ -22,12 +23,32 @@ class CompanyListScreen extends StatefulWidget {
 class _CompanyListScreenState extends State<CompanyListScreen> {
   CompanyDetailsController companyDetailsController = Get.put(CompanyDetailsController());
   int? expandedIndex;
+  final TextEditingController searchController = TextEditingController();
+  List filteredCompanyList = [];
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     companyDetailsController.getCompanyDetails_List();
+  }
+
+  void searchCompany(String value) {
+    final search = value.trim().toLowerCase();
+
+    setState(() {
+      if (search.isEmpty) {
+        filteredCompanyList =
+            companyDetailsController.CompanyDetailsList.toList();
+      } else {
+        filteredCompanyList =
+            companyDetailsController.CompanyDetailsList.where((company) {
+              return (company.companyName ?? '')
+                  .toLowerCase()
+                  .contains(search);
+            }).toList();
+      }
+    });
   }
 
   @override
@@ -76,6 +97,8 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
 
                 Expanded(
                   child: TextField(
+                    controller: searchController,
+                    onChanged: searchCompany,
                     decoration: InputDecoration(
                       hintText: 'Search ...',
                       hintStyle: const TextStyle(
@@ -87,6 +110,7 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                         Icons.search_rounded,
                         color: AppColors.drawerIcon,
                       ),
+
                       filled: true,
                       fillColor: AppColors.white,
                       contentPadding: const EdgeInsets.symmetric(
@@ -136,21 +160,6 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
               },
             ),
           )
-          // List
-          // Expanded(
-          //   child: ListView.builder(
-          //     padding: const EdgeInsets.fromLTRB(
-          //       18,
-          //       5,
-          //       18,
-          //       90,
-          //     ),
-          //     itemCount: 10,
-          //     itemBuilder: (context, index) {
-          //       return _listItem(index);
-          //     },
-          //   ),
-          // ),
         ],
       ),
 
@@ -214,15 +223,29 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
                   color: AppColors.lightBlue,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Center(
-                  child: Text(
-                    initial,
-                    style: const TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 19,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                    ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    children: [
+                      Text(
+                        AppUtils.getDay(company.date),
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      Text(
+                        AppUtils.getMonth(company.date),
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.drawerIcon,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

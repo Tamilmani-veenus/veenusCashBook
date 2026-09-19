@@ -388,3 +388,53 @@ class _LoaderRingPainter extends CustomPainter {
     return oldDelegate.color != color;
   }
 }
+
+class AppUtils {
+  // =========================
+  // GET DAY
+  // =========================
+  static String getDay(String? date) {
+    if (date == null || date.trim().isEmpty) {
+      return '--';
+    }
+
+    try {
+      final parsedDate = DateTime.parse(date);
+      return parsedDate.day.toString().padLeft(2, '0');
+    } catch (_) {
+      return '--';
+    }
+  }
+
+  // =========================
+  // GET MONTH
+  // =========================
+  static String getMonth(String? date) {
+    if (date == null || date.trim().isEmpty) {
+      return '--';
+    }
+
+    try {
+      final parsedDate = DateTime.parse(date);
+
+      const months = [
+        'JAN',
+        'FEB',
+        'MAR',
+        'APR',
+        'MAY',
+        'JUN',
+        'JUL',
+        'AUG',
+        'SEP',
+        'OCT',
+        'NOV',
+        'DEC',
+      ];
+
+      return months[parsedDate.month - 1];
+    } catch (_) {
+      return '--';
+    }
+  }
+}

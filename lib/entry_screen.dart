@@ -724,7 +724,7 @@ class _EntryScreenState extends State<EntryScreen> {
               'Exclude TDS',
               style: TextStyle(
                 fontFamily: 'Poppins',
-                fontSize: 14,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: AppColors.text,
               ),
@@ -1017,7 +1017,14 @@ class _EntryScreenState extends State<EntryScreen> {
                       : billDetailsController.selectedCompanyId,
 
                   isExpanded: true,
-
+                  validator: requiredField
+                      ? (value) {
+                    if (value == null || value == 0) {
+                      return '* Required';
+                    }
+                    return null;
+                  }
+                      : null,
                   decoration: InputDecoration(
                     hintText: hint,
                     hintStyle: const TextStyle(
@@ -1151,6 +1158,17 @@ class _EntryScreenState extends State<EntryScreen> {
                 value: companyDetailsController.selectedCity,
 
                 isExpanded: true,
+                validator: requiredField
+                    ? (value) {
+                  if (value == null ||
+                      value.trim().isEmpty ||
+                      value == "--SELECT--") {
+                    return '* Required';
+                  }
+
+                  return null;
+                }
+                    : null,
 
                 decoration: InputDecoration(
                   hintText: hint,

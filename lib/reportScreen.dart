@@ -155,6 +155,19 @@ class _SalesReportState extends State<SalesReport> {
                                   initialDate: fromDate,
                                   firstDate: DateTime(1900),
                                   lastDate: DateTime.now(),
+                                  builder: (context, child) {
+                                    return Theme(
+                                      data: Theme.of(context).copyWith(
+                                        colorScheme: ColorScheme.light(
+                                          primary: AppColors.primary,
+                                          onPrimary: AppColors.white,
+                                          surface: AppColors.white,
+                                          onSurface: AppColors.text,
+                                        ),
+                                      ),
+                                      child: child!,
+                                    );
+                                  },
                                 );
 
                                 if (picked == null) return;
@@ -228,6 +241,19 @@ class _SalesReportState extends State<SalesReport> {
                                   initialDate: toDate,
                                   firstDate: fromDate,
                                   lastDate: DateTime(2100),
+                                  builder: (context, child) {
+                                    return Theme(
+                                      data: Theme.of(context).copyWith(
+                                        colorScheme: ColorScheme.light(
+                                          primary: AppColors.primary,
+                                          onPrimary: AppColors.white,
+                                          surface: AppColors.white,
+                                          onSurface: AppColors.text,
+                                        ),
+                                      ),
+                                      child: child!,
+                                    );
+                                  },
                                 );
 
                                 if (picked == null) return;
@@ -601,19 +627,17 @@ class _SalesReportState extends State<SalesReport> {
           emptyLabel = "No Data Found";
       }
 
-      if (list.isEmpty) {
-        return Center(
-          child: Text(
-            emptyLabel,
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-        );
-      }
+      // if (list.isEmpty) {
+      //   return Center(
+      //     child: Text(
+      //       emptyLabel,
+      //       style: const TextStyle(fontSize: 14, color: Colors.grey),
+      //     ),
+      //   );
+      // }
 
       return Expanded(
         child: ListView.builder(
-          // shrinkWrap: true,
-          // physics: const NeverScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           itemCount: list.length,
           itemBuilder: (context, index) {
@@ -657,7 +681,9 @@ class _SalesReportState extends State<SalesReport> {
     dynamic cash,
     dynamic account,
     required dynamic gst,
+    required dynamic gstPercent,
     dynamic tds,
+    dynamic tdsPercent,
     dynamic netAmount,
     String noLabel = "No",
   }) {
@@ -691,51 +717,97 @@ class _SalesReportState extends State<SalesReport> {
               14,
               8,
             ),
-            child: Column(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.calendar_month_outlined,
-                      color: AppColors.primary,
-                      size: 18,
-                    ),
-
-                    const SizedBox(width: 8),
-
-                    Expanded(
-                      child: Text(
-                        date.isNotEmpty ? date : "--",
+                // =========================
+                // DATE CONTAINER
+                // =========================
+                Container(
+                  width: 48,
+                  height: 45,
+                  decoration: BoxDecoration(
+                    color: AppColors.lightBlue,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        date.isNotEmpty ? AppUtils.getDay(date) : "--",
                         style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
+                          fontFamily: 'Poppins',
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primary,
                         ),
                       ),
-                    ),
-
-                    Text(
-                      documentNo.isNotEmpty ? documentNo : "--",
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1763A8),
+                      Text(
+                        date.isNotEmpty ? AppUtils.getMonth(date) : "--",
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.drawerIcon,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
 
-                const SizedBox(height: 2),
+                const SizedBox(width: 13),
 
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    companyName.isNotEmpty ? companyName : "--",
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
+                // =========================
+                // COMPANY NAME
+                // =========================
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        companyName.isNotEmpty ? companyName : "--",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.text,
+                        ),
+                      ),
+
+                      const SizedBox(height: 3),
+
+                      Text(
+                        date.isNotEmpty ? DateFormat("dd-MM-yyyy").format(DateTime.parse(date)) : "--",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Poppins',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.subText,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                // =========================
+                // DOCUMENT NO - RIGHT
+                // =========================
+                Text(
+                  documentNo.isNotEmpty ? documentNo : "--",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1763A8),
                   ),
                 ),
               ],
@@ -812,7 +884,7 @@ class _SalesReportState extends State<SalesReport> {
               children: [
                 Expanded(
                   child: _reportAmountItem(
-                    title: widget.title == "Bill Report" ? "BILL AMT" : "GST",
+                    title: widget.title == "Bill Report" ? "BILL AMT" : "GST (${gstPercent.toStringAsFixed(0)}%)",
                     value: widget.title == "Bill Report" ? erpCost : gst,
                     labelColor: const Color(0xFF2685A6),
                     amountColor: const Color(0xFF1D6D8A),
@@ -823,7 +895,7 @@ class _SalesReportState extends State<SalesReport> {
 
                 Expanded(
                   child: _reportAmountItem(
-                    title: widget.title == "Bill Report" ? "GST" : "TDS",
+                    title: widget.title == "Bill Report" ? "GST(${gstPercent.toStringAsFixed(0)}%)" : "TDS(${tdsPercent.toStringAsFixed(0)}%)",
                     value: widget.title == "Bill Report" ? gst : tds,
                     labelColor: const Color(0xFFA85D72),
                     amountColor: const Color(0xFF8F465C),
@@ -908,7 +980,9 @@ class _SalesReportState extends State<SalesReport> {
       cash: detail.cashPortion,
       account: detail.accountPortion,
       gst: detail.gst,
+      gstPercent: detail.gstPercentage,
       tds: detail.tds,
+      tdsPercent: detail.tdsPercentage,
       netAmount: detail.netAmount,
       noLabel: "Sales No",
     );
@@ -928,6 +1002,8 @@ class _SalesReportState extends State<SalesReport> {
       cash: detail.cashPortion,
       account: detail.bankPortion,
       gst: detail.gst,
+      gstPercent: detail.gstPercentage,
+      tdsPercent: detail.tdsPercentage,
       tds: detail.tds,
       noLabel: "Receipt No",
     );
@@ -945,6 +1021,7 @@ class _SalesReportState extends State<SalesReport> {
       companyName: result.companyName ?? "--",
       erpCost: detail.billAmount,
       gst: detail.gst,
+      gstPercent: detail.gstPercentage,
       netAmount: detail.netAmount,
       noLabel: "Bill No",
     );
