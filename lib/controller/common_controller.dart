@@ -10,8 +10,11 @@ import 'package:veenuscashbook/provider/common_provider.dart';
 
 import '../entry_screen.dart';
 import '../models/billDetailsSave_model.dart';
+import '../models/billReport_model.dart';
 import '../models/receiptDetailsSave_model.dart';
+import '../models/receiptReport_model.dart';
 import '../models/salesDetailsSave_model.dart';
+import '../models/salesReport_model.dart';
 import '../provider/billDetails_provider.dart';
 import '../provider/companyDetails_provider.dart';
 import '../provider/receiptDetails_provider.dart';
@@ -25,6 +28,10 @@ class CommonController extends GetxController{
   ReceiptDetailsController receiptDetailsController = Get.put(ReceiptDetailsController());
   BillDetailsController billDetailsController = Get.put(BillDetailsController());
 
+  final salesRptFromDate = TextEditingController();
+  final salesRptToDate = TextEditingController();
+
+
   RxString Sales_autoYrsWise = "".obs;
   RxString Receipt_autoYrsWise = "".obs;
   RxString Bill_autoYrsWise = "".obs;
@@ -33,6 +40,13 @@ class CommonController extends GetxController{
   RxList companyDropdown = [].obs;
   var selectedGstPercentage = Rxn<double>();
   var selectedTdsPercentage = Rxn<double>();
+
+  RxList<SalesResult> salesReportList = <SalesResult>[].obs;
+  RxList<ReceiptResult> receiptReportList = <ReceiptResult>[].obs;
+  RxList<BillResult> billReportList = <BillResult>[].obs;
+
+  int selectedCompanyId = 0;
+  String selectedCompany = "--SELECT--";
 
 
   Future AutoYearWiseNo(Url) async {
@@ -167,7 +181,13 @@ class CommonController extends GetxController{
 
         await BaseUtitiles.showSuccessAnimation(
           context,
-          title: success ? 'Submitted' : 'Failed',
+          title: success
+              ? (salesDetailController.saveButton.value == RequestConstant.SUBMIT
+              ? "Submitted"
+              : salesDetailController.saveButton.value == RequestConstant.RESUBMIT
+              ? "Updated"
+              : "Submitted")
+              : "Failed",
           message: msg,
           isSuccess: success,
         );
@@ -215,7 +235,13 @@ class CommonController extends GetxController{
         await billDetailsController.getBillDetails_List();
         await BaseUtitiles.showSuccessAnimation(
           context,
-          title: success ? 'Submitted' : 'Failed',
+          title: success
+              ? (billDetailsController.saveButton.value == RequestConstant.SUBMIT
+              ? "Submitted"
+              : billDetailsController.saveButton.value == RequestConstant.RESUBMIT
+              ? "Updated"
+              : "Submitted")
+              : "Failed",
           message: msg,
           isSuccess: success,
         );
@@ -269,7 +295,13 @@ class CommonController extends GetxController{
 
         await BaseUtitiles.showSuccessAnimation(
           context,
-          title: success ? 'Submitted' : 'Failed',
+          title: success
+              ? (receiptDetailsController.saveButton.value == RequestConstant.SUBMIT
+              ? "Submitted"
+              : receiptDetailsController.saveButton.value == RequestConstant.RESUBMIT
+              ? "Updated"
+              : "Submitted")
+              : "Failed",
           message: msg,
           isSuccess: success,
         );
@@ -292,7 +324,67 @@ class CommonController extends GetxController{
   }
 
 
+  // Future getSalesReport() async {
+  //   salesReportList.value = [];
+  //   var response = await CommonProvider.getSalesReport(salesRptFromDate.text,salesRptToDate.text);
+  //   if (response != null) {
+  //     if (response.success == true) {
+  //         salesReportList.assignAll(response.!);
+  //
+  //
+  //     } else {
+  //       Fluttertoast.showToast(msg:
+  //       response.message ?? RequestConstant.NETWORKERROR);
+  //     }
+  //   } else {
+  //     Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+  //   }
+  // }
 
+  Future getSalesReport() async {
+    salesReportList.value = [];
+      SalesReportResponse? response = await CommonProvider.getSalesReport(salesRptFromDate.text, salesRptToDate.text);
+      if (response != null) {
+        if(response.success == true) {
+          salesReportList.assignAll(response.result ?? []);
+        }else {
+          Fluttertoast.showToast(msg:
+          response.message ?? RequestConstant.NETWORKERROR);
+        }
+      } else {
+        Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+      }
+  }
+
+  Future getReceiptReport() async {
+    receiptReportList.value = [];
+    ReceiptReportDetails? response = await CommonProvider.getReceiptReport(salesRptFromDate.text, salesRptToDate.text);
+    if (response != null) {
+      if(response.success == true) {
+        receiptReportList.assignAll(response.result ?? []);
+      }else {
+        Fluttertoast.showToast(msg:
+        response.message ?? RequestConstant.NETWORKERROR);
+      }
+    } else {
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+    }
+  }
+
+  Future getBillReport() async {
+    billReportList.value = [];
+    BillReportDetails? response = await CommonProvider.getBillReport(salesRptFromDate.text, salesRptToDate.text);
+    if (response != null) {
+      if(response.success == true) {
+        billReportList.assignAll(response.result ?? []);
+      }else {
+        Fluttertoast.showToast(msg:
+        response.message ?? RequestConstant.NETWORKERROR);
+      }
+    } else {
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+    }
+  }
 
   void calculateErpCost(
       TextEditingController cashPortionController,
