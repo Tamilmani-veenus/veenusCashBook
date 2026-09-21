@@ -35,6 +35,7 @@ class CompanyDetailsGetAllResponse {
 class Result {
   int? id;
   String? companyName;
+  String? date;
   String? companyAddress;
   String? contactNo;
   String? city;
@@ -45,6 +46,7 @@ class Result {
   Result({
     this.id,
     this.companyName,
+    this.date,
     this.companyAddress,
     this.contactNo,
     this.city,
@@ -56,6 +58,7 @@ class Result {
   factory Result.fromJson(Map<String, dynamic> json) => Result(
     id: json["id"],
     companyName: json["companyName"],
+    date: json["companyDate"],
     companyAddress: json["companyAddress"],
     contactNo: json["contactNo"],
     city: json["city"],
@@ -67,6 +70,7 @@ class Result {
   Map<String, dynamic> toJson() => {
     "id": id,
     "companyName": companyName,
+    "companyDate": date,
     "companyAddress": companyAddress,
     "contactNo": contactNo,
     "city": city,

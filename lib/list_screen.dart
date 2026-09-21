@@ -5,6 +5,7 @@ import 'package:veenuscashbook/controller/billDetails_controller.dart';
 import 'package:veenuscashbook/controller/common_controller.dart';
 import 'package:veenuscashbook/controller/receiptDetails_controller.dart';
 import 'package:veenuscashbook/controller/salesDetails_controller.dart';
+import 'package:veenuscashbook/utilities/baseutitiles.dart';
 import 'package:veenuscashbook/utilities/requestconstant.dart';
 
 import 'app_theme.dart';
@@ -361,7 +362,7 @@ class _ListScreenState extends State<ListScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        _getDay(date),
+                        AppUtils.getDay(date),
                         style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 17,
@@ -370,7 +371,7 @@ class _ListScreenState extends State<ListScreen> {
                         ),
                       ),
                       Text(
-                        _getMonth(date),
+                        AppUtils.getMonth(date),
                         style: const TextStyle(
                           fontFamily: 'Poppins',
                           fontSize: 9,
@@ -639,9 +640,10 @@ class _ListScreenState extends State<ListScreen> {
         final company = (sales.companyName ?? '').toLowerCase();
         final salesNo = (sales.salesNo ?? '').toString().toLowerCase();
         final date = (sales.date ?? '').toString().toLowerCase();
-
+        final cost = (sales.erpCost ?? '').toString().toLowerCase();
         if (company.contains(query) ||
             salesNo.contains(query) ||
+            cost.contains(query) ||
             date.contains(query)) {
           result.add(i);
         }
@@ -672,9 +674,10 @@ class _ListScreenState extends State<ListScreen> {
         final company = (bill.companyName ?? '').toLowerCase();
         final billNo = (bill.billNo ?? '').toString().toLowerCase();
         final date = (bill.date ?? '').toString().toLowerCase();
-
+        final cost = (bill.billAmount ?? '').toString().toLowerCase();
         if (company.contains(query) ||
             billNo.contains(query) ||
+            cost.contains(query) ||
             date.contains(query)) {
           result.add(i);
         }
@@ -687,46 +690,7 @@ class _ListScreenState extends State<ListScreen> {
     });
   }
 
-  String _getDay(String? date) {
-    if (date == null || date.isEmpty) {
-      return '--';
-    }
 
-    try {
-      final parsedDate = DateTime.parse(date);
-      return parsedDate.day.toString().padLeft(2, '0');
-    } catch (e) {
-      return '--';
-    }
-  }
-
-  String _getMonth(String? date) {
-    if (date == null || date.isEmpty) {
-      return '--';
-    }
-
-    try {
-      final parsedDate = DateTime.parse(date);
-
-      const months = [
-        'JAN',
-        'FEB',
-        'MAR',
-        'APR',
-        'MAY',
-        'JUN',
-        'JUL',
-        'AUG',
-        'SEP',
-        'OCT',
-        'NOV',
-        'DEC',
-      ];
-
-      return months[parsedDate.month - 1];
-    } catch (e) {
-      return '--';
-    }
-  }
 
 }
+

@@ -365,7 +365,8 @@ class _CashBookDrawerState extends State<CashBookDrawer> {
           onTap: onTap,
           borderRadius: BorderRadius.circular(12),
           child: Container(
-            height: 64,
+            // color: Colors.yellow,
+            height: 45,
             padding: const EdgeInsets.symmetric(
               horizontal: 10,
             ),
@@ -435,7 +436,7 @@ class _CashBookDrawerState extends State<CashBookDrawer> {
           onTap: onTap,
           borderRadius: BorderRadius.circular(10),
           child: Container(
-            height: 46,
+            height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Row(
               children: [
