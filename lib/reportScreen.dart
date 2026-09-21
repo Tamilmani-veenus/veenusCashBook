@@ -46,8 +46,8 @@ class _SalesReportState extends State<SalesReport> {
       setState(() {
 
       });
-      commonController.selectedCompanyId = 0;
-      commonController.selectedCompany = "--SELECT--";
+      commonController.selectedCompanyId.value = 0;
+      commonController.selectedCompany.value = "--SELECT--";
       if(widget.title == "Sales Report"){
 
         commonController.salesReportList.value = [];
@@ -304,9 +304,9 @@ class _SalesReportState extends State<SalesReport> {
                   child: Obx(
                         () => DropdownButtonFormField2<int>(
                       value:
-                          commonController.selectedCompanyId == 0
+                          commonController.selectedCompanyId.value == 0
                           ? null
-                          : commonController.selectedCompanyId,
+                          : commonController.selectedCompanyId.value,
 
                           isExpanded: true,
 
@@ -443,8 +443,8 @@ class _SalesReportState extends State<SalesReport> {
                         );
 
                         setState(() {
-                            commonController.selectedCompanyId = value;
-                            commonController.selectedCompany =
+                            commonController.selectedCompanyId.value = value;
+                            commonController.selectedCompany.value =
                                 selected.companyName ?? '';
                         });
                       },

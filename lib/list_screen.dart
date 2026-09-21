@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:veenuscashbook/controller/billDetails_controller.dart';
 import 'package:veenuscashbook/controller/common_controller.dart';
+import 'package:veenuscashbook/controller/companyDetails_controller.dart';
 import 'package:veenuscashbook/controller/receiptDetails_controller.dart';
 import 'package:veenuscashbook/controller/salesDetails_controller.dart';
 import 'package:veenuscashbook/utilities/baseutitiles.dart';
@@ -24,6 +25,7 @@ class ListScreen extends StatefulWidget {
 }
 
 class _ListScreenState extends State<ListScreen> {
+  CompanyDetailsController companyDetailsController = Get.put(CompanyDetailsController());
   SalesDetailController salesDetailController = Get.put(SalesDetailController());
   ReceiptDetailsController receiptDetailsController = Get.put(ReceiptDetailsController());
   BillDetailsController billDetailsController = Get.put(BillDetailsController());
@@ -264,9 +266,10 @@ class _ListScreenState extends State<ListScreen> {
         backgroundColor: AppColors.primary,
         elevation: 4,
         onPressed: () {
-          isSalesDetails ? salesDetailController.saveButton.value = RequestConstant.SUBMIT :
-          isReceiptDetails ?
-          receiptDetailsController.saveButton.value = RequestConstant.SUBMIT : billDetailsController.saveButton.value = RequestConstant.SUBMIT;
+          companyDetailsController.saveButton.value = RequestConstant.SUBMIT;
+          salesDetailController.saveButton.value = RequestConstant.SUBMIT;
+          receiptDetailsController.saveButton.value = RequestConstant.SUBMIT;
+          billDetailsController.saveButton.value = RequestConstant.SUBMIT;
           Navigator.push(context, MaterialPageRoute(builder: (context)=>EntryScreen(title: widget.title)));
         },
         child: const Icon(

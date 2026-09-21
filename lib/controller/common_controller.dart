@@ -45,8 +45,8 @@ class CommonController extends GetxController{
   RxList<ReceiptResult> receiptReportList = <ReceiptResult>[].obs;
   RxList<BillResult> billReportList = <BillResult>[].obs;
 
-  int selectedCompanyId = 0;
-  String selectedCompany = "--SELECT--";
+  RxString selectedCompany = "--SELECT--".obs;
+  RxInt selectedCompanyId = 0.obs;
 
 
   Future AutoYearWiseNo(Url) async {
@@ -158,8 +158,8 @@ class CommonController extends GetxController{
       id: id != 0 ? id : 0,
       salesNo: salesDetailController.SalesNoController.text,
       date: apiDate,
-      companyId: salesDetailController.selectedCompanyId,
-      companyName: salesDetailController.selectedCompany,
+      companyId: selectedCompanyId.value,
+      companyName: selectedCompany.value,
       cashPortion: double.tryParse(salesDetailController.cashPortionController.text) ?? 0.0,
       erpCost: double.tryParse(salesDetailController.erpCostController.text) ?? 0.0,
       accountPortion: double.tryParse(salesDetailController.accPortionController.text) ?? 0.0,
@@ -218,12 +218,12 @@ class CommonController extends GetxController{
       id: id != 0 ? id : 0,
       billNo: billDetailsController.BillNoController.text,
       billDate: apiDate,
-      companyId: billDetailsController.selectedCompanyId,
+      companyId: selectedCompanyId.value,
       billAmount: double.tryParse(billDetailsController.billCostController.text) ?? 0.0,
       gst: double.tryParse(billDetailsController.gstAmtController.text) ?? 0.0,
       gstPercentage: selectedGstPercentage.value,
       netAmount: double.tryParse(billDetailsController.netAmountController.text) ?? 0.0,
-      companyName: billDetailsController.selectedCompany,
+      companyName: selectedCompany.value,
     ));
 
     final list = await BillDetailsProvider.SaveBillScreenEntryAPI(body, id, context);
@@ -273,8 +273,8 @@ class CommonController extends GetxController{
       id: id != 0 ? id : 0,
       receiptNo: receiptDetailsController.ReceiptNoController.text,
       receiptDate: apiDate,
-      companyId: receiptDetailsController.selectedCompanyId,
-      companyName: receiptDetailsController.selectedCompany,
+      companyId: selectedCompanyId.value,
+      companyName: selectedCompany.value,
       cashPortion: double.tryParse(receiptDetailsController.cashPortionController.text) ?? 0.0,
       receivedAmount: double.tryParse(receiptDetailsController.receiptCostController.text) ?? 0.0,
       bankPortion: double.tryParse(receiptDetailsController.accPortionController.text) ?? 0.0,
@@ -368,7 +368,7 @@ class CommonController extends GetxController{
         RptToDate.text,
       ),
     );
-      SalesReportResponse? response = await CommonProvider.getSalesReport(fromDate, toDate,selectedCompanyId);
+      SalesReportResponse? response = await CommonProvider.getSalesReport(fromDate, toDate,selectedCompanyId.value);
       if (response != null) {
         if(response.success == true) {
           salesReportList.assignAll(response.result ?? []);
@@ -394,7 +394,7 @@ class CommonController extends GetxController{
         RptToDate.text,
       ),
     );
-    ReceiptReportDetails? response = await CommonProvider.getReceiptReport(fromDate, toDate,selectedCompanyId);
+    ReceiptReportDetails? response = await CommonProvider.getReceiptReport(fromDate, toDate,selectedCompanyId.value);
     if (response != null) {
       if(response.success == true) {
         receiptReportList.assignAll(response.result ?? []);
@@ -420,7 +420,7 @@ class CommonController extends GetxController{
         RptToDate.text,
       ),
     );
-    BillReportDetails? response = await CommonProvider.getBillReport(fromDate, toDate,selectedCompanyId);
+    BillReportDetails? response = await CommonProvider.getBillReport(fromDate, toDate,selectedCompanyId.value);
     if (response != null) {
       if(response.success == true) {
         billReportList.assignAll(response.result ?? []);

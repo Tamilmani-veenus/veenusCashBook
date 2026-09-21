@@ -22,8 +22,6 @@ class BillDetailsController extends GetxController{
 
   RxList BillDetailsList = [].obs;
   RxList Bill_EditListApiValue = [].obs;
-  int selectedCompanyId = 0;
-  String selectedCompany = "--SELECT--";
   RxString saveButton = RequestConstant.SUBMIT.obs;
 
   Future getBillDetails_List() async {
@@ -46,53 +44,6 @@ class BillDetailsController extends GetxController{
     }
   }
 
-  Future SaveButton_BillDetails(BuildContext context, int id) async {
-    int i = 0;
-    final String apiDate = DateFormat('yyyy-MM-dd').format(
-      DateFormat('dd/MM/yyyy').parse(BillDate.text),
-    );
-    await Future.delayed(const Duration(seconds: 0));
-    String body = billDetailsSaveResponseToJson(BillDetailsSaveResponse(
-      id: id != 0 ? id : 0,
-      billNo: BillNoController.text,
-      billDate: apiDate,
-      companyId: selectedCompanyId,
-      billAmount: double.tryParse(billCostController.text) ?? 0.0,
-      gst: double.tryParse(gstAmtController.text) ?? 0.0,
-      netAmount: double.tryParse(netAmountController.text) ?? 0.0,
-      companyName: selectedCompany,
-    ));
-
-    final list = await BillDetailsProvider.SaveBillScreenEntryAPI(body, id, context);
-
-    if (list != null) {
-      if (list["success"] == true) {
-        final bool success = list["success"] == true;
-        final String msg = list["message"] ?? '';
-        await getBillDetails_List();
-        await BaseUtitiles.showSuccessAnimation(
-          context,
-          title: success ? 'Submitted' : 'Failed',
-          message: msg,
-          isSuccess: success,
-        );
-
-        BaseUtitiles.popMultiple(context, count: success ? 3 : 2);
-      } else {
-        await BaseUtitiles.showSuccessAnimation(
-          context,
-          title: 'Failed',
-          message: RequestConstant.NETWORKERROR,
-          isSuccess: false,
-        );
-        BaseUtitiles.popMultiple(context, count: 2);
-      }
-    }
-    else {
-      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
-      BaseUtitiles.popMultiple(context, count: 2);
-    }
-  }
 
   Future BillDetails_List_EditApi(int expenseId,String MenuName, BuildContext context) async {
     final value =

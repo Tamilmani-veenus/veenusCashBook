@@ -20,8 +20,6 @@ class ReceiptDetailsController extends GetxController{
   final tdsAmtController = TextEditingController();
 
   int receiptId = 0;
-  int selectedCompanyId = 0;
-  String selectedCompany = "--SELECT--";
   final RxBool isTdsEnabled = false.obs;
 
   RxList ReceiptDetailsList = [].obs;
@@ -49,54 +47,6 @@ class ReceiptDetailsController extends GetxController{
     }
   }
 
-  Future SaveButton_ReceiptDetails(BuildContext context, int id) async {
-    int i = 0;
-    final String apiDate = DateFormat('yyyy-MM-dd').format(
-      DateFormat('dd/MM/yyyy').parse(ReceiptDate.text),
-    );
-    await Future.delayed(const Duration(seconds: 0));
-    String body = receiptDetailsSaveResponseToJson(ReceiptDetailsSaveResponse(
-      id: id != 0 ? id : 0,
-      receiptNo: ReceiptNoController.text,
-      receiptDate: apiDate,
-      companyId: selectedCompanyId,
-      cashPortion: double.tryParse(cashPortionController.text) ?? 0.0,
-      receivedAmount: double.tryParse(receiptCostController.text) ?? 0.0,
-      bankPortion: double.tryParse(accPortionController.text) ?? 0.0,
-      tds: double.tryParse(tdsAmtController.text) ?? 0.0,
-    ));
-
-    final list = await ReceiptDetailsProvider.SaveReceiptScreenEntryAPI(body, id, context);
-
-    if (list != null) {
-      if (list["success"] == true) {
-        final bool success = list["success"] == true;
-        final String msg = list["message"] ?? '';
-        await getReceiptDetails_List();
-
-        await BaseUtitiles.showSuccessAnimation(
-          context,
-          title: success ? 'Submitted' : 'Failed',
-          message: msg,
-          isSuccess: success,
-        );
-
-        BaseUtitiles.popMultiple(context, count: success ? 3 : 2);
-      } else {
-        await BaseUtitiles.showSuccessAnimation(
-          context,
-          title: 'Failed',
-          message: RequestConstant.NETWORKERROR,
-          isSuccess: false,
-        );
-        BaseUtitiles.popMultiple(context, count: 2);
-      }
-    }
-    else {
-      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
-      BaseUtitiles.popMultiple(context, count: 2);
-    }
-  }
 
   Future ReceiptDetails_List_EditApi(int expenseId,String MenuName, BuildContext context) async {
     final value =

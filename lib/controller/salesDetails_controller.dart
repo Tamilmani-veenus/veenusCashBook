@@ -25,8 +25,6 @@ class SalesDetailController extends GetxController{
   final RxBool isTdsEnabled = false.obs;
 
   RxList SalesDetailsList = [].obs;
-  String selectedCompany = "--SELECT--";
-  int selectedCompanyId = 0;
   RxList Sales_EditListApiValue = [].obs;
 
   RxString saveButton = RequestConstant.SUBMIT.obs;
@@ -51,59 +49,6 @@ class SalesDetailController extends GetxController{
     }
   }
 
-
-  Future SaveButton_SalesDetails(BuildContext context, int id) async {
-    final String apiDate = DateFormat('yyyy-MM-dd').format(
-      DateFormat('dd/MM/yyyy').parse(SalesDate.text),
-    );
-
-    String body = salesDetailsSaveResponseToJson(SalesDetailsSaveResponse(
-      id: id != 0 ? id : 0,
-      salesNo: SalesNoController.text,
-      date: apiDate,
-      companyId: selectedCompanyId,
-      companyName: selectedCompany,
-      cashPortion: double.tryParse(cashPortionController.text) ?? 0.0,
-      erpCost: double.tryParse(erpCostController.text) ?? 0.0,
-      accountPortion: double.tryParse(accPortionController.text) ?? 0.0,
-      netAmount: double.tryParse(netAmountController.text) ?? 0.0,
-      gst: double.tryParse(gstAmtController.text) ?? 0.0,
-      // gstPercentage: commonController.selectedGstPercentage.value,
-      tds: double.tryParse(tdsAmtController.text) ?? 0.0,
-      // tdsPercentage: commonController.selectedTdsPercentage.value,
-      tdsCheck: isTdsEnabled.value,
-    ));
-
-    final list = await SalesDetailsProvider.SaveSalesScreenEntryAPI(body, id, context);
-
-    if (list != null) {
-      if (list["success"] == true) {
-        final bool success = list["success"] == true;
-        final String msg = list["message"] ?? '';
-        await getSalesDetails_List();
-
-        await BaseUtitiles.showSuccessAnimation(
-          context,
-          title: success ? 'Submitted' : 'Failed',
-          message: msg,
-          isSuccess: success,
-        );
-
-        BaseUtitiles.popMultiple(context, count: success ? 3 : 2);
-      } else {
-        await BaseUtitiles.showSuccessAnimation(
-          context,
-          title: 'Failed',
-          message: RequestConstant.NETWORKERROR,
-          isSuccess: false,
-        );
-        BaseUtitiles.popMultiple(context, count: 2);
-      }
-    } else {
-      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
-      BaseUtitiles.popMultiple(context, count: 2);
-    }
-  }
 
   Future SalesDetails_List_EditApi(int expenseId,String MenuName, BuildContext context) async {
     final value =
