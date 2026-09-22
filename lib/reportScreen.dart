@@ -1098,3 +1098,5 @@ class _SalesReportState extends State<SalesReport> {
     ).format(value ?? 0);
   }
 }
+
+

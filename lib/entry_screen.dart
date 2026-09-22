@@ -172,8 +172,8 @@ class _EntryScreenState extends State<EntryScreen> {
         else if(billDetailsController.saveButton.value ==RequestConstant.SUBMIT){
           await commmonController.getDropDownGSTValues();
           billDetailsController.billId=0;
-          await commmonController.AutoYearWiseNo("BILL");
-          billDetailsController.BillNoController.text = commmonController.Bill_autoYrsWise.value;
+          // await commmonController.AutoYearWiseNo("BILL");
+          billDetailsController.BillNoController.text = "";
           commmonController.selectedCompanyId.value = 0;
           commmonController.selectedCompany.value = "--SELECT--";
           billDetailsController.BillDate.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
@@ -281,10 +281,11 @@ class _EntryScreenState extends State<EntryScreen> {
                     if (widget.title != "Company Details") ...[
                       _entryField(
                         label: isSalesDetails ? 'Sales No' : isReceiptDetails ? 'Receipt No' : 'Bill No',
-                        hint: '',
+                        hint: isBillDetails ? 'Enter bill no' : "",
                         icon: Icons.numbers,
                         controller: isSalesDetails ? salesDetailController.SalesNoController : isReceiptDetails ? receiptDetailsController.ReceiptNoController : billDetailsController.BillNoController,
-                        isDateField: true,
+                        isDateField: false,
+                        readOnly: isBillDetails ? false : true
                       ),
                       const SizedBox(height: 16),
                     ],
@@ -934,11 +935,9 @@ class _EntryScreenState extends State<EntryScreen> {
 
               if (isSalesDetails || isReceiptDetails || isBillDetails) {
                 return DropdownButtonFormField2<int>(
-                  value:
-                       commmonController.selectedCompanyId.value == 0
+                  value: commmonController.selectedCompanyId.value == 0
                       ? null
-                      : commmonController.selectedCompanyId.value
-                      ,
+                      : commmonController.selectedCompanyId.value,
 
                   isExpanded: true,
                   validator: requiredField

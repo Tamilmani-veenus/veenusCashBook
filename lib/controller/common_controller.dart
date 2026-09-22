@@ -11,6 +11,8 @@ import 'package:veenuscashbook/provider/common_provider.dart';
 import '../entry_screen.dart';
 import '../models/billDetailsSave_model.dart';
 import '../models/billReport_model.dart';
+import '../models/billoutstandingReport_model.dart';
+import '../models/outstandingReport_model.dart';
 import '../models/receiptDetailsSave_model.dart';
 import '../models/receiptReport_model.dart';
 import '../models/salesDetailsSave_model.dart';
@@ -429,6 +431,59 @@ class CommonController extends GetxController{
         response.message ?? RequestConstant.NETWORKERROR);
       }
     } else {
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+    }
+  }
+
+  RxList outstandingList = [].obs;
+  RxList billOutstandingList = [].obs;
+
+  Rxn<OverallTotal> overallTotal = Rxn<OverallTotal>();
+  Rxn<BillOverallTotal> overallBillTotal = Rxn<BillOverallTotal>();
+
+
+  Future getOutStandingReport() async {
+    outstandingList.value = [];
+    overallTotal.value = null;
+    final response =
+      await CommonProvider.getOutStandingReport("2025-01-01","2026-09-22"
+        // RptFromDate.text, RptToDate.text,
+      );
+
+      if (response != null){
+        if(response.success == true) {
+        outstandingList.value =
+            response.data ?? [];
+
+        overallTotal.value =
+            response.overallTotal;
+      }else {
+          Fluttertoast.showToast(msg:
+          response.message ?? RequestConstant.NETWORKERROR);
+        } }else {
+        Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+      }
+  }
+
+  Future getBillOutStandingReport() async {
+    billOutstandingList.value = [];
+    overallBillTotal.value = null;
+    final response =
+    await CommonProvider.getBillOutStandingReport("2025-01-01","2026-09-22"
+      // RptFromDate.text, RptToDate.text,
+    );
+
+    if (response != null){
+      if(response.success == true) {
+        billOutstandingList.value =
+            response.data ?? [];
+
+        overallBillTotal.value =
+            response.overallTotal;
+      }else {
+        Fluttertoast.showToast(msg:
+        response.message ?? RequestConstant.NETWORKERROR);
+      } }else {
       Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
     }
   }

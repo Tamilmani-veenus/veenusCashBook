@@ -4,6 +4,7 @@ import 'package:veenuscashbook/reportScreen.dart';
 import 'app_theme.dart';
 import 'companyDetails/companyDetails_EntryList.dart';
 import 'list_screen.dart';
+import 'outstandingReports.dart';
 
 class CashBookHomeScreen extends StatelessWidget {
   const CashBookHomeScreen({super.key});
@@ -340,6 +341,32 @@ class _CashBookDrawerState extends State<CashBookDrawer> {
                   );
                 },
               ),
+              _drawerSubItem(
+                title: 'Outstanding Report',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OutStandingBillReportWidget(
+                        title: 'Outstanding Report',
+                      ),
+                    ),
+                  );
+                },
+              ),
+              _drawerSubItem(
+                title: 'Bill Outstanding Report',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OutStandingBillReportWidget(
+                        title: 'Bill Outstanding Report',
+                      ),
+                    ),
+                  );
+                },
+              ),
             ],
           ],
         ),
@@ -401,10 +428,6 @@ class _CashBookDrawerState extends State<CashBookDrawer> {
                     ),
                   ),
                 ),
-
-                // =====================
-                // ARROW
-                // =====================
                 trailing ??
                     const Icon(
                       Icons.chevron_right_rounded,

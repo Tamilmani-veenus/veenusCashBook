@@ -114,12 +114,28 @@ class BaseUtitiles {
         '${date.year}';
   }
 
-  static String formatApiDate(String date) {
-    final parts = date.split('-');
+  // static String formatApiDate(String date) {
+  //   final parts = date.split('-');
+  //
+  //   if (parts.length != 3) return date;
+  //
+  //   return '${parts[2]}-${parts[1]}-${parts[0]}';
+  // }
 
-    if (parts.length != 3) return date;
+  static String formatApiDate(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final year = date.year.toString();
 
-    return '${parts[2]}-${parts[1]}-${parts[0]}';
+    return '$year-$month-$day';
+  }
+
+  static String formatDisplayDate(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final year = date.year.toString();
+
+    return '$day/$month/$year';
   }
 
   static void popMultiple(BuildContext context, {int count = 1}) {
@@ -437,4 +453,12 @@ class AppUtils {
       return '--';
     }
   }
+
+  static String formatApiDate(DateTime date) {
+    return "${date.year}-"
+        "${date.month.toString().padLeft(2, '0')}-"
+        "${date.day.toString().padLeft(2, '0')}";
+  }
 }
+
+
