@@ -17,6 +17,7 @@ import '../models/receiptDetailsSave_model.dart';
 import '../models/receiptReport_model.dart';
 import '../models/salesDetailsSave_model.dart';
 import '../models/salesReport_model.dart';
+import '../models/tdsReport_model.dart';
 import '../provider/billDetails_provider.dart';
 import '../provider/companyDetails_provider.dart';
 import '../provider/receiptDetails_provider.dart';
@@ -50,6 +51,9 @@ class CommonController extends GetxController{
   RxString selectedCompany = "--SELECT--".obs;
   RxInt selectedCompanyId = 0.obs;
 
+  RxList financialYearList = [].obs;
+  int selectedFinancialYearId = 0;
+  String? selectedFinancialYear;
 
   Future AutoYearWiseNo(Url) async {
     final value =await CommonProvider.getAutoYearWise(Url);
@@ -325,24 +329,6 @@ class CommonController extends GetxController{
     }
   }
 
-
-  // Future getSalesReport() async {
-  //   salesReportList.value = [];
-  //   var response = await CommonProvider.getSalesReport(salesRptFromDate.text,salesRptToDate.text);
-  //   if (response != null) {
-  //     if (response.success == true) {
-  //         salesReportList.assignAll(response.!);
-  //
-  //
-  //     } else {
-  //       Fluttertoast.showToast(msg:
-  //       response.message ?? RequestConstant.NETWORKERROR);
-  //     }
-  //   } else {
-  //     Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
-  //   }
-  // }
-
   String apiDate(String date) {
     return DateFormat('yyyy-MM-dd').format(
       DateFormat('dd/MM/yyyy').parse(date),
@@ -437,18 +423,18 @@ class CommonController extends GetxController{
 
   RxList outstandingList = [].obs;
   RxList billOutstandingList = [].obs;
+  RxList tdsReportList = [].obs;
 
   Rxn<OverallTotal> overallTotal = Rxn<OverallTotal>();
   Rxn<BillOverallTotal> overallBillTotal = Rxn<BillOverallTotal>();
+  Rxn<OveralltdsTotal> overalltdsTotal = Rxn<OveralltdsTotal>();
 
 
   Future getOutStandingReport() async {
     outstandingList.value = [];
     overallTotal.value = null;
     final response =
-      await CommonProvider.getOutStandingReport("2025-01-01","2026-09-22"
-        // RptFromDate.text, RptToDate.text,
-      );
+      await CommonProvider.getOutStandingReport(RptFromDate.text, RptToDate.text,selectedFinancialYearId);
 
       if (response != null){
         if(response.success == true) {
@@ -469,9 +455,7 @@ class CommonController extends GetxController{
     billOutstandingList.value = [];
     overallBillTotal.value = null;
     final response =
-    await CommonProvider.getBillOutStandingReport("2025-01-01","2026-09-22"
-      // RptFromDate.text, RptToDate.text,
-    );
+    await CommonProvider.getBillOutStandingReport(RptFromDate.text, RptToDate.text,selectedFinancialYearId);
 
     if (response != null){
       if(response.success == true) {
@@ -486,6 +470,38 @@ class CommonController extends GetxController{
       } }else {
       Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
     }
+  }
+
+  Future getTdsReport() async {
+    tdsReportList.value = [];
+    overalltdsTotal.value = null;
+    final response =
+    await CommonProvider.getTdsReport(RptFromDate.text, RptToDate.text,selectedFinancialYearId);
+
+    if (response != null){
+      if(response.success == true) {
+        tdsReportList.value =
+            response.data ?? [];
+
+        overalltdsTotal.value =
+            response.overallTotal;
+      }else {
+        Fluttertoast.showToast(msg:
+        response.message ?? RequestConstant.NETWORKERROR);
+      } }else {
+      Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
+    }
+  }
+
+  Future<void> getFinancialReportData() async {
+    financialYearList.value = [];
+      final response = await CommonProvider.getFinancialReport();
+
+      if (response != null && response['success'] == true) {
+        financialYearList.value = response['result'] ?? [];
+      } else {
+        financialYearList.clear();
+      }
   }
 
   void calculateErpCost(

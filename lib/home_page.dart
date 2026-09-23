@@ -367,6 +367,19 @@ class _CashBookDrawerState extends State<CashBookDrawer> {
                   );
                 },
               ),
+              _drawerSubItem(
+                title: 'TDS Report',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OutStandingBillReportWidget(
+                        title: 'TDS Report',
+                      ),
+                    ),
+                  );
+                },
+              ),
             ],
           ],
         ),
