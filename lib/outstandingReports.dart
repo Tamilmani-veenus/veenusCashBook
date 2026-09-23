@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
@@ -38,6 +39,7 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
     commonController.RptToDate.text=BaseUtitiles.formatApiDate(currentDate);
     commonController.overallBillTotal.value = null;
     commonController.overalltdsTotal.value = null;
+    commonController.overallTotal.value = null;
     commonController.billOutstandingList.value = [];
     commonController.tdsReportList.value = [];
     commonController.outstandingList.value = [];
@@ -117,6 +119,12 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
                       ),
                     ),
                     onTap: () async {
+                      if (isCustomDate == null) {
+                        Fluttertoast.showToast(
+                          msg: "Please select Financial Year or Custom Date",
+                        );
+                        return;
+                      }
                       if (_isBillOutstanding) {
                         await commonController.getBillOutStandingReport();
                       }else if(_istdsOutstanding) {
@@ -385,19 +393,28 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
                 child: InkWell(
                   borderRadius: BorderRadius.circular(10),
                   onTap: () async {
+                    commonController.tdsReportList.clear();
+                    commonController.overalltdsTotal.value = null;
+
+                    commonController.billReportList.clear();
+                    commonController.overallBillTotal.value = null;
+
+                    commonController.outstandingList.clear();
+                    commonController.overallTotal.value = null;
+
                     await _showFinancialYearDialog();
                   },
                   child: Row(
                     children: [
-                      Radio<bool>(
-                        value: false,
-                        groupValue: isCustomDate,
-                        activeColor: const Color(0xff3048A1),
-                        materialTapTargetSize:
-                        MaterialTapTargetSize.shrinkWrap,
-                        onChanged: (_) async {
-                          await _showFinancialYearDialog();
-                        },
+                      IgnorePointer(
+                        child: Radio<bool>(
+                          value: false,
+                          groupValue: isCustomDate,
+                          activeColor: const Color(0xff3048A1),
+                          materialTapTargetSize:
+                          MaterialTapTargetSize.shrinkWrap,
+                          onChanged: (_) {},
+                        ),
                       ),
 
                       const SizedBox(width: 4),
@@ -435,6 +452,12 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
                         materialTapTargetSize:
                         MaterialTapTargetSize.shrinkWrap,
                         onChanged: (value) {
+                          commonController.tdsReportList.value = [];
+                          commonController.overalltdsTotal.value = null;
+                          commonController.billReportList.value = [];
+                          commonController.overallBillTotal.value = null;
+                          commonController.outstandingList.value = [];
+                          commonController.overallTotal.value = null;
                           _loadDefaultCustomDates();
                           // setState(() {
                           //   isCustomDate = value ?? false;
