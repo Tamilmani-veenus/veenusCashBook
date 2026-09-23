@@ -285,7 +285,8 @@ class _EntryScreenState extends State<EntryScreen> {
                         icon: Icons.numbers,
                         controller: isSalesDetails ? salesDetailController.SalesNoController : isReceiptDetails ? receiptDetailsController.ReceiptNoController : billDetailsController.BillNoController,
                         isDateField: false,
-                        readOnly: isBillDetails ? false : true
+                        readOnly: isBillDetails ? false : true,
+                        requiredField: true
                       ),
                       const SizedBox(height: 16),
                     ],
@@ -320,6 +321,7 @@ class _EntryScreenState extends State<EntryScreen> {
                             : isReceiptDetails ? receiptDetailsController.receiptCostController
                             : billDetailsController.billCostController,
                         readOnly: widget.title != "Bill Details" ? true : false,
+                        keyboardType: TextInputType.number,
                         isNumberField: true,
                         requiredField: true,
                         onTap: (){
@@ -1039,7 +1041,7 @@ class _EntryScreenState extends State<EntryScreen> {
 
                     });
                   },
-
+                  autovalidateMode: AutovalidateMode.always,
                   buttonStyleData: const ButtonStyleData(
                     height: 20,
                     padding: EdgeInsets.zero,
@@ -1117,7 +1119,7 @@ class _EntryScreenState extends State<EntryScreen> {
                     ),
                   ),
                 ),
-
+                autovalidateMode: AutovalidateMode.always,
                 hint: Text(
                   hint,
                   style: const TextStyle(
@@ -1196,7 +1198,7 @@ class _EntryScreenState extends State<EntryScreen> {
             TextFormField(
               cursorColor: AppColors.primary,
               controller: controller,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
+              autovalidateMode: AutovalidateMode.always,
               keyboardType: keyboardType,
               maxLines: maxLines,
               readOnly: readOnly,
