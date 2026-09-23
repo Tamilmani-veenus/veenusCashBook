@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
@@ -25,7 +26,9 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
   CommonController commonController = Get.put(CommonController());
 
   bool get _isBillOutstanding => widget.title == "Bill Outstanding Report";
-  bool isCustomDate = false;
+  bool get _istdsOutstanding => widget.title == "TDS Report";
+
+  bool? isCustomDate = null;
 
   @override
   void initState() {
@@ -34,11 +37,14 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
     DateTime oneWeekBefore = currentDate.subtract(const Duration(days: 7));
     commonController.RptFromDate.text=BaseUtitiles.formatApiDate(oneWeekBefore);
     commonController.RptToDate.text=BaseUtitiles.formatApiDate(currentDate);
-    if (_isBillOutstanding) {
-      commonController.getBillOutStandingReport();
-    } else {
-      commonController.getOutStandingReport();
-    }
+    commonController.overallBillTotal.value = null;
+    commonController.overalltdsTotal.value = null;
+    commonController.overallTotal.value = null;
+    commonController.billOutstandingList.value = [];
+    commonController.tdsReportList.value = [];
+    commonController.outstandingList.value = [];
+    commonController.financialYearList.value = [];
+    commonController.getFinancialReportData();
   }
 
   @override
@@ -47,18 +53,19 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
       body: Obx(
             () {
           final bool isBill = _isBillOutstanding;
+          final bool isTds = _istdsOutstanding;
 
           final dynamic total = isBill
-              ? commonController.overallBillTotal.value
+              ? commonController.overallBillTotal.value : isTds ? commonController.overalltdsTotal.value
               : commonController.overallTotal.value;
 
           final List list = isBill
-              ? commonController.billOutstandingList
+              ? commonController.billOutstandingList : isTds ? commonController.tdsReportList
               : commonController.outstandingList;
 
-          if (list.isEmpty && total == null) {
-            return const SizedBox.shrink();
-          }
+          // if (list.isEmpty && total == null) {
+          //   return const SizedBox.shrink();
+          // }
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,9 +119,17 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
                       ),
                     ),
                     onTap: () async {
+                      if (isCustomDate == null) {
+                        Fluttertoast.showToast(
+                          msg: "Please select Financial Year or Custom Date",
+                        );
+                        return;
+                      }
                       if (_isBillOutstanding) {
                         await commonController.getBillOutStandingReport();
-                      } else {
+                      }else if(_istdsOutstanding) {
+                        await commonController.getTdsReport();
+                      }else {
                         await commonController.getOutStandingReport();
                       }
                       setState(() {});
@@ -126,7 +141,7 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
               if (total != null)
                 Padding(
                   padding: const EdgeInsets.all(8.0),
-                  child: isBill ? _billSummaryGrid(total) : _totalSummary(total),
+                  child: isBill ? _billSummaryGrid(total) : _istdsOutstanding ? _totalSummary(total) : _totalSummary(total),
                 ),
 
               const SizedBox(height: 12),
@@ -184,6 +199,174 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
     );
   }
 
+  void _loadDefaultCustomDates() {
+    final today = DateTime.now();
+
+    final fromDate = today.subtract(
+      const Duration(days: 7),
+    );
+
+    setState(() {
+      isCustomDate = true;
+
+      commonController.selectedFinancialYearId = 0;
+      commonController.selectedFinancialYear = null;
+
+      commonController.RptFromDate.text =
+          BaseUtitiles.formatApiDate(fromDate);
+
+      commonController.RptToDate.text =
+          BaseUtitiles.formatApiDate(today);
+    });
+  }
+
+  Future<void> _showFinancialYearDialog() async {
+    if (commonController.financialYearList.isEmpty) {
+      await commonController.getFinancialReportData();
+    }
+
+    if (commonController.financialYearList.isEmpty) {
+      return;
+    }
+
+    final selected = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            "Select Financial Year",
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: Color(0xff17245E),
+            ),
+          ),
+          contentPadding: const EdgeInsets.fromLTRB(
+            12,
+            8,
+            12,
+            12,
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Obx(
+                  () => ListView.separated(
+                shrinkWrap: true,
+                itemCount: commonController.financialYearList.length,
+                separatorBuilder: (_, __) => const Divider(
+                  height: 1,
+                ),
+                itemBuilder: (context, index) {
+                  final item = commonController.financialYearList[index];
+
+                  final year = item['accountYear']?.toString() ?? '';
+
+                  final isSelected =
+                      commonController.selectedFinancialYear == year;
+
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () {
+                      Navigator.pop(context, item);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 13,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xffF0F5FF)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            isSelected
+                                ? Icons.radio_button_checked
+                                : Icons.radio_button_off,
+                            size: 20,
+                            color: const Color(0xff3048A1),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            year,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: const Color(0xff17245E),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    if (selected != null) {
+      _applyFinancialYear(selected);
+    }
+  }
+
+  void _applyFinancialYear(Map<String, dynamic> item) {
+    final accountYear =
+        item['accountYear']?.toString() ?? '';
+
+    if (accountYear.isEmpty) return;
+
+    // Example:
+    // 26-27 -> 2026
+    // 25-26 -> 2025
+
+    final parts = accountYear.split('-');
+
+    if (parts.length != 2) return;
+
+    final startShortYear = int.tryParse(parts[0]);
+
+    if (startShortYear == null) return;
+
+    final startYear = 2000 + startShortYear;
+    final endYear = startYear + 1;
+
+    final fromDate = DateTime(
+      startYear,
+      4,
+      1,
+    );
+
+    final toDate = DateTime(
+      endYear,
+      3,
+      31,
+    );
+
+    setState(() {
+      isCustomDate = false;
+
+      commonController.selectedFinancialYearId = item['id'];
+      commonController.selectedFinancialYear = accountYear;
+
+      commonController.RptFromDate.text =
+          BaseUtitiles.formatApiDate(fromDate);
+
+      commonController.RptToDate.text =
+          BaseUtitiles.formatApiDate(toDate);
+    });
+  }
+
   Widget _dateFilterCard() {
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -209,24 +392,29 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
               Expanded(
                 child: InkWell(
                   borderRadius: BorderRadius.circular(10),
-                  onTap: () {
-                    setState(() {
-                      isCustomDate = false;
-                    });
+                  onTap: () async {
+                    commonController.tdsReportList.clear();
+                    commonController.overalltdsTotal.value = null;
+
+                    commonController.billReportList.clear();
+                    commonController.overallBillTotal.value = null;
+
+                    commonController.outstandingList.clear();
+                    commonController.overallTotal.value = null;
+
+                    await _showFinancialYearDialog();
                   },
                   child: Row(
                     children: [
-                      Radio<bool>(
-                        value: false,
-                        groupValue: isCustomDate,
-                        activeColor: const Color(0xff3048A1),
-                        materialTapTargetSize:
-                        MaterialTapTargetSize.shrinkWrap,
-                        onChanged: (value) {
-                          setState(() {
-                            isCustomDate = value ?? false;
-                          });
-                        },
+                      IgnorePointer(
+                        child: Radio<bool>(
+                          value: false,
+                          groupValue: isCustomDate,
+                          activeColor: const Color(0xff3048A1),
+                          materialTapTargetSize:
+                          MaterialTapTargetSize.shrinkWrap,
+                          onChanged: (_) {},
+                        ),
                       ),
 
                       const SizedBox(width: 4),
@@ -264,9 +452,16 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
                         materialTapTargetSize:
                         MaterialTapTargetSize.shrinkWrap,
                         onChanged: (value) {
-                          setState(() {
-                            isCustomDate = value ?? false;
-                          });
+                          commonController.tdsReportList.value = [];
+                          commonController.overalltdsTotal.value = null;
+                          commonController.billReportList.value = [];
+                          commonController.overallBillTotal.value = null;
+                          commonController.outstandingList.value = [];
+                          commonController.overallTotal.value = null;
+                          _loadDefaultCustomDates();
+                          // setState(() {
+                          //   isCustomDate = value ?? false;
+                          // });
                         },
                       ),
 
@@ -289,7 +484,7 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
             ],
           ),
 
-          if (isCustomDate) ...[
+          if (isCustomDate != null) ...[
             const SizedBox(height: 8),
 
             Row(
@@ -300,6 +495,7 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
                   child: _dateBox(
                     title: "From",
                     controller: commonController.RptFromDate,
+                    enabled: isCustomDate == true,
                     onTap: () async {
                       DateTime today = DateTime.now();
                       DateTime initialDate = today.subtract(const Duration(days: 7));
@@ -345,6 +541,7 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
                   child: _dateBox(
                     title: "To",
                     controller: commonController.RptToDate,
+                    enabled: isCustomDate == true,
                     onTap: () async {
                       DateTime today = DateTime.now();
                       DateTime fromDate = DateTime.parse(commonController.RptFromDate.text);
@@ -391,6 +588,7 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
     required String title,
     required TextEditingController controller,
     required VoidCallback onTap,
+    bool enabled = true,
   }) {
     String displayDate = "";
 
@@ -400,7 +598,7 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
       );
     }
     return InkWell(
-      onTap: onTap,
+      onTap: enabled ? onTap : null,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(
@@ -467,8 +665,8 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
       children: [
         Expanded(
           child: _summaryCard(
-            title: "Total Sales",
-            amount: total.salesAmount,
+            title: _istdsOutstanding ? "Total TDS" : "Total Sales",
+            amount: _istdsOutstanding ? total.tdsAmount : total.salesAmount,
             icon: Icons.account_balance_wallet_rounded,
             iconColor: const Color(0xff1687E8),
             backgroundColor: const Color(0xffF0F7FF),
@@ -479,8 +677,8 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
 
         Expanded(
           child: _summaryCard(
-            title: "Total Receipt",
-            amount: total.receiptAmount,
+            title: _istdsOutstanding ? "Total Received" : "Total Receipt",
+            amount: _istdsOutstanding ? total.receivedAmount : total.receiptAmount,
             icon: Icons.receipt_long_rounded,
             iconColor: const Color(0xff009B6B),
             backgroundColor: const Color(0xffEDFFF7),
@@ -510,8 +708,8 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
     required Color backgroundColor,
   }) {
     return Container(
-      height: 125,
-      padding: const EdgeInsets.all(14),
+      height: 105,
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(13),
@@ -524,15 +722,15 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            height: 48,
-            width: 48,
+            height: 40,
+            width: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: iconColor.withOpacity(0.12),
             ),
             child: Icon(
               icon,
-              size: 26,
+              size: 22,
               color: iconColor,
             ),
           ),
@@ -544,7 +742,7 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
               color: Color(0xff17245E),
             ),
@@ -574,10 +772,11 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
     (item.companyName ?? "").toString().trim();
 
     final num salesAmount =
-        item.salesAmount ?? 0;
+        _istdsOutstanding ? item.tdsAmount ?? 0 : item.salesAmount ?? 0;
+
 
     final num receiptAmount =
-        item.receiptAmount ?? 0;
+    _istdsOutstanding ? item.receivedAmount ?? 0 : item.receiptAmount ?? 0;
 
     final num balanceAmount =
         item.balanceAmount ?? 0;
@@ -616,7 +815,7 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: _companyColor(companyName),
+                  color: AppColors.primary,
                 ),
                 child: Text(
                   companyName.isNotEmpty
@@ -657,7 +856,7 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
               Expanded(
                 flex: 5,
                 child: _amountBox(
-                  label: "Sales Amount",
+                  label: _istdsOutstanding ? "TDS Amount" : "Sales Amount",
                   value: _formatAmount(salesAmount),
                   backgroundColor: const Color(0xffEFF3FF),
                   borderColor: const Color(0xffD0DCFA),
@@ -671,7 +870,7 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
               Expanded(
                 flex: 5,
                 child: _amountBox(
-                  label: "Receipt Amount",
+                  label: _istdsOutstanding ? "Input Amount" : "Receipt Amount",
                   value: _formatAmount(receiptAmount),
                   backgroundColor: const Color(0xffFFF6E9),
                   borderColor: const Color(0xffFCE3B4),
@@ -726,9 +925,9 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
         vertical: 7,
       ),
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: Color(0xffF0F5FF),
         borderRadius: BorderRadius.circular(11),
-        border: Border.all(color: borderColor),
+        border: Border.all(color: AppColors.primary.withOpacity(0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -737,7 +936,7 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
             label,
             style: TextStyle(
               fontSize: 11,
-              color: labelColor,
+                color: Color(0xff5C6B92)
             ),
           ),
           const SizedBox(height: 3),
@@ -749,7 +948,7 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: valueFontWeight,
-                color: valueColor,
+                color: Color(0xff17245E),
               ),
             ),
           ),

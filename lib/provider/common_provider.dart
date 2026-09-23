@@ -8,6 +8,7 @@ import '../models/billoutstandingReport_model.dart';
 import '../models/outstandingReport_model.dart';
 import '../models/receiptReport_model.dart';
 import '../models/salesReport_model.dart';
+import '../models/tdsReport_model.dart';
 import '../utilities/apiconstant.dart';
 import '../utilities/requestconstant.dart';
 
@@ -113,10 +114,10 @@ class CommonProvider{
     }
   }
 
-  static Future<OutStandingReport?> getOutStandingReport(String fromDate,String toDate) async {
+  static Future<OutStandingReport?> getOutStandingReport(String fromDate,String toDate,int? financialYrId) async {
     try {
       var value = await ApiManager.getAPICall(
-          "${ApiConstant.GETOUTSTANDING_REPORTLIST}?FromDate=$fromDate&ToDate=$toDate");
+          "${ApiConstant.GETOUTSTANDING_REPORTLIST}?FromDate=$fromDate&ToDate=$toDate&FinancialYearid=$financialYrId");
       return outStandingReportFromJson(value);
 
     } catch (error,E) {
@@ -126,10 +127,10 @@ class CommonProvider{
     }
   }
 
-  static Future<BillOutStandingReport?> getBillOutStandingReport(String fromDate,String toDate) async {
+  static Future<BillOutStandingReport?> getBillOutStandingReport(String fromDate,String toDate,int? fnclYrId) async {
     try {
       var value = await ApiManager.getAPICall(
-          "${ApiConstant.GETBILLOUTSTANDING_REPORTLIST}?FromDate=$fromDate&ToDate=$toDate");
+          "${ApiConstant.GETBILLOUTSTANDING_REPORTLIST}?FromDate=$fromDate&ToDate=$toDate&FinancialYearid=$fnclYrId");
       return billOutStandingReportFromJson(value);
 
     } catch (error,E) {
@@ -139,11 +140,11 @@ class CommonProvider{
     }
   }
 
-  static Future<BillOutStandingReport?> getFinancialReport(String fromDate,String toDate) async {
+  static Future<TdsReportResponse?> getTdsReport(String fromDate,String toDate,int? fnclYrId) async {
     try {
       var value = await ApiManager.getAPICall(
-          "${ApiConstant.GETFINANCIAL_REPORTLIST}");
-      return billOutStandingReportFromJson(value);
+          "${ApiConstant.GETTDS_REPORTLIST}?FromDate=$fromDate&ToDate=$toDate&FinancialYearid=$fnclYrId");
+      return tdsReportResponseFromJson(value);
 
     } catch (error,E) {
       print(error);
@@ -151,4 +152,18 @@ class CommonProvider{
       return null;
     }
   }
+
+  static Future<dynamic> getFinancialReport() async {
+    try {
+      final value = await ApiManager.getAPICall(ApiConstant.GETFINANCIAL_REPORTLIST);
+      print('API Response: ${value}');
+      return jsonDecode(value);
+
+    } catch (error) {
+      print("Error == $error");
+      return null;
+    }
+  }
+
+
 }
