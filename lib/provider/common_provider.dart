@@ -4,6 +4,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 
 import '../apimanager/apimanager.dart';
 import '../models/billReport_model.dart';
+import '../models/billoutstandingReport_model.dart';
+import '../models/outstandingReport_model.dart';
 import '../models/receiptReport_model.dart';
 import '../models/salesReport_model.dart';
 import '../utilities/apiconstant.dart';
@@ -103,6 +105,45 @@ class CommonProvider{
           "${ApiConstant.GETBILL_REPORTLIST}?FromDate=$fromDate&ToDate=$toDate&CompanyId=$companyId");
 
       return billReportDetailsFromJson(value);
+
+    } catch (error,E) {
+      print(error);
+      print("EEEE...${E}");
+      return null;
+    }
+  }
+
+  static Future<OutStandingReport?> getOutStandingReport(String fromDate,String toDate) async {
+    try {
+      var value = await ApiManager.getAPICall(
+          "${ApiConstant.GETOUTSTANDING_REPORTLIST}?FromDate=$fromDate&ToDate=$toDate");
+      return outStandingReportFromJson(value);
+
+    } catch (error,E) {
+      print(error);
+      print("EEEE...${E}");
+      return null;
+    }
+  }
+
+  static Future<BillOutStandingReport?> getBillOutStandingReport(String fromDate,String toDate) async {
+    try {
+      var value = await ApiManager.getAPICall(
+          "${ApiConstant.GETBILLOUTSTANDING_REPORTLIST}?FromDate=$fromDate&ToDate=$toDate");
+      return billOutStandingReportFromJson(value);
+
+    } catch (error,E) {
+      print(error);
+      print("EEEE...${E}");
+      return null;
+    }
+  }
+
+  static Future<BillOutStandingReport?> getFinancialReport(String fromDate,String toDate) async {
+    try {
+      var value = await ApiManager.getAPICall(
+          "${ApiConstant.GETFINANCIAL_REPORTLIST}");
+      return billOutStandingReportFromJson(value);
 
     } catch (error,E) {
       print(error);

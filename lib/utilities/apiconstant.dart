@@ -66,6 +66,9 @@ class ApiConstant{
   static String GETSALES_REPORTLIST = BASE_URL_CORE + "api/Reports/GetSalesReport";
   static String GETRECEIPT_REPORTLIST = BASE_URL_CORE + "api/Reports/GetReceiptReport";
   static String GETBILL_REPORTLIST = BASE_URL_CORE + "api/Reports/GetBillReport";
+  static String GETOUTSTANDING_REPORTLIST = BASE_URL_CORE + "api/Reports/GetOutStandingReport";
+  static String GETBILLOUTSTANDING_REPORTLIST = BASE_URL_CORE + "api/Reports/GetBillOutStandingReport";
+  static String GETFINANCIAL_REPORTLIST = BASE_URL_CORE + "api/Reports/GetFinancialYear";
 
   static String EDITCOMPANY_DETAILSLIST = BASE_URL_CORE + "api/Company/CompanyDetailsGetById";
   static String EDITSALES_DETAILSLIST = BASE_URL_CORE + "api/Sales/SalesDetailsById";
