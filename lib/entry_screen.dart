@@ -75,6 +75,8 @@ class _EntryScreenState extends State<EntryScreen> {
 
       else if (widget.title == "Sales Details") {
         if(salesDetailController.saveButton.value == RequestConstant.RESUBMIT) {
+          await commmonController.getDropDownGSTValues();
+          await commmonController.getDropDownTDSValues();
           salesDetailController.Sales_EditListApiValue.forEach((element) {
             salesDetailController.salesId=element.id!;
             salesDetailController.SalesNoController.text = element.salesNo;
@@ -117,6 +119,8 @@ class _EntryScreenState extends State<EntryScreen> {
 
       else if (widget.title == "Receipt Details") {
         if(receiptDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
+          await commmonController.getDropDownGSTValues();
+          await commmonController.getDropDownTDSValues();
           receiptDetailsController.Receipt_EditListApiValue.forEach((element) {
             receiptDetailsController.receiptId=element.id!;
             receiptDetailsController.ReceiptNoController.text = element.receiptNo;
@@ -156,6 +160,7 @@ class _EntryScreenState extends State<EntryScreen> {
 
       else if (widget.title == "Bill Details") {
         if(billDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
+          await commmonController.getDropDownGSTValues();
           billDetailsController.Bill_EditListApiValue.forEach((element) {
             billDetailsController.billId=element.id!;
             billDetailsController.BillNoController.text = element.billNo;
@@ -455,6 +460,8 @@ class _EntryScreenState extends State<EntryScreen> {
                     ],
                     if (isSalesDetails || isReceiptDetails || isBillDetails) ...[
                       _gstFields(
+                        // gstPercentage:
+                        // commmonController.selectedGstPercentage.value ?? 0.0,
 
                         gstAmountController: isSalesDetails
                             ? salesDetailController.gstAmtController
@@ -509,7 +516,8 @@ class _EntryScreenState extends State<EntryScreen> {
                                   commmonController.calculateTds(
                                       receiptDetailsController.accPortionController,
                                       receiptDetailsController.tdsAmtController,
-                                      commmonController.selectedTdsPercentage.value);}
+                                      commmonController.selectedTdsPercentage.value);
+                                }
                               }
                           },
 
@@ -620,6 +628,7 @@ class _EntryScreenState extends State<EntryScreen> {
 
   Widget _gstFields({
     required TextEditingController gstAmountController,
+    // required double gstPercentage,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -631,6 +640,9 @@ class _EntryScreenState extends State<EntryScreen> {
             icon: Icons.percent_rounded,
             readOnly: true,
             isDropdown: true,
+            // controller: TextEditingController(
+            //   text: '${gstPercentage.toStringAsFixed(2)}%',
+            // ),
           ),
         ),
 
@@ -919,10 +931,19 @@ class _EntryScreenState extends State<EntryScreen> {
                   widget.title == "Bill Details";
               final bool isGst = label == 'GST %';
               final bool isTds = label == 'TDS %';
+              print("XXXXXXXXXXyyyyyy...${commmonController.selectedGstPercentage.value}");
+
               if (isGst || isTds) {
                 final dropdownList = isTds
                     ? commmonController.tdsDropdown
                     : commmonController.gstDropdown;
+                print("Selected GST: ${commmonController.selectedGstPercentage.value}");
+
+                print("GST Dropdown values: ${dropdownList.map((e) => e.percentage).toList()}");
+
+                print("GST Match: ${dropdownList.any((e) =>
+                (e.percentage ?? 0.0) ==
+                    (commmonController.selectedGstPercentage.value ?? 0.0))}");
                 return DropdownButtonFormField2<double>(
                   value: isTds
                       ? commmonController.selectedTdsPercentage.value

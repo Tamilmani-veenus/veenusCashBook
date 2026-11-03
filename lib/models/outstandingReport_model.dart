@@ -39,7 +39,7 @@ class OutStandingReport {
 class OverallTotal {
   String? companyName;
   double? salesAmount;
-  double? receiptAmount;
+  dynamic receiptAmount;
   double? balanceAmount;
 
   OverallTotal({

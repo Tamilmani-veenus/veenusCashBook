@@ -4,6 +4,9 @@ import 'package:get/instance_manager.dart';
 import 'package:veenuscashbook/controller/companyDetails_controller.dart';
 import '../app_theme.dart';
 import '../common_utils/common_listScreen.dart';
+import '../controller/billDetails_controller.dart';
+import '../controller/receiptDetails_controller.dart';
+import '../controller/salesDetails_controller.dart';
 import '../entry_screen.dart';
 import '../utilities/baseutitiles.dart';
 import '../utilities/requestconstant.dart';
@@ -22,6 +25,9 @@ class CompanyListScreen extends StatefulWidget {
 
 class _CompanyListScreenState extends State<CompanyListScreen> {
   CompanyDetailsController companyDetailsController = Get.put(CompanyDetailsController());
+  SalesDetailController salesDetailController = Get.put(SalesDetailController());
+  ReceiptDetailsController receiptDetailsController = Get.put(ReceiptDetailsController());
+  BillDetailsController billDetailsController = Get.put(BillDetailsController());
   int? expandedIndex;
   final TextEditingController searchController = TextEditingController();
   List filteredCompanyList = [];
@@ -169,6 +175,9 @@ class _CompanyListScreenState extends State<CompanyListScreen> {
           onAdd: () {
             companyDetailsController.saveButton.value =
                 RequestConstant.SUBMIT;
+            salesDetailController.saveButton.value = RequestConstant.SUBMIT;
+            receiptDetailsController.saveButton.value = RequestConstant.SUBMIT;
+            billDetailsController.saveButton.value = RequestConstant.SUBMIT;
 
             Navigator.push(
               context,
