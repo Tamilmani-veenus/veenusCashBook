@@ -86,7 +86,7 @@ class CompanyDetailsProvider{
           "${ApiConstant.COMPANYDETAILS_DELETE}?CompanyId=$reqId");
 
       final Map<String, dynamic> decoded = jsonDecode(response);
-
+      print("XXXXXXXX...${response}");
 
       bool isSuccess = decoded["success"] == true;
 

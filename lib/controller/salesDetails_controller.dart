@@ -35,7 +35,7 @@ class SalesDetailController extends GetxController{
     if (response != null) {
       if (response.success == true) {
         if (response.result!.isNotEmpty) {
-          SalesDetailsList.assignAll(response.result!);
+          SalesDetailsList.value.assignAll(response.result!);
         }
         else {
           Fluttertoast.showToast(msg: "No Data Found");

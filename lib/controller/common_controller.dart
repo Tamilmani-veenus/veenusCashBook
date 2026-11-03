@@ -183,23 +183,27 @@ class CommonController extends GetxController{
       if (list["success"] == true) {
         final bool success = list["success"] == true;
         final String msg = list["message"] ?? '';
-        await salesDetailController.getSalesDetails_List();
 
         await BaseUtitiles.showSuccessAnimation(
           context,
-          title: success
-              ? (salesDetailController.saveButton.value == RequestConstant.SUBMIT
+          title: salesDetailController.saveButton.value ==
+              RequestConstant.SUBMIT
               ? "Submitted"
-              : salesDetailController.saveButton.value == RequestConstant.RESUBMIT
+              : salesDetailController.saveButton.value ==
+              RequestConstant.RESUBMIT
               ? "Updated"
-              : "Submitted")
-              : "Failed",
+              : "Submitted",
           message: msg,
           isSuccess: success,
         );
 
-        BaseUtitiles.popMultiple(context, count: success ? 3 : 2);
-      } else {
+        // Refresh the original list
+        await salesDetailController.getSalesDetails_List();
+
+        // Navigate back
+        BaseUtitiles.popMultiple(context, count: 3);
+      }
+      else {
         await BaseUtitiles.showSuccessAnimation(
           context,
           title: 'Failed',
@@ -208,7 +212,8 @@ class CommonController extends GetxController{
         );
         BaseUtitiles.popMultiple(context, count: 2);
       }
-    } else {
+    }
+    else {
       Fluttertoast.showToast(msg: RequestConstant.NETWORKERROR);
       BaseUtitiles.popMultiple(context, count: 2);
     }
@@ -238,7 +243,7 @@ class CommonController extends GetxController{
       if (list["success"] == true) {
         final bool success = list["success"] == true;
         final String msg = list["message"] ?? '';
-        await billDetailsController.getBillDetails_List();
+
         await BaseUtitiles.showSuccessAnimation(
           context,
           title: success
@@ -251,7 +256,7 @@ class CommonController extends GetxController{
           message: msg,
           isSuccess: success,
         );
-
+        await billDetailsController.getBillDetails_List();
         BaseUtitiles.popMultiple(context, count: success ? 3 : 2);
       } else {
         await BaseUtitiles.showSuccessAnimation(

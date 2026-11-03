@@ -37,18 +37,24 @@ class _ListScreenState extends State<ListScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
     searchController.addListener(_searchList);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _resetFilteredList();
-    });
+    Future.delayed(const Duration(milliseconds: 300), () async {
+      if (!mounted) return;
 
-    salesDetailController.getSalesDetails_List();
-    receiptDetailsController.getReceiptDetails_List();
-    billDetailsController.getBillDetails_List();
+      if (widget.title == "Sales Details") {
+        await salesDetailController.getSalesDetails_List();
+      } else if (widget.title == "Receipt Details") {   // check spelling, see below
+        await receiptDetailsController.getReceiptDetails_List();
+      } else if (widget.title == "Bill Details") {
+        await billDetailsController.getBillDetails_List();
+      }
+
+      if (!mounted) return;
+      _resetFilteredList();   // runs AFTER the API data has arrived
+    });
   }
 
   @override
@@ -227,37 +233,30 @@ class _ListScreenState extends State<ListScreen> {
 
           const SizedBox(height: 8),
 
-          // List
           Expanded(
-            child: Obx(
-                  () {
-                // Make sure indexes are initialized
-                if (filteredIndexes.isEmpty &&
-                    searchController.text.isEmpty &&
-                    _getOriginalListLength() > 0) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      _resetFilteredList();
-                    }
-                  });
-                }
+            child: Obx(() {
+              final int originalCount = _getOriginalListLength();
 
-                return ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(
-                    18,
-                    5,
-                    18,
-                    90,
-                  ),
-                  itemCount: filteredIndexes.length,
-                  itemBuilder: (context, index) {
-                    final originalIndex = filteredIndexes[index];
+              if (searchController.text.trim().isEmpty &&
+                  filteredIndexes.length != originalCount) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted &&
+                      searchController.text.trim().isEmpty &&
+                      filteredIndexes.length != _getOriginalListLength()) {
+                    _resetFilteredList();
+                  }
+                });
+              }
 
-                    return _listItem(originalIndex);
-                  },
-                );
-              },
-            ),
+              return ListView.builder(
+                padding: const EdgeInsets.fromLTRB(18, 5, 18, 90),
+                itemCount: filteredIndexes.length,
+                itemBuilder: (context, index) {
+                  final originalIndex = filteredIndexes[index];
+                  return _listItem(originalIndex);
+                },
+              );
+            }),
           ),
         ],
       ),
@@ -319,7 +318,7 @@ class _ListScreenState extends State<ListScreen> {
     }
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 0),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -501,6 +500,10 @@ class _ListScreenState extends State<ListScreen> {
                       FocusScope.of(
                           context)
                           .unfocus();
+                      setState(() {
+                        expandedIndex = null;
+                      });
+
                       isSalesDetails ?
                       salesDetailController.SalesDetails_List_EditApi(
                           salesDetailController
@@ -561,6 +564,9 @@ class _ListScreenState extends State<ListScreen> {
                   InkWell(
                     borderRadius: BorderRadius.circular(10),
                     onTap: () async {
+                      setState(() {
+                        expandedIndex = null;
+                      });
                       await commonController.DeleteAlert(
                           context,
                           index,widget.title);
@@ -608,10 +614,12 @@ class _ListScreenState extends State<ListScreen> {
     final count = _getOriginalListLength();
 
     setState(() {
-      filteredIndexes = List.generate(count, (index) => index);
+      filteredIndexes = List.generate(
+        count,
+            (index) => index,
+      );
     });
   }
-
   int _getOriginalListLength() {
     if (isSalesDetails) {
       return salesDetailController.SalesDetailsList.length;
@@ -661,9 +669,10 @@ class _ListScreenState extends State<ListScreen> {
         final receiptNo =
         (receipt.receiptNo ?? '').toString().toLowerCase();
         final date = (receipt.date ?? '').toString().toLowerCase();
-
+        final cost = (receipt.receivedAmount ?? '').toString().toLowerCase();
         if (company.contains(query) ||
             receiptNo.contains(query) ||
+            cost.contains(query) ||
             date.contains(query)) {
           result.add(i);
         }

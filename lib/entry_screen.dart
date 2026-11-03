@@ -1,5 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_contact_picker/flutter_native_contact_picker.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
@@ -10,7 +11,6 @@ import 'package:veenuscashbook/controller/receiptDetails_controller.dart';
 import 'package:veenuscashbook/controller/salesDetails_controller.dart';
 import 'package:veenuscashbook/utilities/baseutitiles.dart';
 import 'package:veenuscashbook/utilities/requestconstant.dart';
-
 import 'app_theme.dart';
 import 'package:intl/intl.dart';
 
@@ -62,6 +62,7 @@ class _EntryScreenState extends State<EntryScreen> {
         }
 
         else if(companyDetailsController.saveButton.value ==RequestConstant.SUBMIT){
+          companyDetailsController.companyId = 0;
           companyDetailsController.companyNameController.text = "";
           companyDetailsController.CompanyDate.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
           companyDetailsController.AdressController.text = "";
@@ -301,8 +302,7 @@ class _EntryScreenState extends State<EntryScreen> {
                     ),
                     const SizedBox(height: 16),
 
-
-                      _entryField(
+                    _entryField(
                         label: 'Date',
                         hint: '',
                         icon: Icons.calendar_month_outlined,
@@ -312,40 +312,7 @@ class _EntryScreenState extends State<EntryScreen> {
                         isDateField: true,
                       ),
                       const SizedBox(height: 16),
-                    if (isSalesDetails || isReceiptDetails || isBillDetails) ...[
-                      _entryField(
-                        label: isSalesDetails ? 'ERP Cost' : isReceiptDetails ? 'Receipt Amount' : 'Bill Amount',
-                        hint: '0.0',
-                        icon: Icons.numbers,
-                        controller: isSalesDetails ? salesDetailController.erpCostController
-                            : isReceiptDetails ? receiptDetailsController.receiptCostController
-                            : billDetailsController.billCostController,
-                        readOnly: widget.title != "Bill Details" ? true : false,
-                        keyboardType: TextInputType.number,
-                        isNumberField: true,
-                        requiredField: true,
-                        onTap: (){
-                          if (billDetailsController.billCostController.text.trim() == '0.0' ||
-                              billDetailsController.billCostController.text.trim() == '0.00') {
-                            billDetailsController.billCostController.clear();
-                          }
-                        },
-                        onChanged: (_) {
-                          setState(() {
-                            if (isBillDetails) {
-                              // GST
-                              commmonController.calculateGst(
-                                billDetailsController.billCostController,
-                                billDetailsController.gstAmtController,
-                                commmonController.selectedGstPercentage.value,
-                              );
-                              commmonController.calculateBillNetAmount();
-                            }
-                          });
-                          },
-                      ),
-                      const SizedBox(height: 16),
-                      ],
+
                     if (isSalesDetails || isReceiptDetails ) ...[
                       _entryField(
                         label: 'Cash portion',
@@ -453,6 +420,40 @@ class _EntryScreenState extends State<EntryScreen> {
                       const SizedBox(height: 16),
                     ],
                     if (isSalesDetails || isReceiptDetails || isBillDetails) ...[
+                      _entryField(
+                        label: isSalesDetails ? 'ERP Cost' : isReceiptDetails ? 'Receipt Amount' : 'Bill Amount',
+                        hint: '0.0',
+                        icon: Icons.numbers,
+                        controller: isSalesDetails ? salesDetailController.erpCostController
+                            : isReceiptDetails ? receiptDetailsController.receiptCostController
+                            : billDetailsController.billCostController,
+                        readOnly: widget.title != "Bill Details" ? true : false,
+                        keyboardType: TextInputType.number,
+                        isNumberField: true,
+                        requiredField: true,
+                        onTap: (){
+                          if (billDetailsController.billCostController.text.trim() == '0.0' ||
+                              billDetailsController.billCostController.text.trim() == '0.00') {
+                            billDetailsController.billCostController.clear();
+                          }
+                        },
+                        onChanged: (_) {
+                          setState(() {
+                            if (isBillDetails) {
+                              // GST
+                              commmonController.calculateGst(
+                                billDetailsController.billCostController,
+                                billDetailsController.gstAmtController,
+                                commmonController.selectedGstPercentage.value,
+                              );
+                              commmonController.calculateBillNetAmount();
+                            }
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    if (isSalesDetails || isReceiptDetails || isBillDetails) ...[
                       _gstFields(
 
                         gstAmountController: isSalesDetails
@@ -531,9 +532,15 @@ class _EntryScreenState extends State<EntryScreen> {
                           label: 'Contact No.',
                           hint: 'Enter contact number',
                           icon: Icons.phone_outlined,
-                          keyboardType: TextInputType.number,
                           controller: companyDetailsController.ContactNoController,
                           requiredField: true,
+                          keyboardType: TextInputType.phone,
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.contacts_outlined, color: AppColors.drawerIcon),
+                            tooltip: 'Pick from contacts',
+                            onPressed: () =>
+                                _pickContact(companyDetailsController.ContactNoController),
+                          ),
                         ),
                         const SizedBox(height: 16),
 
@@ -703,6 +710,58 @@ class _EntryScreenState extends State<EntryScreen> {
       ],
     );
   }
+  final FlutterContactPicker _contactPicker = FlutterContactPicker();
+
+  Future<void> _pickContact(TextEditingController controller) async {
+    try {
+      final contact = await _contactPicker.selectContact(); // type inferred
+      if (contact == null) return; // user cancelled
+
+      final numbers = contact.phoneNumbers ?? <String>[];
+      if (numbers.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Selected contact has no phone number')),
+        );
+        return;
+      }
+
+      // If several numbers, let the user choose
+      String raw = numbers.first;
+      if (numbers.length > 1) {
+        final chosen = await showModalBottomSheet<String>(
+          context: context,
+          builder: (ctx) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: numbers
+                  .map((n) => ListTile(
+                leading: const Icon(Icons.phone_outlined),
+                title: Text(n),
+                onTap: () => Navigator.pop(ctx, n),
+              ))
+                  .toList(),
+            ),
+          ),
+        );
+        if (chosen == null) return;
+        raw = chosen;
+      }
+
+      // Digits only, then last 10 (drops +91 / 0 prefix)
+      var number = raw.replaceAll(RegExp(r'[^0-9]'), '');
+      if (number.length > 10) number = number.substring(number.length - 10);
+
+      setState(() => controller.text = number);
+    } catch (e, st) {
+      debugPrint('CONTACT ERROR: $e\n$st');
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
 
   Widget _entryField({
     required String label,
@@ -716,20 +775,47 @@ class _EntryScreenState extends State<EntryScreen> {
     bool readOnly = false,
     bool requiredField = false,
     bool isNumberField = false,
+    Widget? suffixIcon,
     VoidCallback? onTap,
     ValueChanged<String>? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.text,
-          ),
+        Row(
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text,
+              ),
+            ),
+            if (label == 'ERP Cost' || label == "Receipt Amount") ...[
+              const SizedBox(width: 8),
+              Icon(
+                Icons.info_outline_rounded,
+                size: 15,
+                color: Colors.green.shade800,
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  'Cash portion + A/C portion',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 11,
+                    color: Colors.green.shade800,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
 
         const SizedBox(height: 7),
@@ -991,7 +1077,21 @@ class _EntryScreenState extends State<EntryScreen> {
                         color: AppColors.border,
                       ),
                     ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.border,
+                        width: 1,
+                      ),
+                    ),
 
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.border,
+                        width: 1,
+                      ),
+                    ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(11),
                       borderSide: const BorderSide(
@@ -1109,6 +1209,22 @@ class _EntryScreenState extends State<EntryScreen> {
                     borderRadius: BorderRadius.circular(11),
                     borderSide: const BorderSide(
                       color: AppColors.border,
+                    ),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(11),
+                    borderSide: const BorderSide(
+                      color: AppColors.border,
+                      width: 1,
+                    ),
+                  ),
+
+// Normal border when tapping an invalid field
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(11),
+                    borderSide: const BorderSide(
+                      color: AppColors.border,
+                      width: 1,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
@@ -1242,6 +1358,7 @@ class _EntryScreenState extends State<EntryScreen> {
                   fontSize: 13,
                   color: AppColors.subText,
                 ),
+                suffixIcon: suffixIcon,
 
                 prefixIcon: Icon(
                   icon,
@@ -1272,7 +1389,21 @@ class _EntryScreenState extends State<EntryScreen> {
                     color: AppColors.border,
                   ),
                 ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(11),
+                  borderSide: const BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
 
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(11),
+                  borderSide: const BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(11),
                   borderSide: const BorderSide(
