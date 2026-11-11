@@ -43,9 +43,11 @@ class _EntryScreenState extends State<EntryScreen> {
     super.initState();
     var duration = const Duration(seconds:0);
     Future.delayed(duration,() async {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        companyDetailsController.getDropDownCityValues();
-        commmonController.getDropDownCompanyValues();
+      WidgetsBinding.instance.addPostFrameCallback((_) async{
+        await companyDetailsController.getDropDownCityValues();
+        if (widget.title != "Company Details") {
+        await commmonController.getDropDownCompanyValues();
+        }
       });
       if (widget.title == "Company Details") {
         if(companyDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
@@ -56,7 +58,7 @@ class _EntryScreenState extends State<EntryScreen> {
                 DateFormat('yyyy-MM-dd').parse(element.companyDate));
             companyDetailsController.AdressController.text = element.companyAddress;
             companyDetailsController.ContactNoController.text = element.contactNo.toString();
-            companyDetailsController.selectedCity = element.city.toString();
+            companyDetailsController.selectedCity.value = element.city.toString();
             companyDetailsController.emailController.text = element.email.toString();
             companyDetailsController.GSTNoController.text = element.gstNo.toString();
           });
@@ -68,7 +70,7 @@ class _EntryScreenState extends State<EntryScreen> {
           companyDetailsController.CompanyDate.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
           companyDetailsController.AdressController.text = "";
           companyDetailsController.ContactNoController.text = "";
-          companyDetailsController.selectedCity = "--SELECT--";
+          companyDetailsController.selectedCity.value = "--SELECT--";
           companyDetailsController.emailController.text = "";
           companyDetailsController.GSTNoController.text = "";
         }
@@ -140,6 +142,7 @@ class _EntryScreenState extends State<EntryScreen> {
             receiptDetailsController.tdsAmtController.text = element.tds.toString();
             receiptDetailsController.isTdsEnabled.value = element.tdsCheck;
             receiptDetailsController.netAmountController.text = element.netAmount.toString();
+            receiptDetailsController.tdsnetAmountController.text = element.netPayAmt.toString();
           });
         }
 
@@ -159,6 +162,7 @@ class _EntryScreenState extends State<EntryScreen> {
           receiptDetailsController.tdsAmtController.text = "0.0";
           receiptDetailsController.isTdsEnabled.value = false;
           receiptDetailsController.netAmountController.text = "0.0";
+          receiptDetailsController.tdsnetAmountController.text = "0.0";
         }
       }
 
@@ -549,7 +553,7 @@ class _EntryScreenState extends State<EntryScreen> {
                     ],
                     if (isSalesDetails || isReceiptDetails) ...[
                       _entryField(
-                        label: 'Net Pay Amount',
+                        label: isReceiptDetails ? 'Net Paid Amount':'Net Pay Amount',
                         hint: '0.00',
                         icon: Icons.calculate_outlined,
                         controller: isSalesDetails ? salesDetailController.tdsnetAmountController :
@@ -1071,7 +1075,7 @@ class _EntryScreenState extends State<EntryScreen> {
                 );
               }
 
-              if (isSalesDetails || isReceiptDetails || isBillDetails) {
+              else if (isSalesDetails || isReceiptDetails || isBillDetails) {
                 return DropdownButtonFormField2<int>(
                   value: commmonController.selectedCompanyId.value == 0
                       ? null
@@ -1219,146 +1223,151 @@ class _EntryScreenState extends State<EntryScreen> {
                 );
               }
 
-              // CITY DROPDOWN
-              return DropdownButtonFormField2<String>(
-                value: companyDetailsController.selectedCity,
+              else {
+                return DropdownButtonFormField2<String>(
+                  value: companyDetailsController.selectedCity.value=="--SELECT--"?null:companyDetailsController.selectedCity.value,
 
-                isExpanded: true,
-                validator: requiredField
-                    ? (value) {
-                  if (value == null ||
-                      value.trim().isEmpty ||
-                      value == "--SELECT--") {
-                    return '* Required';
+                  isExpanded: true,
+                  validator: requiredField
+                      ? (value) {
+                    if (value == null ||
+                        value
+                            .trim()
+                            .isEmpty ||
+                        value == "--SELECT--") {
+                      return '* Required';
+                    }
+
+                    return null;
                   }
+                      : null,
 
-                  return null;
-                }
-                    : null,
-
-                decoration: InputDecoration(
-                  hintText: hint,
-                  prefixIcon: Icon(
-                    icon,
-                    color: AppColors.drawerIcon,
-                    size: 21,
-                  ),
-                  filled: true,
-                  fillColor: AppColors.background,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 14,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: const BorderSide(
-                      color: AppColors.border,
+                  decoration: InputDecoration(
+                    hintText: hint,
+                    prefixIcon: Icon(
+                      icon,
+                      color: AppColors.drawerIcon,
+                      size: 21,
                     ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: const BorderSide(
-                      color: AppColors.border,
+                    filled: true,
+                    fillColor: AppColors.background,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
                     ),
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: const BorderSide(
-                      color: AppColors.border,
-                      width: 1,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.border,
+                      ),
                     ),
-                  ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.border,
+                      ),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.border,
+                        width: 1,
+                      ),
+                    ),
 
 // Normal border when tapping an invalid field
-                  focusedErrorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: const BorderSide(
-                      color: AppColors.border,
-                      width: 1,
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.border,
+                        width: 1,
+                      ),
                     ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: const BorderSide(
-                      color: AppColors.accent,
-                      width: 1.3,
-                    ),
-                  ),
-                ),
-                autovalidateMode: AutovalidateMode.always,
-                hint: Text(
-                  hint,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 13,
-                    color: AppColors.subText,
-                  ),
-                ),
-
-                items: [
-                  const DropdownMenuItem<String>(
-                    value: "--SELECT--",
-                    child: Text(
-                      "--SELECT--",
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 13,
-                        color: AppColors.subText,
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.accent,
+                        width: 1.3,
                       ),
                     ),
                   ),
-
-                  ...companyDetailsController.cityDropDown
-                      .map((city) => city.cityName?.trim() ?? '')
-                      .where((city) => city.isNotEmpty)
-                      .toSet()
-                      .map(
-                        (city) => DropdownMenuItem<String>(
-                      value: city,
-                      child: Text(
-                        city,
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.text,
-                        ),
-                      ),
+                  autovalidateMode: AutovalidateMode.always,
+                  hint: Text(
+                    hint,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 13,
+                      color: AppColors.subText,
                     ),
                   ),
-                ],
 
-                onChanged: (value) {
-                  setState(() {
-                    companyDetailsController.selectedCity =
-                        value ?? "--SELECT--";
-                  });
-                },
+                  items: [
+                    // const DropdownMenuItem<String>(
+                    //   value: "--SELECT--",
+                    //   child: Text(
+                    //     "--SELECT--",
+                    //     style: TextStyle(
+                    //       fontFamily: 'Poppins',
+                    //       fontSize: 13,
+                    //       color: AppColors.subText,
+                    //     ),
+                    //   ),
+                    // ),
 
-                buttonStyleData: const ButtonStyleData(
-                  height: 20,
-                ),
+                    ...companyDetailsController.cityDropDown
+                        .map((city) => city.cityName?.trim() ?? '')
+                        .where((city) => city.isNotEmpty)
+                        .toSet()
+                        .map(
+                          (city) {
+                            return DropdownMenuItem<String>(
+                              value: city,
+                              child: Text(
+                                city,
+                                style: const TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.text,
+                                ),
+                              ),
+                            );
+                          }
+                    ),
+                  ],
 
-                iconStyleData: const IconStyleData(
-                  icon: Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: AppColors.subText,
+                  onChanged: (value) {
+                    setState(() {
+                      companyDetailsController.selectedCity.value =
+                          value ?? "";
+                    });
+                  },
+
+                  buttonStyleData: const ButtonStyleData(
+                    height: 20,
                   ),
-                ),
 
-                dropdownStyleData: DropdownStyleData(
-                  maxHeight: 220,
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(11),
+                  iconStyleData: const IconStyleData(
+                    icon: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: AppColors.subText,
+                    ),
                   ),
-                ),
 
-                menuItemStyleData: const MenuItemStyleData(
-                  height: 45,
-                  padding: EdgeInsets.symmetric(horizontal: 14),
-                ),
-              );
+                  dropdownStyleData: DropdownStyleData(
+                    maxHeight: 220,
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                  ),
+
+                  menuItemStyleData: const MenuItemStyleData(
+                    height: 45,
+                    padding: EdgeInsets.symmetric(horizontal: 14),
+                  ),
+                );
+              }
             })
           // else if (isNumberField && controller != null)
           //     AmountView(

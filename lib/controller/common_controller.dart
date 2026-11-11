@@ -88,8 +88,9 @@ class CommonController extends GetxController{
       if (response.success == true) {
         if (response.messge!.isNotEmpty) {
           gstDropdown.assignAll(response.messge!);
+
           final defaultGst = gstDropdown.firstWhere(
-                (gst) => (gst.percentage ?? 0).toDouble() == 18.0,
+                (gst) => (gst.percentage ?? 0).toDouble() == 0.0,
             orElse: () => gstDropdown.first,
           );
 
@@ -116,7 +117,7 @@ class CommonController extends GetxController{
         if (response.messge!.isNotEmpty) {
           tdsDropdown.assignAll(response.messge!);
           final defaultTds = tdsDropdown.firstWhere(
-                (tds) => tds.percentage == 10,
+                (tds) => tds.percentage == 0.0,
             orElse: () => tdsDropdown.first,
           );
 
