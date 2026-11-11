@@ -20,6 +20,7 @@ class SalesDetailController extends GetxController{
   final gstAmtController = TextEditingController();
   final netAmountController = TextEditingController();
   final tdsAmtController = TextEditingController();
+  final tdsnetAmountController = TextEditingController();
 
   int salesId = 0;
   final RxBool isTdsEnabled = false.obs;

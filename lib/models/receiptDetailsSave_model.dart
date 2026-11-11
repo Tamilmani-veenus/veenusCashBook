@@ -22,6 +22,8 @@ class ReceiptDetailsSaveResponse {
   double? gst;
   double? gstPercentage;
   bool? tdsCheck;
+  double? netPayAmount;
+  double? netAmount;
 
   ReceiptDetailsSaveResponse({
     this.id,
@@ -37,6 +39,8 @@ class ReceiptDetailsSaveResponse {
     this.gst,
     this.gstPercentage,
     this.tdsCheck,
+    this.netPayAmount,
+    this.netAmount
   });
 
   factory ReceiptDetailsSaveResponse.fromJson(Map<String, dynamic> json) => ReceiptDetailsSaveResponse(
@@ -53,6 +57,8 @@ class ReceiptDetailsSaveResponse {
     gst: json["gst"],
     gstPercentage: json["gstPercentage"],
     tdsCheck: json["tdsCheck"],
+    netPayAmount: json["afterTDSNetAmount"],
+      netAmount: json["netAmount"]
   );
 
   Map<String, dynamic> toJson() => {
@@ -69,5 +75,7 @@ class ReceiptDetailsSaveResponse {
     "gst": gst,
     "gstPercentage": gstPercentage,
     "tdsCheck": tdsCheck,
+    "afterTDSNetAmount": netPayAmount,
+    "netAmount": netAmount
   };
 }

@@ -41,20 +41,18 @@ class _ListScreenState extends State<ListScreen> {
 
     searchController.addListener(_searchList);
 
-    Future.delayed(const Duration(milliseconds: 300), () async {
-      if (!mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadList());
+  }
 
-      if (widget.title == "Sales Details") {
-        await salesDetailController.getSalesDetails_List();
-      } else if (widget.title == "Receipt Details") {   // check spelling, see below
-        await receiptDetailsController.getReceiptDetails_List();
-      } else if (widget.title == "Bill Details") {
-        await billDetailsController.getBillDetails_List();
-      }
-
-      if (!mounted) return;
-      _resetFilteredList();   // runs AFTER the API data has arrived
-    });
+  Future<void> _loadList() async {
+    if (isSalesDetails) {
+      await salesDetailController.getSalesDetails_List();
+    } else if (isReceiptDetails) {
+      await receiptDetailsController.getReceiptDetails_List();
+    } else if (isBillDetails) {
+      await billDetailsController.getBillDetails_List();
+    }
+    if (mounted) setState(() => expandedIndex = null);
   }
 
   @override
@@ -235,26 +233,12 @@ class _ListScreenState extends State<ListScreen> {
 
           Expanded(
             child: Obx(() {
-              final int originalCount = _getOriginalListLength();
-
-              if (searchController.text.trim().isEmpty &&
-                  filteredIndexes.length != originalCount) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted &&
-                      searchController.text.trim().isEmpty &&
-                      filteredIndexes.length != _getOriginalListLength()) {
-                    _resetFilteredList();
-                  }
-                });
-              }
+              final indexes = _getFilteredIndexes();
 
               return ListView.builder(
                 padding: const EdgeInsets.fromLTRB(18, 5, 18, 90),
-                itemCount: filteredIndexes.length,
-                itemBuilder: (context, index) {
-                  final originalIndex = filteredIndexes[index];
-                  return _listItem(originalIndex);
-                },
+                itemCount: indexes.length,
+                itemBuilder: (context, index) => _listItem(indexes[index]),
               );
             }),
           ),
@@ -264,12 +248,18 @@ class _ListScreenState extends State<ListScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         elevation: 4,
-        onPressed: () {
+        onPressed: () async {
           companyDetailsController.saveButton.value = RequestConstant.SUBMIT;
           salesDetailController.saveButton.value = RequestConstant.SUBMIT;
           receiptDetailsController.saveButton.value = RequestConstant.SUBMIT;
           billDetailsController.saveButton.value = RequestConstant.SUBMIT;
-          Navigator.push(context, MaterialPageRoute(builder: (context)=>EntryScreen(title: widget.title)));
+
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => EntryScreen(title: widget.title)),
+          );
+
+          _loadList(); // runs when you come back to this screen
         },
         child: const Icon(
           Icons.add_rounded,
@@ -302,19 +292,19 @@ class _ListScreenState extends State<ListScreen> {
       date = sales.date;
       companyName = sales.companyName ?? '';
       number = "SalesNo : ${sales.salesNo ?? ''}";
-      amount = sales.erpCost ?? 0;
+      amount = sales.netPayAmt ?? 0;
     } else if (isReceiptDetails) {
       final receipt = receiptDetailsController.ReceiptDetailsList[index];
       date = receipt.date;
       companyName = receipt.companyName ?? '';
       number = "ReceiptNo : ${receipt.receiptNo ?? ''}";
-      amount = receipt.receivedAmount ?? 0;
+      amount = receipt.netPayAmt ?? 0;
     } else {
       final bill = billDetailsController.BillDetailsList[index];
       date = bill.date;
-      companyName = bill.companyName ?? '';
-      number = "BillNo : ${bill.billNo ?? ''}";
-      amount = bill.billAmount ?? 0;
+      companyName = bill.companyName ?? '' ;
+      number = "BillNo : ${bill.billNo ?? ''}" ;
+      amount = bill.billAmount ?? 0 ;
     }
 
     return AnimatedContainer(
@@ -496,34 +486,22 @@ class _ListScreenState extends State<ListScreen> {
                   // =========================
                   InkWell(
                     borderRadius: BorderRadius.circular(10),
-                    onTap: () {
-                      FocusScope.of(
-                          context)
-                          .unfocus();
-                      setState(() {
-                        expandedIndex = null;
-                      });
+                    onTap: () async {
+                      FocusScope.of(context).unfocus();
+                      setState(() => expandedIndex = null);
 
-                      isSalesDetails ?
-                      salesDetailController.SalesDetails_List_EditApi(
-                          salesDetailController
-                              .SalesDetailsList
-                              .value[
-                          index]
-                              .id,widget.title,
-                          context) : isReceiptDetails ? receiptDetailsController.ReceiptDetails_List_EditApi(
-                          receiptDetailsController
-                              .ReceiptDetailsList
-                              .value[
-                          index]
-                              .id,widget.title,
-                          context) : billDetailsController.BillDetails_List_EditApi(
-                          billDetailsController
-                              .BillDetailsList
-                              .value[
-                          index]
-                              .id,widget.title,
-                          context);
+                      if (isSalesDetails) {
+                        await salesDetailController.SalesDetails_List_EditApi(
+                            salesDetailController.SalesDetailsList[index].id, widget.title, context);
+                      } else if (isReceiptDetails) {
+                        await receiptDetailsController.ReceiptDetails_List_EditApi(
+                            receiptDetailsController.ReceiptDetailsList[index].id, widget.title, context);
+                      } else {
+                        await billDetailsController.BillDetails_List_EditApi(
+                            billDetailsController.BillDetailsList[index].id, widget.title, context);
+                      }
+
+                      _loadList();
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -632,77 +610,44 @@ class _ListScreenState extends State<ListScreen> {
     return billDetailsController.BillDetailsList.length;
   }
 
-  void _searchList() {
+  List<int> _getFilteredIndexes() {
     final query = searchController.text.trim().toLowerCase();
 
-    if (query.isEmpty) {
-      _resetFilteredList();
-      return;
-    }
+    // Read the right list (this also makes Obx listen to it)
+    final int count = _getOriginalListLength();
+
+    bool matches(List<Object?> fields) =>
+        fields.any((f) => (f ?? '').toString().toLowerCase().contains(query));
 
     final List<int> result = [];
 
-    if (isSalesDetails) {
-      for (int i = 0;
-      i < salesDetailController.SalesDetailsList.length;
-      i++) {
-        final sales = salesDetailController.SalesDetailsList[i];
-
-        final company = (sales.companyName ?? '').toLowerCase();
-        final salesNo = (sales.salesNo ?? '').toString().toLowerCase();
-        final date = (sales.date ?? '').toString().toLowerCase();
-        final cost = (sales.erpCost ?? '').toString().toLowerCase();
-        if (company.contains(query) ||
-            salesNo.contains(query) ||
-            cost.contains(query) ||
-            date.contains(query)) {
-          result.add(i);
-        }
+    for (int i = 0; i < count; i++) {
+      if (query.isEmpty) {
+        result.add(i);
+        continue;
       }
-    } else if (isReceiptDetails) {
-      for (int i = 0;
-      i < receiptDetailsController.ReceiptDetailsList.length;
-      i++) {
-        final receipt = receiptDetailsController.ReceiptDetailsList[i];
 
-        final company = (receipt.companyName ?? '').toLowerCase();
-        final receiptNo =
-        (receipt.receiptNo ?? '').toString().toLowerCase();
-        final date = (receipt.date ?? '').toString().toLowerCase();
-        final cost = (receipt.receivedAmount ?? '').toString().toLowerCase();
-        if (company.contains(query) ||
-            receiptNo.contains(query) ||
-            cost.contains(query) ||
-            date.contains(query)) {
-          result.add(i);
-        }
+      bool ok;
+      if (isSalesDetails) {
+        final s = salesDetailController.SalesDetailsList[i];
+        ok = matches([s.companyName, s.salesNo, s.date, s.erpCost, s.netPayAmt]);
+      } else if (isReceiptDetails) {
+        final r = receiptDetailsController.ReceiptDetailsList[i];
+        ok = matches([r.companyName, r.receiptNo, r.date, r.receivedAmount, r.netPayAmt]);
+      } else {
+        final b = billDetailsController.BillDetailsList[i];
+        ok = matches([b.companyName, b.billNo, b.date, b.billAmount]);
       }
-    } else {
-      for (int i = 0;
-      i < billDetailsController.BillDetailsList.length;
-      i++) {
-        final bill = billDetailsController.BillDetailsList[i];
 
-        final company = (bill.companyName ?? '').toLowerCase();
-        final billNo = (bill.billNo ?? '').toString().toLowerCase();
-        final date = (bill.date ?? '').toString().toLowerCase();
-        final cost = (bill.billAmount ?? '').toString().toLowerCase();
-        if (company.contains(query) ||
-            billNo.contains(query) ||
-            cost.contains(query) ||
-            date.contains(query)) {
-          result.add(i);
-        }
-      }
+      if (ok) result.add(i);
     }
 
-    setState(() {
-      filteredIndexes = result;
-      expandedIndex = null;
-    });
+    return result;
   }
 
-
+  void _searchList() {
+    setState(() => expandedIndex = null);
+  }
 
 }
 

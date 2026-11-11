@@ -89,7 +89,7 @@ class CommonController extends GetxController{
         if (response.messge!.isNotEmpty) {
           gstDropdown.assignAll(response.messge!);
           final defaultGst = gstDropdown.firstWhere(
-                (gst) => gst.percentage == 18,
+                (gst) => (gst.percentage ?? 0).toDouble() == 18.0,
             orElse: () => gstDropdown.first,
           );
 
@@ -175,6 +175,7 @@ class CommonController extends GetxController{
       tds: double.tryParse(salesDetailController.tdsAmtController.text) ?? 0.0,
       tdsPercentage: selectedTdsPercentage.value,
       tdsCheck: salesDetailController.isTdsEnabled.value,
+      netPayAmount: double.tryParse(salesDetailController.tdsnetAmountController.text) ?? 0.0
     ));
 
     final list = await SalesDetailsProvider.SaveSalesScreenEntryAPI(body, id, context);
@@ -293,7 +294,9 @@ class CommonController extends GetxController{
         tdsPercentage: selectedTdsPercentage.value,
         gst: double.tryParse(receiptDetailsController.gstAmtController.text) ?? 0.0,
         gstPercentage: selectedGstPercentage.value,
-      tdsCheck: receiptDetailsController.isTdsEnabled.value
+      tdsCheck: receiptDetailsController.isTdsEnabled.value,
+      netAmount: double.tryParse(receiptDetailsController.netAmountController.text) ?? 0.0,
+      netPayAmount: double.tryParse(receiptDetailsController.tdsnetAmountController.text) ?? 0.0
     ));
 
     final list = await ReceiptDetailsProvider.SaveReceiptScreenEntryAPI(body, id, context);
@@ -537,6 +540,8 @@ class CommonController extends GetxController{
   //   gstController.text = gst.toStringAsFixed(2);
   // }
 
+
+
   void calculateGst(
       TextEditingController accPortionController,
       TextEditingController gstAmountController,
@@ -563,7 +568,15 @@ class CommonController extends GetxController{
     tdsAmountController.text = tds.toStringAsFixed(2);
   }
 
-
+  void calcNetPay(
+      TextEditingController netAmt,
+      TextEditingController tdsAmt,
+      TextEditingController netPay,
+      ) {
+    final n = double.tryParse(netAmt.text.trim()) ?? 0;
+    final t = double.tryParse(tdsAmt.text.trim()) ?? 0;
+    netPay.text = (n - t).toStringAsFixed(2);
+  }
 
   void calculateNetAmount() {
     final double cash =
@@ -578,6 +591,21 @@ class CommonController extends GetxController{
     final double netAmount = cash + acc + gst;
 
     salesDetailController.netAmountController.text = netAmount.toStringAsFixed(2);
+  }
+
+  void calculateReceiptNetAmount() {
+    final double cash =
+        double.tryParse(receiptDetailsController.cashPortionController.text.trim()) ?? 0;
+
+    final double acc =
+        double.tryParse(receiptDetailsController.accPortionController.text.trim()) ?? 0;
+
+    final double gst =
+        double.tryParse(receiptDetailsController.gstAmtController.text.trim()) ?? 0;
+
+    final double netAmount = cash + acc + gst;
+
+    receiptDetailsController.netAmountController.text = netAmount.toStringAsFixed(2);
   }
 
   void calculateBillNetAmount() {

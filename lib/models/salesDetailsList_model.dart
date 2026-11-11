@@ -44,6 +44,7 @@ class Result {
   double? netAmount;
   double? tds;
   String? companyName;
+  double? netPayAmt;
 
   Result({
     this.id,
@@ -57,6 +58,7 @@ class Result {
     this.netAmount,
     this.tds,
     this.companyName,
+    this.netPayAmt
   });
 
   factory Result.fromJson(Map<String, dynamic> json) => Result(
@@ -71,6 +73,7 @@ class Result {
     netAmount: json["netAmount"],
     tds: json["tds"],
     companyName: json["companyName"],
+    netPayAmt: json["afterTDSNetAmount"]
   );
 
   Map<String, dynamic> toJson() => {
@@ -85,5 +88,6 @@ class Result {
     "netAmount": netAmount,
     "tds": tds,
     "companyName": companyName,
+    "afterTDSNetAmount": netPayAmt
   };
 }

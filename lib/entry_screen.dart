@@ -93,6 +93,7 @@ class _EntryScreenState extends State<EntryScreen> {
             salesDetailController.tdsAmtController.text = element.tds.toString();
             salesDetailController.netAmountController.text = element.netAmount.toString();
             salesDetailController.isTdsEnabled.value = element.tdsCheck;
+            salesDetailController.tdsnetAmountController.text = element.netPayAmt.toString();
             // salesDetailController.isTdsEnabled.value =
             //     (element.tds ?? 0) > 0;
           });
@@ -114,6 +115,7 @@ class _EntryScreenState extends State<EntryScreen> {
           salesDetailController.tdsAmtController.text = "0.0";
           salesDetailController.netAmountController.text = "0.0";
           salesDetailController.isTdsEnabled.value = false;
+          salesDetailController.tdsnetAmountController.text = "0.0";
         }
       }
 
@@ -136,7 +138,7 @@ class _EntryScreenState extends State<EntryScreen> {
             commmonController.selectedTdsPercentage.value = element.tdsPercentage;
             receiptDetailsController.tdsAmtController.text = element.tds.toString();
             receiptDetailsController.isTdsEnabled.value = element.tdsCheck;
-
+            receiptDetailsController.netAmountController.text = element.netAmount.toString();
           });
         }
 
@@ -155,6 +157,7 @@ class _EntryScreenState extends State<EntryScreen> {
           receiptDetailsController.accPortionController.text = "0.0";
           receiptDetailsController.tdsAmtController.text = "0.0";
           receiptDetailsController.isTdsEnabled.value = false;
+          receiptDetailsController.netAmountController.text = "0.0";
         }
       }
 
@@ -189,6 +192,22 @@ class _EntryScreenState extends State<EntryScreen> {
           billDetailsController.netAmountController.text = "0.0";
         }
       }
+      void salesNetPay() => commmonController.calcNetPay(
+        salesDetailController.netAmountController,
+        salesDetailController.tdsAmtController,
+        salesDetailController.tdsnetAmountController,
+      );
+      salesDetailController.netAmountController.addListener(salesNetPay);
+      salesDetailController.tdsAmtController.addListener(salesNetPay);
+
+      // RECEIPT
+      void receiptNetPay() => commmonController.calcNetPay(
+        receiptDetailsController.netAmountController,
+        receiptDetailsController.tdsAmtController,
+        receiptDetailsController.tdsnetAmountController,
+      );
+      receiptDetailsController.netAmountController.addListener(receiptNetPay);
+      receiptDetailsController.tdsAmtController.addListener(receiptNetPay);
     });
   }
 
@@ -351,6 +370,7 @@ class _EntryScreenState extends State<EntryScreen> {
                               receiptDetailsController.accPortionController,
                               receiptDetailsController.receiptCostController,
                             );
+                            commmonController.calculateReceiptNetAmount();
                           }
                         },
                       ),
@@ -418,6 +438,7 @@ class _EntryScreenState extends State<EntryScreen> {
                                 receiptDetailsController.tdsAmtController,
                                 commmonController.selectedTdsPercentage.value,
                               );
+                              commmonController.calculateReceiptNetAmount();
                             // }
                           }
                         },
@@ -460,8 +481,6 @@ class _EntryScreenState extends State<EntryScreen> {
                     ],
                     if (isSalesDetails || isReceiptDetails || isBillDetails) ...[
                       _gstFields(
-                        // gstPercentage:
-                        // commmonController.selectedGstPercentage.value ?? 0.0,
 
                         gstAmountController: isSalesDetails
                             ? salesDetailController.gstAmtController
@@ -471,12 +490,14 @@ class _EntryScreenState extends State<EntryScreen> {
                       ),
                       const SizedBox(height: 16),
                       ],
-                    if (isSalesDetails || isBillDetails) ...[
+                    if (isSalesDetails || isBillDetails || isReceiptDetails) ...[
                       _entryField(
                         label: 'Net Amount',
                         hint: '0.00',
                         icon: Icons.calculate_outlined,
-                        controller: isSalesDetails ? salesDetailController.netAmountController : billDetailsController.netAmountController,
+                        controller: isSalesDetails ? salesDetailController.netAmountController
+                            : isReceiptDetails ? receiptDetailsController.netAmountController
+                            : billDetailsController.netAmountController,
                         readOnly: true,
                         requiredField: true,
 
@@ -519,11 +540,36 @@ class _EntryScreenState extends State<EntryScreen> {
                                       commmonController.selectedTdsPercentage.value);
                                 }
                               }
+                              // commmonController.calculateNetPayAmount(
+                              //   tdsAmountController: isSalesDetails
+                              //       ? salesDetailController.tdsAmtController
+                              //       : receiptDetailsController.tdsAmtController,
+                              //
+                              //   netAmountController: isSalesDetails
+                              //       ? salesDetailController.netAmountController
+                              //       : receiptDetailsController.netAmountController,
+                              //
+                              //   netPayAmountController: isSalesDetails
+                              //       ? salesDetailController.tdsnetAmountController
+                              //       : receiptDetailsController.tdsnetAmountController,
+                              // );
+                              // commmonController.updateNetPayAmount(isSZZZZZZZZZZZZZZZZZZZZ
                           },
 
                         ),
                       ),
                       const SizedBox(height: 16),
+                    ],
+                    if (isSalesDetails || isReceiptDetails) ...[
+                      _entryField(
+                        label: 'Net Pay Amount',
+                        hint: '0.00',
+                        icon: Icons.calculate_outlined,
+                        controller: isSalesDetails ? salesDetailController.tdsnetAmountController :
+                            receiptDetailsController.tdsnetAmountController,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16,),
                     ],
                     if (widget.title == "Company Details") ...[
                         _entryField(
@@ -628,7 +674,6 @@ class _EntryScreenState extends State<EntryScreen> {
 
   Widget _gstFields({
     required TextEditingController gstAmountController,
-    // required double gstPercentage,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -640,9 +685,6 @@ class _EntryScreenState extends State<EntryScreen> {
             icon: Icons.percent_rounded,
             readOnly: true,
             isDropdown: true,
-            // controller: TextEditingController(
-            //   text: '${gstPercentage.toStringAsFixed(2)}%',
-            // ),
           ),
         ),
 
@@ -669,30 +711,30 @@ class _EntryScreenState extends State<EntryScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            const Text(
-              'Exclude TDS',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.text,
-              ),
-            ),
-
-            // const Spacer(),
-
-            Checkbox(
-              value: isTdsEnabled,
-              onChanged: onTdsChanged,
-              activeColor: AppColors.primary,
-              visualDensity: VisualDensity.compact,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-          ],
-        ),
+        // Row(
+        //   mainAxisAlignment: MainAxisAlignment.end,
+        //   children: [
+        //     const Text(
+        //       'Exclude TDS',
+        //       style: TextStyle(
+        //         fontFamily: 'Poppins',
+        //         fontSize: 11,
+        //         fontWeight: FontWeight.w600,
+        //         color: AppColors.text,
+        //       ),
+        //     ),
+        //
+        //     // const Spacer(),
+        //
+        //     Checkbox(
+        //       value: isTdsEnabled,
+        //       onChanged: onTdsChanged,
+        //       activeColor: AppColors.primary,
+        //       visualDensity: VisualDensity.compact,
+        //       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        //     ),
+        //   ],
+        // ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -931,15 +973,12 @@ class _EntryScreenState extends State<EntryScreen> {
                   widget.title == "Bill Details";
               final bool isGst = label == 'GST %';
               final bool isTds = label == 'TDS %';
-              print("XXXXXXXXXXyyyyyy...${commmonController.selectedGstPercentage.value}");
 
               if (isGst || isTds) {
                 final dropdownList = isTds
                     ? commmonController.tdsDropdown
                     : commmonController.gstDropdown;
-                print("Selected GST: ${commmonController.selectedGstPercentage.value}");
 
-                print("GST Dropdown values: ${dropdownList.map((e) => e.percentage).toList()}");
 
                 print("GST Match: ${dropdownList.any((e) =>
                 (e.percentage ?? 0.0) ==
@@ -1024,7 +1063,7 @@ class _EntryScreenState extends State<EntryScreen> {
                             commmonController.selectedGstPercentage.value,
                           );
                         }
-
+                        commmonController.calculateNetAmount();
                       }
                     });
                   },
