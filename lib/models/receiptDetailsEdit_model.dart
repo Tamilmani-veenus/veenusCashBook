@@ -46,6 +46,7 @@ class Result {
   double? gst;
   double? gstPercentage;
   bool? tdsCheck;
+  double? netAmount;
   double? netPayAmt;
 
   Result({
@@ -62,7 +63,8 @@ class Result {
     this.gst,
     this.gstPercentage,
     this.tdsCheck,
-    this.netPayAmt
+    this.netPayAmt,
+    this.netAmount
   });
 
   factory Result.fromJson(Map<String, dynamic> json) => Result(
@@ -79,7 +81,8 @@ class Result {
     gst: json["gst"],
     gstPercentage: json["gstPercentage"],
     tdsCheck: json["tdsCheck"],
-      netPayAmt: json["afterTDSNetAmount"]
+      netPayAmt: json["afterTDSNetAmount"],
+      netAmount: json["netAmount"]
   );
 
   Map<String, dynamic> toJson() => {
@@ -96,6 +99,7 @@ class Result {
     "gst": gst,
     "gstPercentage": gstPercentage,
     "tdsCheck": tdsCheck,
-    "afterTDSNetAmount": netPayAmt
+    "afterTDSNetAmount": netPayAmt,
+    "netAmount": netAmount
   };
 }

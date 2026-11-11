@@ -151,12 +151,12 @@ class _ListScreenState extends State<ListScreen> {
             final double totalAmount =
             isSalesDetails ? salesDetailController.SalesDetailsList.fold<double>(
               0.0,
-                  (sum, item) => sum + (item.erpCost ?? 0),
+                  (sum, item) => sum + (item.netPayAmt ?? 0),
             ) :isReceiptDetails ? receiptDetailsController.ReceiptDetailsList.fold<double>(
               0.0,
-                  (sum, item) => sum + (item.receivedAmount ?? 0) ) : billDetailsController.BillDetailsList.fold<double>(
+                  (sum, item) => sum + (item.netPayAmt ?? 0) ) : billDetailsController.BillDetailsList.fold<double>(
                 0.0,
-                    (sum, item) => sum + (item.billAmount ?? 0) ) ;
+                    (sum, item) => sum + (item.netAmount ?? 0) ) ;
 
             return Padding(
               padding: const EdgeInsets.symmetric(
@@ -304,7 +304,7 @@ class _ListScreenState extends State<ListScreen> {
       date = bill.date;
       companyName = bill.companyName ?? '' ;
       number = "BillNo : ${bill.billNo ?? ''}" ;
-      amount = bill.billAmount ?? 0 ;
+      amount = bill.netAmount ?? 0 ;
     }
 
     return AnimatedContainer(

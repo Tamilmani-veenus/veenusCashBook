@@ -1,5 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_native_contact_picker/flutter_native_contact_picker.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
@@ -540,20 +541,6 @@ class _EntryScreenState extends State<EntryScreen> {
                                       commmonController.selectedTdsPercentage.value);
                                 }
                               }
-                              // commmonController.calculateNetPayAmount(
-                              //   tdsAmountController: isSalesDetails
-                              //       ? salesDetailController.tdsAmtController
-                              //       : receiptDetailsController.tdsAmtController,
-                              //
-                              //   netAmountController: isSalesDetails
-                              //       ? salesDetailController.netAmountController
-                              //       : receiptDetailsController.netAmountController,
-                              //
-                              //   netPayAmountController: isSalesDetails
-                              //       ? salesDetailController.tdsnetAmountController
-                              //       : receiptDetailsController.tdsnetAmountController,
-                              // );
-                              // commmonController.updateNetPayAmount(isSZZZZZZZZZZZZZZZZZZZZ
                           },
 
                         ),
@@ -804,7 +791,7 @@ class _EntryScreenState extends State<EntryScreen> {
 
       // Digits only, then last 10 (drops +91 / 0 prefix)
       var number = raw.replaceAll(RegExp(r'[^0-9]'), '');
-      if (number.length > 10) number = number.substring(number.length - 10);
+      // if (number.length > 10) number = number.substring(number.length - 10);
 
       setState(() => controller.text = number);
     } catch (e, st) {
@@ -1042,7 +1029,8 @@ class _EntryScreenState extends State<EntryScreen> {
                             commmonController.selectedTdsPercentage.value,
                           );
                         }
-                      } else {
+                      }
+                      else {
                         commmonController.selectedGstPercentage.value = value;
                         if(isBillDetails){
                           commmonController.calculateGst(
@@ -1050,20 +1038,22 @@ class _EntryScreenState extends State<EntryScreen> {
                             billDetailsController.gstAmtController,
                             commmonController.selectedGstPercentage.value,
                           );
+                          commmonController.calculateBillNetAmount();
                         }else if(isReceiptDetails){
                           commmonController.calculateGst(
                             receiptDetailsController.accPortionController,
                             receiptDetailsController.gstAmtController,
                             commmonController.selectedGstPercentage.value,
                           );
+                          commmonController.calculateReceiptNetAmount();
                         }else{
                           commmonController.calculateGst(
                             salesDetailController.accPortionController,
                             salesDetailController.gstAmtController,
                             commmonController.selectedGstPercentage.value,
                           );
+                          commmonController.calculateNetAmount();
                         }
-                        commmonController.calculateNetAmount();
                       }
                     });
                   },
@@ -1370,6 +1360,98 @@ class _EntryScreenState extends State<EntryScreen> {
                 ),
               );
             })
+          // else if (isNumberField && controller != null)
+          //     AmountView(
+          //       source: controller,
+          //       builder: (activeController, focusNode) => TextFormField(
+          //         controller: activeController,
+          //         focusNode: focusNode,
+          //         cursorColor: AppColors.primary,
+          //         autovalidateMode: AutovalidateMode.always,
+          //         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          //         maxLines: maxLines,
+          //         readOnly: readOnly,
+          //         onTap: onTap,
+          //         onChanged: onChanged,
+          //         style: const TextStyle(
+          //           fontFamily: 'Poppins',
+          //           fontSize: 14,
+          //           fontWeight: FontWeight.w500,
+          //           color: AppColors.text,
+          //         ),
+          //         validator: requiredField
+          //             ? (value) {
+          //           final text = (value ?? '').replaceAll(',', '').trim();
+          //           if (text.isEmpty) return '* Required';
+          //           final number = double.tryParse(text);
+          //           if (number == null || number <= 0) return '* Required';
+          //           return null;
+          //         }
+          //             : null,
+          //         decoration: InputDecoration(
+          //           hintText: hint,
+          //
+          //           hintStyle: const TextStyle(
+          //             fontFamily: 'Poppins',
+          //             fontSize: 13,
+          //             color: AppColors.subText,
+          //           ),
+          //           suffixIcon: suffixIcon,
+          //
+          //           prefixIcon: Icon(
+          //             icon,
+          //             color: AppColors.drawerIcon,
+          //             size: 21,
+          //           ),
+          //
+          //           filled: true,
+          //           fillColor: readOnly
+          //               ? AppColors.background.withOpacity(0.7)
+          //               : AppColors.background,
+          //
+          //           contentPadding: const EdgeInsets.symmetric(
+          //             horizontal: 14,
+          //             vertical: 14,
+          //           ),
+          //
+          //           border: OutlineInputBorder(
+          //             borderRadius: BorderRadius.circular(11),
+          //             borderSide: const BorderSide(
+          //               color: AppColors.border,
+          //             ),
+          //           ),
+          //
+          //           enabledBorder: OutlineInputBorder(
+          //             borderRadius: BorderRadius.circular(11),
+          //             borderSide: const BorderSide(
+          //               color: AppColors.border,
+          //             ),
+          //           ),
+          //           errorBorder: OutlineInputBorder(
+          //             borderRadius: BorderRadius.circular(11),
+          //             borderSide: const BorderSide(
+          //               color: AppColors.border,
+          //               width: 1,
+          //             ),
+          //           ),
+          //
+          //           focusedErrorBorder: OutlineInputBorder(
+          //             borderRadius: BorderRadius.circular(11),
+          //             borderSide: const BorderSide(
+          //               color: AppColors.border,
+          //               width: 1,
+          //             ),
+          //           ),
+          //           focusedBorder: OutlineInputBorder(
+          //             borderRadius: BorderRadius.circular(11),
+          //             borderSide: const BorderSide(
+          //               color: AppColors.accent,
+          //               width: 1.3,
+          //             ),
+          //           ),
+          //         ),
+          //       ),
+          //     )
           else
             TextFormField(
               cursorColor: AppColors.primary,
@@ -1563,3 +1645,93 @@ class _EntryScreenState extends State<EntryScreen> {
   }
 
 }
+
+String commaView(String raw) {
+  var t = raw.trim().replaceAll(',', '');
+  if (t.isEmpty) return raw;
+  final neg = t.startsWith('-');
+  if (neg) t = t.substring(1);
+
+  final dot = t.indexOf('.');
+  final intPart = dot == -1 ? t : t.substring(0, dot);
+  final decPart = dot == -1 ? '' : t.substring(dot);
+  if (!RegExp(r'^\d+$').hasMatch(intPart)) return raw;
+
+  String grouped;
+  if (intPart.length <= 3) {
+    grouped = intPart;
+  } else {
+    final last3 = intPart.substring(intPart.length - 3);
+    var rest = intPart.substring(0, intPart.length - 3);
+    final parts = <String>[];
+    while (rest.length > 2) {
+      parts.insert(0, rest.substring(rest.length - 2));
+      rest = rest.substring(0, rest.length - 2);
+    }
+    if (rest.isNotEmpty) parts.insert(0, rest);
+    grouped = '${parts.join(',')},$last3';
+  }
+  // For international grouping (1,234,567) use instead:
+  // grouped = intPart.replaceAllMapped(
+  //     RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
+
+  return '${neg ? '-' : ''}$grouped$decPart';
+}
+
+/// Shows commas when the field is not focused, raw text while typing.
+/// The [source] controller text is NEVER modified.
+class AmountView extends StatefulWidget {
+  final TextEditingController source;
+  final Widget Function(TextEditingController active, FocusNode focusNode) builder;
+
+  const AmountView({Key? key, required this.source, required this.builder})
+      : super(key: key);
+
+  @override
+  State<AmountView> createState() => _AmountViewState();
+}
+
+class _AmountViewState extends State<AmountView> {
+  final FocusNode _focus = FocusNode();
+  final TextEditingController _display = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _syncDisplay();
+    widget.source.addListener(_syncDisplay);
+    _focus.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
+
+  void _syncDisplay() {
+    final formatted = commaView(widget.source.text);
+    if (_display.text != formatted) _display.text = formatted;
+  }
+
+  @override
+  void didUpdateWidget(covariant AmountView old) {
+    super.didUpdateWidget(old);
+    if (old.source != widget.source) {
+      old.source.removeListener(_syncDisplay);
+      widget.source.addListener(_syncDisplay);
+      _syncDisplay();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.source.removeListener(_syncDisplay);
+    _focus.dispose();
+    _display.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.builder(_focus.hasFocus ? widget.source : _display, _focus);
+  }
+}
+
+

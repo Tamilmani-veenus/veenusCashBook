@@ -74,6 +74,7 @@ class ReceiptDetail {
   double? gstPercentage;
   bool? tdsCheck;
   dynamic companyLink;
+  double? netAmount;
 
   ReceiptDetail({
     this.id,
@@ -89,6 +90,7 @@ class ReceiptDetail {
     this.gstPercentage,
     this.tdsCheck,
     this.companyLink,
+    this.netAmount,
   });
 
   factory ReceiptDetail.fromJson(Map<String, dynamic> json) => ReceiptDetail(
@@ -105,6 +107,7 @@ class ReceiptDetail {
     gstPercentage: json["gstPercentage"],
     tdsCheck: json["tdsCheck"],
     companyLink: json["companyLink"],
+    netAmount: json["netAmount"]?.toDouble(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -121,5 +124,6 @@ class ReceiptDetail {
     "gstPercentage": gstPercentage,
     "tdsCheck": tdsCheck,
     "companyLink": companyLink,
+    "netAmount": netAmount,
   };
 }

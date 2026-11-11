@@ -60,6 +60,7 @@ class CompanyDetailsProvider{
       } else {
         response = await ApiManager.postAPICall(ApiConstant.COMPANYDETAILS_SAVEAPI, body);
       }
+      print("XXXXXXXXX...${response}");
       return jsonDecode(response);
 
     }  catch (error) {

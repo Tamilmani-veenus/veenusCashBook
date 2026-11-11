@@ -901,9 +901,9 @@ class _SalesReportState extends State<SalesReport> {
                     amountColor: const Color(0xFF8F465C),
                   ),
                 ),
-                if(widget.title != "Receipt Report")
+                // if(widget.title != "Receipt Report")
                 _reportDivider(),
-                if(widget.title != "Receipt Report")
+                // if(widget.title != "Receipt Report")
                 Expanded(
                   child: _reportAmountItem(
                     title: "NET AMT",
@@ -1004,6 +1004,7 @@ class _SalesReportState extends State<SalesReport> {
       gst: detail.gst,
       gstPercent: detail.gstPercentage,
       tdsPercent: detail.tdsPercentage,
+      netAmount: detail.netAmount,
       tds: detail.tds,
       noLabel: "Receipt No",
     );
