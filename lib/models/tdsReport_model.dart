@@ -39,7 +39,7 @@ class TdsReportResponse {
 class OveralltdsTotal {
   String? companyName;
   double? tdsAmount;
-  int? receivedAmount;
+  dynamic receivedAmount;
   double? balanceAmount;
 
   OveralltdsTotal({

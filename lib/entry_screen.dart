@@ -1,5 +1,7 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_native_contact_picker/flutter_native_contact_picker.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
@@ -10,7 +12,6 @@ import 'package:veenuscashbook/controller/receiptDetails_controller.dart';
 import 'package:veenuscashbook/controller/salesDetails_controller.dart';
 import 'package:veenuscashbook/utilities/baseutitiles.dart';
 import 'package:veenuscashbook/utilities/requestconstant.dart';
-
 import 'app_theme.dart';
 import 'package:intl/intl.dart';
 
@@ -42,9 +43,11 @@ class _EntryScreenState extends State<EntryScreen> {
     super.initState();
     var duration = const Duration(seconds:0);
     Future.delayed(duration,() async {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        companyDetailsController.getDropDownCityValues();
-        commmonController.getDropDownCompanyValues();
+      WidgetsBinding.instance.addPostFrameCallback((_) async{
+        await companyDetailsController.getDropDownCityValues();
+        if (widget.title != "Company Details") {
+        await commmonController.getDropDownCompanyValues();
+        }
       });
       if (widget.title == "Company Details") {
         if(companyDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
@@ -55,18 +58,19 @@ class _EntryScreenState extends State<EntryScreen> {
                 DateFormat('yyyy-MM-dd').parse(element.companyDate));
             companyDetailsController.AdressController.text = element.companyAddress;
             companyDetailsController.ContactNoController.text = element.contactNo.toString();
-            companyDetailsController.selectedCity = element.city.toString();
+            companyDetailsController.selectedCity.value = element.city.toString();
             companyDetailsController.emailController.text = element.email.toString();
             companyDetailsController.GSTNoController.text = element.gstNo.toString();
           });
         }
 
         else if(companyDetailsController.saveButton.value ==RequestConstant.SUBMIT){
+          companyDetailsController.companyId = 0;
           companyDetailsController.companyNameController.text = "";
           companyDetailsController.CompanyDate.text = DateFormat('dd/MM/yyyy').format(DateTime.now());
           companyDetailsController.AdressController.text = "";
           companyDetailsController.ContactNoController.text = "";
-          companyDetailsController.selectedCity = "--SELECT--";
+          companyDetailsController.selectedCity.value = "--SELECT--";
           companyDetailsController.emailController.text = "";
           companyDetailsController.GSTNoController.text = "";
         }
@@ -74,6 +78,8 @@ class _EntryScreenState extends State<EntryScreen> {
 
       else if (widget.title == "Sales Details") {
         if(salesDetailController.saveButton.value == RequestConstant.RESUBMIT) {
+          await commmonController.getDropDownGSTValues();
+          await commmonController.getDropDownTDSValues();
           salesDetailController.Sales_EditListApiValue.forEach((element) {
             salesDetailController.salesId=element.id!;
             salesDetailController.SalesNoController.text = element.salesNo;
@@ -90,6 +96,7 @@ class _EntryScreenState extends State<EntryScreen> {
             salesDetailController.tdsAmtController.text = element.tds.toString();
             salesDetailController.netAmountController.text = element.netAmount.toString();
             salesDetailController.isTdsEnabled.value = element.tdsCheck;
+            salesDetailController.tdsnetAmountController.text = element.netPayAmt.toString();
             // salesDetailController.isTdsEnabled.value =
             //     (element.tds ?? 0) > 0;
           });
@@ -111,11 +118,14 @@ class _EntryScreenState extends State<EntryScreen> {
           salesDetailController.tdsAmtController.text = "0.0";
           salesDetailController.netAmountController.text = "0.0";
           salesDetailController.isTdsEnabled.value = false;
+          salesDetailController.tdsnetAmountController.text = "0.0";
         }
       }
 
       else if (widget.title == "Receipt Details") {
         if(receiptDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
+          await commmonController.getDropDownGSTValues();
+          await commmonController.getDropDownTDSValues();
           receiptDetailsController.Receipt_EditListApiValue.forEach((element) {
             receiptDetailsController.receiptId=element.id!;
             receiptDetailsController.ReceiptNoController.text = element.receiptNo;
@@ -131,7 +141,8 @@ class _EntryScreenState extends State<EntryScreen> {
             commmonController.selectedTdsPercentage.value = element.tdsPercentage;
             receiptDetailsController.tdsAmtController.text = element.tds.toString();
             receiptDetailsController.isTdsEnabled.value = element.tdsCheck;
-
+            receiptDetailsController.netAmountController.text = element.netAmount.toString();
+            receiptDetailsController.tdsnetAmountController.text = element.netPayAmt.toString();
           });
         }
 
@@ -150,11 +161,14 @@ class _EntryScreenState extends State<EntryScreen> {
           receiptDetailsController.accPortionController.text = "0.0";
           receiptDetailsController.tdsAmtController.text = "0.0";
           receiptDetailsController.isTdsEnabled.value = false;
+          receiptDetailsController.netAmountController.text = "0.0";
+          receiptDetailsController.tdsnetAmountController.text = "0.0";
         }
       }
 
       else if (widget.title == "Bill Details") {
         if(billDetailsController.saveButton.value == RequestConstant.RESUBMIT) {
+          await commmonController.getDropDownGSTValues();
           billDetailsController.Bill_EditListApiValue.forEach((element) {
             billDetailsController.billId=element.id!;
             billDetailsController.BillNoController.text = element.billNo;
@@ -183,6 +197,22 @@ class _EntryScreenState extends State<EntryScreen> {
           billDetailsController.netAmountController.text = "0.0";
         }
       }
+      void salesNetPay() => commmonController.calcNetPay(
+        salesDetailController.netAmountController,
+        salesDetailController.tdsAmtController,
+        salesDetailController.tdsnetAmountController,
+      );
+      salesDetailController.netAmountController.addListener(salesNetPay);
+      salesDetailController.tdsAmtController.addListener(salesNetPay);
+
+      // RECEIPT
+      void receiptNetPay() => commmonController.calcNetPay(
+        receiptDetailsController.netAmountController,
+        receiptDetailsController.tdsAmtController,
+        receiptDetailsController.tdsnetAmountController,
+      );
+      receiptDetailsController.netAmountController.addListener(receiptNetPay);
+      receiptDetailsController.tdsAmtController.addListener(receiptNetPay);
     });
   }
 
@@ -285,7 +315,8 @@ class _EntryScreenState extends State<EntryScreen> {
                         icon: Icons.numbers,
                         controller: isSalesDetails ? salesDetailController.SalesNoController : isReceiptDetails ? receiptDetailsController.ReceiptNoController : billDetailsController.BillNoController,
                         isDateField: false,
-                        readOnly: isBillDetails ? false : true
+                        readOnly: isBillDetails ? false : true,
+                        requiredField: true
                       ),
                       const SizedBox(height: 16),
                     ],
@@ -300,8 +331,7 @@ class _EntryScreenState extends State<EntryScreen> {
                     ),
                     const SizedBox(height: 16),
 
-
-                      _entryField(
+                    _entryField(
                         label: 'Date',
                         hint: '',
                         icon: Icons.calendar_month_outlined,
@@ -311,39 +341,7 @@ class _EntryScreenState extends State<EntryScreen> {
                         isDateField: true,
                       ),
                       const SizedBox(height: 16),
-                    if (isSalesDetails || isReceiptDetails || isBillDetails) ...[
-                      _entryField(
-                        label: isSalesDetails ? 'ERP Cost' : isReceiptDetails ? 'Receipt Amount' : 'Bill Amount',
-                        hint: '0.0',
-                        icon: Icons.numbers,
-                        controller: isSalesDetails ? salesDetailController.erpCostController
-                            : isReceiptDetails ? receiptDetailsController.receiptCostController
-                            : billDetailsController.billCostController,
-                        readOnly: widget.title != "Bill Details" ? true : false,
-                        isNumberField: true,
-                        requiredField: true,
-                        onTap: (){
-                          if (billDetailsController.billCostController.text.trim() == '0.0' ||
-                              billDetailsController.billCostController.text.trim() == '0.00') {
-                            billDetailsController.billCostController.clear();
-                          }
-                        },
-                        onChanged: (_) {
-                          setState(() {
-                            if (isBillDetails) {
-                              // GST
-                              commmonController.calculateGst(
-                                billDetailsController.billCostController,
-                                billDetailsController.gstAmtController,
-                                commmonController.selectedGstPercentage.value,
-                              );
-                              commmonController.calculateBillNetAmount();
-                            }
-                          });
-                          },
-                      ),
-                      const SizedBox(height: 16),
-                      ],
+
                     if (isSalesDetails || isReceiptDetails ) ...[
                       _entryField(
                         label: 'Cash portion',
@@ -377,6 +375,7 @@ class _EntryScreenState extends State<EntryScreen> {
                               receiptDetailsController.accPortionController,
                               receiptDetailsController.receiptCostController,
                             );
+                            commmonController.calculateReceiptNetAmount();
                           }
                         },
                       ),
@@ -444,8 +443,43 @@ class _EntryScreenState extends State<EntryScreen> {
                                 receiptDetailsController.tdsAmtController,
                                 commmonController.selectedTdsPercentage.value,
                               );
+                              commmonController.calculateReceiptNetAmount();
                             // }
                           }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    if (isSalesDetails || isReceiptDetails || isBillDetails) ...[
+                      _entryField(
+                        label: isSalesDetails ? 'ERP Cost' : isReceiptDetails ? 'Receipt Amount' : 'Bill Amount',
+                        hint: '0.0',
+                        icon: Icons.numbers,
+                        controller: isSalesDetails ? salesDetailController.erpCostController
+                            : isReceiptDetails ? receiptDetailsController.receiptCostController
+                            : billDetailsController.billCostController,
+                        readOnly: widget.title != "Bill Details" ? true : false,
+                        keyboardType: TextInputType.number,
+                        isNumberField: true,
+                        requiredField: true,
+                        onTap: (){
+                          if (billDetailsController.billCostController.text.trim() == '0.0' ||
+                              billDetailsController.billCostController.text.trim() == '0.00') {
+                            billDetailsController.billCostController.clear();
+                          }
+                        },
+                        onChanged: (_) {
+                          setState(() {
+                            if (isBillDetails) {
+                              // GST
+                              commmonController.calculateGst(
+                                billDetailsController.billCostController,
+                                billDetailsController.gstAmtController,
+                                commmonController.selectedGstPercentage.value,
+                              );
+                              commmonController.calculateBillNetAmount();
+                            }
+                          });
                         },
                       ),
                       const SizedBox(height: 16),
@@ -461,12 +495,14 @@ class _EntryScreenState extends State<EntryScreen> {
                       ),
                       const SizedBox(height: 16),
                       ],
-                    if (isSalesDetails || isBillDetails) ...[
+                    if (isSalesDetails || isBillDetails || isReceiptDetails) ...[
                       _entryField(
                         label: 'Net Amount',
                         hint: '0.00',
                         icon: Icons.calculate_outlined,
-                        controller: isSalesDetails ? salesDetailController.netAmountController : billDetailsController.netAmountController,
+                        controller: isSalesDetails ? salesDetailController.netAmountController
+                            : isReceiptDetails ? receiptDetailsController.netAmountController
+                            : billDetailsController.netAmountController,
                         readOnly: true,
                         requiredField: true,
 
@@ -506,13 +542,25 @@ class _EntryScreenState extends State<EntryScreen> {
                                   commmonController.calculateTds(
                                       receiptDetailsController.accPortionController,
                                       receiptDetailsController.tdsAmtController,
-                                      commmonController.selectedTdsPercentage.value);}
+                                      commmonController.selectedTdsPercentage.value);
+                                }
                               }
                           },
 
                         ),
                       ),
                       const SizedBox(height: 16),
+                    ],
+                    if (isSalesDetails || isReceiptDetails) ...[
+                      _entryField(
+                        label: isReceiptDetails ? 'Net Paid Amount':'Net Pay Amount',
+                        hint: '0.00',
+                        icon: Icons.calculate_outlined,
+                        controller: isSalesDetails ? salesDetailController.tdsnetAmountController :
+                            receiptDetailsController.tdsnetAmountController,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 16,),
                     ],
                     if (widget.title == "Company Details") ...[
                         _entryField(
@@ -529,9 +577,15 @@ class _EntryScreenState extends State<EntryScreen> {
                           label: 'Contact No.',
                           hint: 'Enter contact number',
                           icon: Icons.phone_outlined,
-                          keyboardType: TextInputType.number,
                           controller: companyDetailsController.ContactNoController,
                           requiredField: true,
+                          keyboardType: TextInputType.phone,
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.contacts_outlined, color: AppColors.drawerIcon),
+                            tooltip: 'Pick from contacts',
+                            onPressed: () =>
+                                _pickContact(companyDetailsController.ContactNoController),
+                          ),
                         ),
                         const SizedBox(height: 16),
 
@@ -648,30 +702,30 @@ class _EntryScreenState extends State<EntryScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            const Text(
-              'Exclude TDS',
-              style: TextStyle(
-                fontFamily: 'Poppins',
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.text,
-              ),
-            ),
-
-            // const Spacer(),
-
-            Checkbox(
-              value: isTdsEnabled,
-              onChanged: onTdsChanged,
-              activeColor: AppColors.primary,
-              visualDensity: VisualDensity.compact,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-          ],
-        ),
+        // Row(
+        //   mainAxisAlignment: MainAxisAlignment.end,
+        //   children: [
+        //     const Text(
+        //       'Exclude TDS',
+        //       style: TextStyle(
+        //         fontFamily: 'Poppins',
+        //         fontSize: 11,
+        //         fontWeight: FontWeight.w600,
+        //         color: AppColors.text,
+        //       ),
+        //     ),
+        //
+        //     // const Spacer(),
+        //
+        //     Checkbox(
+        //       value: isTdsEnabled,
+        //       onChanged: onTdsChanged,
+        //       activeColor: AppColors.primary,
+        //       visualDensity: VisualDensity.compact,
+        //       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        //     ),
+        //   ],
+        // ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -701,6 +755,58 @@ class _EntryScreenState extends State<EntryScreen> {
       ],
     );
   }
+  final FlutterContactPicker _contactPicker = FlutterContactPicker();
+
+  Future<void> _pickContact(TextEditingController controller) async {
+    try {
+      final contact = await _contactPicker.selectContact(); // type inferred
+      if (contact == null) return; // user cancelled
+
+      final numbers = contact.phoneNumbers ?? <String>[];
+      if (numbers.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Selected contact has no phone number')),
+        );
+        return;
+      }
+
+      // If several numbers, let the user choose
+      String raw = numbers.first;
+      if (numbers.length > 1) {
+        final chosen = await showModalBottomSheet<String>(
+          context: context,
+          builder: (ctx) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: numbers
+                  .map((n) => ListTile(
+                leading: const Icon(Icons.phone_outlined),
+                title: Text(n),
+                onTap: () => Navigator.pop(ctx, n),
+              ))
+                  .toList(),
+            ),
+          ),
+        );
+        if (chosen == null) return;
+        raw = chosen;
+      }
+
+      // Digits only, then last 10 (drops +91 / 0 prefix)
+      var number = raw.replaceAll(RegExp(r'[^0-9]'), '');
+      // if (number.length > 10) number = number.substring(number.length - 10);
+
+      setState(() => controller.text = number);
+    } catch (e, st) {
+      debugPrint('CONTACT ERROR: $e\n$st');
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
 
   Widget _entryField({
     required String label,
@@ -714,20 +820,47 @@ class _EntryScreenState extends State<EntryScreen> {
     bool readOnly = false,
     bool requiredField = false,
     bool isNumberField = false,
+    Widget? suffixIcon,
     VoidCallback? onTap,
     ValueChanged<String>? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontFamily: 'Poppins',
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.text,
-          ),
+        Row(
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.text,
+              ),
+            ),
+            if (label == 'ERP Cost' || label == "Receipt Amount") ...[
+              const SizedBox(width: 8),
+              Icon(
+                Icons.info_outline_rounded,
+                size: 15,
+                color: Colors.green.shade800,
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  'Cash portion + A/C portion',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'Poppins',
+                    fontSize: 11,
+                    color: Colors.green.shade800,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
 
         const SizedBox(height: 7),
@@ -831,10 +964,16 @@ class _EntryScreenState extends State<EntryScreen> {
                   widget.title == "Bill Details";
               final bool isGst = label == 'GST %';
               final bool isTds = label == 'TDS %';
+
               if (isGst || isTds) {
                 final dropdownList = isTds
                     ? commmonController.tdsDropdown
                     : commmonController.gstDropdown;
+
+
+                print("GST Match: ${dropdownList.any((e) =>
+                (e.percentage ?? 0.0) ==
+                    (commmonController.selectedGstPercentage.value ?? 0.0))}");
                 return DropdownButtonFormField2<double>(
                   value: isTds
                       ? commmonController.selectedTdsPercentage.value
@@ -894,7 +1033,8 @@ class _EntryScreenState extends State<EntryScreen> {
                             commmonController.selectedTdsPercentage.value,
                           );
                         }
-                      } else {
+                      }
+                      else {
                         commmonController.selectedGstPercentage.value = value;
                         if(isBillDetails){
                           commmonController.calculateGst(
@@ -902,20 +1042,22 @@ class _EntryScreenState extends State<EntryScreen> {
                             billDetailsController.gstAmtController,
                             commmonController.selectedGstPercentage.value,
                           );
+                          commmonController.calculateBillNetAmount();
                         }else if(isReceiptDetails){
                           commmonController.calculateGst(
                             receiptDetailsController.accPortionController,
                             receiptDetailsController.gstAmtController,
                             commmonController.selectedGstPercentage.value,
                           );
+                          commmonController.calculateReceiptNetAmount();
                         }else{
                           commmonController.calculateGst(
                             salesDetailController.accPortionController,
                             salesDetailController.gstAmtController,
                             commmonController.selectedGstPercentage.value,
                           );
+                          commmonController.calculateNetAmount();
                         }
-
                       }
                     });
                   },
@@ -933,7 +1075,7 @@ class _EntryScreenState extends State<EntryScreen> {
                 );
               }
 
-              if (isSalesDetails || isReceiptDetails || isBillDetails) {
+              else if (isSalesDetails || isReceiptDetails || isBillDetails) {
                 return DropdownButtonFormField2<int>(
                   value: commmonController.selectedCompanyId.value == 0
                       ? null
@@ -989,7 +1131,21 @@ class _EntryScreenState extends State<EntryScreen> {
                         color: AppColors.border,
                       ),
                     ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.border,
+                        width: 1,
+                      ),
+                    ),
 
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.border,
+                        width: 1,
+                      ),
+                    ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(11),
                       borderSide: const BorderSide(
@@ -1039,7 +1195,7 @@ class _EntryScreenState extends State<EntryScreen> {
 
                     });
                   },
-
+                  autovalidateMode: AutovalidateMode.always,
                   buttonStyleData: const ButtonStyleData(
                     height: 20,
                     padding: EdgeInsets.zero,
@@ -1067,136 +1223,249 @@ class _EntryScreenState extends State<EntryScreen> {
                 );
               }
 
-              // CITY DROPDOWN
-              return DropdownButtonFormField2<String>(
-                value: companyDetailsController.selectedCity,
+              else {
+                return DropdownButtonFormField2<String>(
+                  value: companyDetailsController.selectedCity.value=="--SELECT--"?null:companyDetailsController.selectedCity.value,
 
-                isExpanded: true,
-                validator: requiredField
-                    ? (value) {
-                  if (value == null ||
-                      value.trim().isEmpty ||
-                      value == "--SELECT--") {
-                    return '* Required';
+                  isExpanded: true,
+                  validator: requiredField
+                      ? (value) {
+                    if (value == null ||
+                        value
+                            .trim()
+                            .isEmpty ||
+                        value == "--SELECT--") {
+                      return '* Required';
+                    }
+
+                    return null;
                   }
+                      : null,
 
-                  return null;
-                }
-                    : null,
-
-                decoration: InputDecoration(
-                  hintText: hint,
-                  prefixIcon: Icon(
-                    icon,
-                    color: AppColors.drawerIcon,
-                    size: 21,
-                  ),
-                  filled: true,
-                  fillColor: AppColors.background,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 14,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: const BorderSide(
-                      color: AppColors.border,
+                  decoration: InputDecoration(
+                    hintText: hint,
+                    prefixIcon: Icon(
+                      icon,
+                      color: AppColors.drawerIcon,
+                      size: 21,
                     ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: const BorderSide(
-                      color: AppColors.border,
+                    filled: true,
+                    fillColor: AppColors.background,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
                     ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(11),
-                    borderSide: const BorderSide(
-                      color: AppColors.accent,
-                      width: 1.3,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.border,
+                      ),
                     ),
-                  ),
-                ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.border,
+                      ),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.border,
+                        width: 1,
+                      ),
+                    ),
 
-                hint: Text(
-                  hint,
-                  style: const TextStyle(
-                    fontFamily: 'Poppins',
-                    fontSize: 13,
-                    color: AppColors.subText,
-                  ),
-                ),
-
-                items: [
-                  const DropdownMenuItem<String>(
-                    value: "--SELECT--",
-                    child: Text(
-                      "--SELECT--",
-                      style: TextStyle(
-                        fontFamily: 'Poppins',
-                        fontSize: 13,
-                        color: AppColors.subText,
+// Normal border when tapping an invalid field
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.border,
+                        width: 1,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(11),
+                      borderSide: const BorderSide(
+                        color: AppColors.accent,
+                        width: 1.3,
                       ),
                     ),
                   ),
-
-                  ...companyDetailsController.cityDropDown
-                      .map((city) => city.cityName?.trim() ?? '')
-                      .where((city) => city.isNotEmpty)
-                      .toSet()
-                      .map(
-                        (city) => DropdownMenuItem<String>(
-                      value: city,
-                      child: Text(
-                        city,
-                        style: const TextStyle(
-                          fontFamily: 'Poppins',
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.text,
-                        ),
-                      ),
+                  autovalidateMode: AutovalidateMode.always,
+                  hint: Text(
+                    hint,
+                    style: const TextStyle(
+                      fontFamily: 'Poppins',
+                      fontSize: 13,
+                      color: AppColors.subText,
                     ),
                   ),
-                ],
 
-                onChanged: (value) {
-                  setState(() {
-                    companyDetailsController.selectedCity =
-                        value ?? "--SELECT--";
-                  });
-                },
+                  items: [
+                    // const DropdownMenuItem<String>(
+                    //   value: "--SELECT--",
+                    //   child: Text(
+                    //     "--SELECT--",
+                    //     style: TextStyle(
+                    //       fontFamily: 'Poppins',
+                    //       fontSize: 13,
+                    //       color: AppColors.subText,
+                    //     ),
+                    //   ),
+                    // ),
 
-                buttonStyleData: const ButtonStyleData(
-                  height: 20,
-                ),
+                    ...companyDetailsController.cityDropDown
+                        .map((city) => city.cityName?.trim() ?? '')
+                        .where((city) => city.isNotEmpty)
+                        .toSet()
+                        .map(
+                          (city) {
+                            return DropdownMenuItem<String>(
+                              value: city,
+                              child: Text(
+                                city,
+                                style: const TextStyle(
+                                  fontFamily: 'Poppins',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.text,
+                                ),
+                              ),
+                            );
+                          }
+                    ),
+                  ],
 
-                iconStyleData: const IconStyleData(
-                  icon: Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    color: AppColors.subText,
+                  onChanged: (value) {
+                    setState(() {
+                      companyDetailsController.selectedCity.value =
+                          value ?? "";
+                    });
+                  },
+
+                  buttonStyleData: const ButtonStyleData(
+                    height: 20,
                   ),
-                ),
 
-                dropdownStyleData: DropdownStyleData(
-                  maxHeight: 220,
-                  decoration: BoxDecoration(
-                    color: AppColors.white,
-                    borderRadius: BorderRadius.circular(11),
+                  iconStyleData: const IconStyleData(
+                    icon: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: AppColors.subText,
+                    ),
                   ),
-                ),
 
-                menuItemStyleData: const MenuItemStyleData(
-                  height: 45,
-                  padding: EdgeInsets.symmetric(horizontal: 14),
-                ),
-              );
+                  dropdownStyleData: DropdownStyleData(
+                    maxHeight: 220,
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                  ),
+
+                  menuItemStyleData: const MenuItemStyleData(
+                    height: 45,
+                    padding: EdgeInsets.symmetric(horizontal: 14),
+                  ),
+                );
+              }
             })
+          // else if (isNumberField && controller != null)
+          //     AmountView(
+          //       source: controller,
+          //       builder: (activeController, focusNode) => TextFormField(
+          //         controller: activeController,
+          //         focusNode: focusNode,
+          //         cursorColor: AppColors.primary,
+          //         autovalidateMode: AutovalidateMode.always,
+          //         keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          //         maxLines: maxLines,
+          //         readOnly: readOnly,
+          //         onTap: onTap,
+          //         onChanged: onChanged,
+          //         style: const TextStyle(
+          //           fontFamily: 'Poppins',
+          //           fontSize: 14,
+          //           fontWeight: FontWeight.w500,
+          //           color: AppColors.text,
+          //         ),
+          //         validator: requiredField
+          //             ? (value) {
+          //           final text = (value ?? '').replaceAll(',', '').trim();
+          //           if (text.isEmpty) return '* Required';
+          //           final number = double.tryParse(text);
+          //           if (number == null || number <= 0) return '* Required';
+          //           return null;
+          //         }
+          //             : null,
+          //         decoration: InputDecoration(
+          //           hintText: hint,
+          //
+          //           hintStyle: const TextStyle(
+          //             fontFamily: 'Poppins',
+          //             fontSize: 13,
+          //             color: AppColors.subText,
+          //           ),
+          //           suffixIcon: suffixIcon,
+          //
+          //           prefixIcon: Icon(
+          //             icon,
+          //             color: AppColors.drawerIcon,
+          //             size: 21,
+          //           ),
+          //
+          //           filled: true,
+          //           fillColor: readOnly
+          //               ? AppColors.background.withOpacity(0.7)
+          //               : AppColors.background,
+          //
+          //           contentPadding: const EdgeInsets.symmetric(
+          //             horizontal: 14,
+          //             vertical: 14,
+          //           ),
+          //
+          //           border: OutlineInputBorder(
+          //             borderRadius: BorderRadius.circular(11),
+          //             borderSide: const BorderSide(
+          //               color: AppColors.border,
+          //             ),
+          //           ),
+          //
+          //           enabledBorder: OutlineInputBorder(
+          //             borderRadius: BorderRadius.circular(11),
+          //             borderSide: const BorderSide(
+          //               color: AppColors.border,
+          //             ),
+          //           ),
+          //           errorBorder: OutlineInputBorder(
+          //             borderRadius: BorderRadius.circular(11),
+          //             borderSide: const BorderSide(
+          //               color: AppColors.border,
+          //               width: 1,
+          //             ),
+          //           ),
+          //
+          //           focusedErrorBorder: OutlineInputBorder(
+          //             borderRadius: BorderRadius.circular(11),
+          //             borderSide: const BorderSide(
+          //               color: AppColors.border,
+          //               width: 1,
+          //             ),
+          //           ),
+          //           focusedBorder: OutlineInputBorder(
+          //             borderRadius: BorderRadius.circular(11),
+          //             borderSide: const BorderSide(
+          //               color: AppColors.accent,
+          //               width: 1.3,
+          //             ),
+          //           ),
+          //         ),
+          //       ),
+          //     )
           else
             TextFormField(
               cursorColor: AppColors.primary,
               controller: controller,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
+              autovalidateMode: AutovalidateMode.always,
               keyboardType: keyboardType,
               maxLines: maxLines,
               readOnly: readOnly,
@@ -1240,6 +1509,7 @@ class _EntryScreenState extends State<EntryScreen> {
                   fontSize: 13,
                   color: AppColors.subText,
                 ),
+                suffixIcon: suffixIcon,
 
                 prefixIcon: Icon(
                   icon,
@@ -1270,7 +1540,21 @@ class _EntryScreenState extends State<EntryScreen> {
                     color: AppColors.border,
                   ),
                 ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(11),
+                  borderSide: const BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
 
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(11),
+                  borderSide: const BorderSide(
+                    color: AppColors.border,
+                    width: 1,
+                  ),
+                ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(11),
                   borderSide: const BorderSide(
@@ -1370,3 +1654,93 @@ class _EntryScreenState extends State<EntryScreen> {
   }
 
 }
+
+String commaView(String raw) {
+  var t = raw.trim().replaceAll(',', '');
+  if (t.isEmpty) return raw;
+  final neg = t.startsWith('-');
+  if (neg) t = t.substring(1);
+
+  final dot = t.indexOf('.');
+  final intPart = dot == -1 ? t : t.substring(0, dot);
+  final decPart = dot == -1 ? '' : t.substring(dot);
+  if (!RegExp(r'^\d+$').hasMatch(intPart)) return raw;
+
+  String grouped;
+  if (intPart.length <= 3) {
+    grouped = intPart;
+  } else {
+    final last3 = intPart.substring(intPart.length - 3);
+    var rest = intPart.substring(0, intPart.length - 3);
+    final parts = <String>[];
+    while (rest.length > 2) {
+      parts.insert(0, rest.substring(rest.length - 2));
+      rest = rest.substring(0, rest.length - 2);
+    }
+    if (rest.isNotEmpty) parts.insert(0, rest);
+    grouped = '${parts.join(',')},$last3';
+  }
+  // For international grouping (1,234,567) use instead:
+  // grouped = intPart.replaceAllMapped(
+  //     RegExp(r'\B(?=(\d{3})+(?!\d))'), (_) => ',');
+
+  return '${neg ? '-' : ''}$grouped$decPart';
+}
+
+/// Shows commas when the field is not focused, raw text while typing.
+/// The [source] controller text is NEVER modified.
+class AmountView extends StatefulWidget {
+  final TextEditingController source;
+  final Widget Function(TextEditingController active, FocusNode focusNode) builder;
+
+  const AmountView({Key? key, required this.source, required this.builder})
+      : super(key: key);
+
+  @override
+  State<AmountView> createState() => _AmountViewState();
+}
+
+class _AmountViewState extends State<AmountView> {
+  final FocusNode _focus = FocusNode();
+  final TextEditingController _display = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _syncDisplay();
+    widget.source.addListener(_syncDisplay);
+    _focus.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
+
+  void _syncDisplay() {
+    final formatted = commaView(widget.source.text);
+    if (_display.text != formatted) _display.text = formatted;
+  }
+
+  @override
+  void didUpdateWidget(covariant AmountView old) {
+    super.didUpdateWidget(old);
+    if (old.source != widget.source) {
+      old.source.removeListener(_syncDisplay);
+      widget.source.addListener(_syncDisplay);
+      _syncDisplay();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.source.removeListener(_syncDisplay);
+    _focus.dispose();
+    _display.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.builder(_focus.hasFocus ? widget.source : _display, _focus);
+  }
+}
+
+

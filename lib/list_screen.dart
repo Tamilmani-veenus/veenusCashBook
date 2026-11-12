@@ -37,18 +37,22 @@ class _ListScreenState extends State<ListScreen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
     searchController.addListener(_searchList);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _resetFilteredList();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadList());
+  }
 
-    salesDetailController.getSalesDetails_List();
-    receiptDetailsController.getReceiptDetails_List();
-    billDetailsController.getBillDetails_List();
+  Future<void> _loadList() async {
+    if (isSalesDetails) {
+      await salesDetailController.getSalesDetails_List();
+    } else if (isReceiptDetails) {
+      await receiptDetailsController.getReceiptDetails_List();
+    } else if (isBillDetails) {
+      await billDetailsController.getBillDetails_List();
+    }
+    if (mounted) setState(() => expandedIndex = null);
   }
 
   @override
@@ -147,12 +151,12 @@ class _ListScreenState extends State<ListScreen> {
             final double totalAmount =
             isSalesDetails ? salesDetailController.SalesDetailsList.fold<double>(
               0.0,
-                  (sum, item) => sum + (item.erpCost ?? 0),
+                  (sum, item) => sum + (item.netPayAmt ?? 0),
             ) :isReceiptDetails ? receiptDetailsController.ReceiptDetailsList.fold<double>(
               0.0,
-                  (sum, item) => sum + (item.receivedAmount ?? 0) ) : billDetailsController.BillDetailsList.fold<double>(
+                  (sum, item) => sum + (item.netPayAmt ?? 0) ) : billDetailsController.BillDetailsList.fold<double>(
                 0.0,
-                    (sum, item) => sum + (item.billAmount ?? 0) ) ;
+                    (sum, item) => sum + (item.netAmount ?? 0) ) ;
 
             return Padding(
               padding: const EdgeInsets.symmetric(
@@ -227,37 +231,16 @@ class _ListScreenState extends State<ListScreen> {
 
           const SizedBox(height: 8),
 
-          // List
           Expanded(
-            child: Obx(
-                  () {
-                // Make sure indexes are initialized
-                if (filteredIndexes.isEmpty &&
-                    searchController.text.isEmpty &&
-                    _getOriginalListLength() > 0) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      _resetFilteredList();
-                    }
-                  });
-                }
+            child: Obx(() {
+              final indexes = _getFilteredIndexes();
 
-                return ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(
-                    18,
-                    5,
-                    18,
-                    90,
-                  ),
-                  itemCount: filteredIndexes.length,
-                  itemBuilder: (context, index) {
-                    final originalIndex = filteredIndexes[index];
-
-                    return _listItem(originalIndex);
-                  },
-                );
-              },
-            ),
+              return ListView.builder(
+                padding: const EdgeInsets.fromLTRB(18, 5, 18, 90),
+                itemCount: indexes.length,
+                itemBuilder: (context, index) => _listItem(indexes[index]),
+              );
+            }),
           ),
         ],
       ),
@@ -265,12 +248,18 @@ class _ListScreenState extends State<ListScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: AppColors.primary,
         elevation: 4,
-        onPressed: () {
+        onPressed: () async {
           companyDetailsController.saveButton.value = RequestConstant.SUBMIT;
           salesDetailController.saveButton.value = RequestConstant.SUBMIT;
           receiptDetailsController.saveButton.value = RequestConstant.SUBMIT;
           billDetailsController.saveButton.value = RequestConstant.SUBMIT;
-          Navigator.push(context, MaterialPageRoute(builder: (context)=>EntryScreen(title: widget.title)));
+
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => EntryScreen(title: widget.title)),
+          );
+
+          _loadList(); // runs when you come back to this screen
         },
         child: const Icon(
           Icons.add_rounded,
@@ -303,23 +292,23 @@ class _ListScreenState extends State<ListScreen> {
       date = sales.date;
       companyName = sales.companyName ?? '';
       number = "SalesNo : ${sales.salesNo ?? ''}";
-      amount = sales.erpCost ?? 0;
+      amount = sales.netPayAmt ?? 0;
     } else if (isReceiptDetails) {
       final receipt = receiptDetailsController.ReceiptDetailsList[index];
       date = receipt.date;
       companyName = receipt.companyName ?? '';
       number = "ReceiptNo : ${receipt.receiptNo ?? ''}";
-      amount = receipt.receivedAmount ?? 0;
+      amount = receipt.netPayAmt ?? 0;
     } else {
       final bill = billDetailsController.BillDetailsList[index];
       date = bill.date;
-      companyName = bill.companyName ?? '';
-      number = "BillNo : ${bill.billNo ?? ''}";
-      amount = bill.billAmount ?? 0;
+      companyName = bill.companyName ?? '' ;
+      number = "BillNo : ${bill.billNo ?? ''}" ;
+      amount = bill.netAmount ?? 0 ;
     }
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 0),
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -497,30 +486,22 @@ class _ListScreenState extends State<ListScreen> {
                   // =========================
                   InkWell(
                     borderRadius: BorderRadius.circular(10),
-                    onTap: () {
-                      FocusScope.of(
-                          context)
-                          .unfocus();
-                      isSalesDetails ?
-                      salesDetailController.SalesDetails_List_EditApi(
-                          salesDetailController
-                              .SalesDetailsList
-                              .value[
-                          index]
-                              .id,widget.title,
-                          context) : isReceiptDetails ? receiptDetailsController.ReceiptDetails_List_EditApi(
-                          receiptDetailsController
-                              .ReceiptDetailsList
-                              .value[
-                          index]
-                              .id,widget.title,
-                          context) : billDetailsController.BillDetails_List_EditApi(
-                          billDetailsController
-                              .BillDetailsList
-                              .value[
-                          index]
-                              .id,widget.title,
-                          context);
+                    onTap: () async {
+                      FocusScope.of(context).unfocus();
+                      setState(() => expandedIndex = null);
+
+                      if (isSalesDetails) {
+                        await salesDetailController.SalesDetails_List_EditApi(
+                            salesDetailController.SalesDetailsList[index].id, widget.title, context);
+                      } else if (isReceiptDetails) {
+                        await receiptDetailsController.ReceiptDetails_List_EditApi(
+                            receiptDetailsController.ReceiptDetailsList[index].id, widget.title, context);
+                      } else {
+                        await billDetailsController.BillDetails_List_EditApi(
+                            billDetailsController.BillDetailsList[index].id, widget.title, context);
+                      }
+
+                      _loadList();
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -561,6 +542,9 @@ class _ListScreenState extends State<ListScreen> {
                   InkWell(
                     borderRadius: BorderRadius.circular(10),
                     onTap: () async {
+                      setState(() {
+                        expandedIndex = null;
+                      });
                       await commonController.DeleteAlert(
                           context,
                           index,widget.title);
@@ -608,10 +592,12 @@ class _ListScreenState extends State<ListScreen> {
     final count = _getOriginalListLength();
 
     setState(() {
-      filteredIndexes = List.generate(count, (index) => index);
+      filteredIndexes = List.generate(
+        count,
+            (index) => index,
+      );
     });
   }
-
   int _getOriginalListLength() {
     if (isSalesDetails) {
       return salesDetailController.SalesDetailsList.length;
@@ -624,76 +610,44 @@ class _ListScreenState extends State<ListScreen> {
     return billDetailsController.BillDetailsList.length;
   }
 
-  void _searchList() {
+  List<int> _getFilteredIndexes() {
     final query = searchController.text.trim().toLowerCase();
 
-    if (query.isEmpty) {
-      _resetFilteredList();
-      return;
-    }
+    // Read the right list (this also makes Obx listen to it)
+    final int count = _getOriginalListLength();
+
+    bool matches(List<Object?> fields) =>
+        fields.any((f) => (f ?? '').toString().toLowerCase().contains(query));
 
     final List<int> result = [];
 
-    if (isSalesDetails) {
-      for (int i = 0;
-      i < salesDetailController.SalesDetailsList.length;
-      i++) {
-        final sales = salesDetailController.SalesDetailsList[i];
-
-        final company = (sales.companyName ?? '').toLowerCase();
-        final salesNo = (sales.salesNo ?? '').toString().toLowerCase();
-        final date = (sales.date ?? '').toString().toLowerCase();
-        final cost = (sales.erpCost ?? '').toString().toLowerCase();
-        if (company.contains(query) ||
-            salesNo.contains(query) ||
-            cost.contains(query) ||
-            date.contains(query)) {
-          result.add(i);
-        }
+    for (int i = 0; i < count; i++) {
+      if (query.isEmpty) {
+        result.add(i);
+        continue;
       }
-    } else if (isReceiptDetails) {
-      for (int i = 0;
-      i < receiptDetailsController.ReceiptDetailsList.length;
-      i++) {
-        final receipt = receiptDetailsController.ReceiptDetailsList[i];
 
-        final company = (receipt.companyName ?? '').toLowerCase();
-        final receiptNo =
-        (receipt.receiptNo ?? '').toString().toLowerCase();
-        final date = (receipt.date ?? '').toString().toLowerCase();
-
-        if (company.contains(query) ||
-            receiptNo.contains(query) ||
-            date.contains(query)) {
-          result.add(i);
-        }
+      bool ok;
+      if (isSalesDetails) {
+        final s = salesDetailController.SalesDetailsList[i];
+        ok = matches([s.companyName, s.salesNo, s.date, s.erpCost, s.netPayAmt]);
+      } else if (isReceiptDetails) {
+        final r = receiptDetailsController.ReceiptDetailsList[i];
+        ok = matches([r.companyName, r.receiptNo, r.date, r.receivedAmount, r.netPayAmt]);
+      } else {
+        final b = billDetailsController.BillDetailsList[i];
+        ok = matches([b.companyName, b.billNo, b.date, b.billAmount]);
       }
-    } else {
-      for (int i = 0;
-      i < billDetailsController.BillDetailsList.length;
-      i++) {
-        final bill = billDetailsController.BillDetailsList[i];
 
-        final company = (bill.companyName ?? '').toLowerCase();
-        final billNo = (bill.billNo ?? '').toString().toLowerCase();
-        final date = (bill.date ?? '').toString().toLowerCase();
-        final cost = (bill.billAmount ?? '').toString().toLowerCase();
-        if (company.contains(query) ||
-            billNo.contains(query) ||
-            cost.contains(query) ||
-            date.contains(query)) {
-          result.add(i);
-        }
-      }
+      if (ok) result.add(i);
     }
 
-    setState(() {
-      filteredIndexes = result;
-      expandedIndex = null;
-    });
+    return result;
   }
 
-
+  void _searchList() {
+    setState(() => expandedIndex = null);
+  }
 
 }
 

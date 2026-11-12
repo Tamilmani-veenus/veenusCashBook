@@ -18,6 +18,9 @@ class ReceiptDetailsController extends GetxController{
   final accPortionController = TextEditingController();
   final gstAmtController = TextEditingController();
   final tdsAmtController = TextEditingController();
+  final netAmountController = TextEditingController();
+  final tdsnetAmountController = TextEditingController();
+
 
   int receiptId = 0;
   final RxBool isTdsEnabled = false.obs;

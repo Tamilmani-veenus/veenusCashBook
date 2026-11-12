@@ -45,6 +45,8 @@ class _OutStandingBillReportWidgetState extends State<OutStandingBillReportWidge
     commonController.outstandingList.value = [];
     commonController.financialYearList.value = [];
     commonController.getFinancialReportData();
+    commonController.selectedFinancialYearId = 0;
+    commonController.selectedFinancialYear = null;
   }
 
   @override

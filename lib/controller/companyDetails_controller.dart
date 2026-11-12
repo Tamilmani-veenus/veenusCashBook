@@ -25,7 +25,7 @@ class CompanyDetailsController extends GetxController{
   RxList CompanyDetailsList = [].obs;
   RxList cityDropDown = [].obs;
 
-  String selectedCity = "--SELECT--";
+  RxString selectedCity = "--SELECT--".obs;
   RxList Company_EditListApiValue = [].obs;
 
   RxString saveButton = RequestConstant.SUBMIT.obs;
@@ -83,7 +83,7 @@ class CompanyDetailsController extends GetxController{
       companyName: companyNameController.text,
       companyDate: fromDate,
       companyAddress: AdressController.text,
-      city: selectedCity,
+      city: selectedCity.value,
       contactNo: ContactNoController.text,
       email: emailController.text,
       gstNo: GSTNoController.text,

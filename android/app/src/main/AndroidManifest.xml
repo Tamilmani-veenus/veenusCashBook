@@ -2,7 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.veenus.veenuscashbook">
     <uses-permission android:name="android.permission.INTERNET"/>
-
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
     <application
         android:label="Veenus CashBook"
         android:name="${applicationName}"

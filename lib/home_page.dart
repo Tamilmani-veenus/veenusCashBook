@@ -182,6 +182,7 @@ class _CashBookDrawerState extends State<CashBookDrawer> {
       backgroundColor: AppColors.white,
       width: 320,
       child: SafeArea(
+        top: false,
         child: Column(
           children: [
 
@@ -191,15 +192,14 @@ class _CashBookDrawerState extends State<CashBookDrawer> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.only(
-                top: 28,
-                bottom: 28,
+                top: 50,
+                bottom: 10,
                 left: 20,
                 right: 20,
               ),
               child: Column(
-                children: [
 
-                  // CashBook Logo
+                children: [
                   Image.asset(
                     'assets/drawerimg.png',
                     height: 150,
@@ -207,17 +207,61 @@ class _CashBookDrawerState extends State<CashBookDrawer> {
                   ),
 
 
-                  // // CashBook
-                  // const Text(
-                  //   'CashBook',
-                  //   style: TextStyle(
-                  //     fontFamily: 'Poppins',
-                  //     fontSize: 24,
-                  //     fontWeight: FontWeight.w700,
-                  //     color: AppColors.primary,
-                  //     letterSpacing: -0.5,
-                  //   ),
+                  // CashBook Logo
+                  // Row(
+                  //
+                  //   mainAxisSize: MainAxisSize.min,
+                  //   children: [
+                  //     Stack(
+                  //       clipBehavior: Clip.none,
+                  //       children: [
+                  //         Image.asset(
+                  //           'assets/veenuslogo.png',
+                  //           height: 80,
+                  //           // width: 80,
+                  //           fit: BoxFit.contain,
+                  //         ),
+                  //
+                  //         Positioned(
+                  //           left: 95, // text starts near/right side of logo
+                  //           top: 35, // Veenus at center of logo
+                  //           child: Column(
+                  //             crossAxisAlignment: CrossAxisAlignment.start,
+                  //             mainAxisSize: MainAxisSize.min,
+                  //             children: [
+                  //               const Text(
+                  //                 'Veenus',
+                  //                 style: TextStyle(
+                  //                   fontFamily: 'Poppins',
+                  //                   fontSize: 24,
+                  //                   fontWeight: FontWeight.w700,
+                  //                   color: AppColors.primary,
+                  //                   height: 1,
+                  //                   letterSpacing: -0.5,
+                  //                 ),
+                  //               ),
+                  //               const Text(
+                  //                 'CashBook',
+                  //                 style: TextStyle(
+                  //                   fontFamily: 'Poppins',
+                  //                   fontSize: 24,
+                  //                   fontWeight: FontWeight.w700,
+                  //                   color: Color(0xFFF97316),
+                  //                   height: 1,
+                  //                   letterSpacing: -0.5,
+                  //                 ),
+                  //               ),
+                  //             ],
+                  //           ),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ],
                   // ),
+                  // SizedBox(height: 5,),
+
+                  // CashBook
+
 
                   // Tagline
                   const Text(
@@ -239,7 +283,7 @@ class _CashBookDrawerState extends State<CashBookDrawer> {
               color: AppColors.border,
             ),
 
-            const SizedBox(height: 18),
+            const SizedBox(height: 15),
 
             // =========================
             // MENU

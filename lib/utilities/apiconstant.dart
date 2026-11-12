@@ -1,7 +1,5 @@
 import 'dart:io';
 
-
-
 class ApiConfig {
   static const String LIVE_ENDPOINT_1 = "http://49.204.233.151:8080/";
   static const String LIVE_ENDPOINT_2 = "http://122.173.84.247:8080/";

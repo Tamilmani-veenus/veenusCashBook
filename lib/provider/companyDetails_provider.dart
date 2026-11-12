@@ -60,6 +60,7 @@ class CompanyDetailsProvider{
       } else {
         response = await ApiManager.postAPICall(ApiConstant.COMPANYDETAILS_SAVEAPI, body);
       }
+      print("XXXXXXXXX...${response}");
       return jsonDecode(response);
 
     }  catch (error) {
@@ -86,7 +87,7 @@ class CompanyDetailsProvider{
           "${ApiConstant.COMPANYDETAILS_DELETE}?CompanyId=$reqId");
 
       final Map<String, dynamic> decoded = jsonDecode(response);
-
+      print("XXXXXXXX...${response}");
 
       bool isSuccess = decoded["success"] == true;
 

@@ -23,6 +23,7 @@ class SalesDetailsSaveResponse {
   double? tdsPercentage;
   bool? tdsCheck;
   String? companyName;
+  double? netPayAmount;
 
   SalesDetailsSaveResponse({
     this.id,
@@ -39,6 +40,7 @@ class SalesDetailsSaveResponse {
     this.tdsPercentage,
     this.tdsCheck,
     this.companyName,
+    this.netPayAmount
   });
 
   factory SalesDetailsSaveResponse.fromJson(Map<String, dynamic> json) => SalesDetailsSaveResponse(
@@ -56,6 +58,7 @@ class SalesDetailsSaveResponse {
     tdsPercentage: json["tdsPercentage"],
     tdsCheck: json["tdsCheck"],
     companyName: json["companyName"],
+    netPayAmount: json["afterTDSNetAmount"]
   );
 
   Map<String, dynamic> toJson() => {
@@ -73,5 +76,6 @@ class SalesDetailsSaveResponse {
     "tdsPercentage": tdsPercentage,
     "tdsCheck": tdsCheck,
     "companyName": companyName,
+    "afterTDSNetAmount": netPayAmount
   };
 }

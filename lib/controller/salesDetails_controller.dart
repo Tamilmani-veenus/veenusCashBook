@@ -20,6 +20,7 @@ class SalesDetailController extends GetxController{
   final gstAmtController = TextEditingController();
   final netAmountController = TextEditingController();
   final tdsAmtController = TextEditingController();
+  final tdsnetAmountController = TextEditingController();
 
   int salesId = 0;
   final RxBool isTdsEnabled = false.obs;
@@ -35,7 +36,7 @@ class SalesDetailController extends GetxController{
     if (response != null) {
       if (response.success == true) {
         if (response.result!.isNotEmpty) {
-          SalesDetailsList.assignAll(response.result!);
+          SalesDetailsList.value.assignAll(response.result!);
         }
         else {
           Fluttertoast.showToast(msg: "No Data Found");
